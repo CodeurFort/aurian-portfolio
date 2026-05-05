@@ -5,6 +5,8 @@ import { ProjectPlanet } from "@/components/sections/ProjectPlanet";
 import { OpenclawPlanet } from "@/components/sections/OpenclawPlanet";
 import { Threads } from "@/components/sections/Threads";
 import { StellarMap } from "@/components/sections/StellarMap";
+import { Outro } from "@/components/sections/Outro";
+import { ConsoleEasterEgg } from "@/components/ConsoleEasterEgg";
 import { projects } from "@/lib/content";
 
 export default function Home() {
@@ -20,6 +22,8 @@ export default function Home() {
       <OpenclawPlanet project={openclaw} index={4} />
       <Threads />
       <StellarMap />
+      <Outro />
+      <ConsoleEasterEgg />
     </PageShell>
   );
 }
