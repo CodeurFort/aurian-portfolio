@@ -1,3 +1,5 @@
+import { thelookQuery } from "./thelookQuery";
+
 export type PaperColor =
   | "paper-cream"
   | "paper-mint"
@@ -187,14 +189,16 @@ export const projects: Project[] = [
     paperColor: "paper-stone",
     role: "audit SQL avancé",
     pitch:
-      "audit complet d'une marketplace e-commerce. 11 CTEs imbriquées, window functions pour cohort analysis, KPIs business : LTV, retention, panier moyen, performance par catégorie.",
+      "audit Fashion Hoodies & Sweatshirts sur TheLook eCommerce (BigQuery public). 12 CTEs enchaînées, window functions LAG et ROW_NUMBER, KPIs business par mois : CA, marge, panier moyen, croissance, rotation stock, top canal, taux de rebond et de conversion, top région.",
     achievements: [
-      "11 CTEs orchestrées en pipeline d'analyse",
-      "window functions : RANK, LAG, NTILE pour cohortes",
-      "dashboard Looker Studio avec 8 KPIs business",
-      "recommandations stratégiques pitchées au sponsor",
+      "12 CTEs orchestrées en pipeline d'analyse mensuelle",
+      "window functions : LAG pour la croissance mois sur mois, ROW_NUMBER pour isoler le canal et la région dominants",
+      "ratio rotation stock (vendus / stock fin de mois) pour détecter rupture vs surstock",
+      "taux de rebond et taux de conversion calculés en LEFT JOIN sessions / orders",
+      "période paramétrable via DECLARE date_debut / date_fin",
     ],
-    stack: ["SQL", "BigQuery", "Looker Studio", "Pandas"],
+    stack: ["SQL", "BigQuery", "Looker Studio", "Tableau Desktop", "Pandas"],
+    sqlQuery: thelookQuery,
   },
 ];
 

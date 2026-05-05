@@ -198,6 +198,208 @@ function OverlayCloseBtn({ onClose }: { onClose: () => void }) {
   );
 }
 
+// Minimal SQL syntax highlighter (regex-based, lightweight, no extra deps).
+// Token classes are styled via inline color values to avoid Tailwind purge issues.
+function highlightSql(code: string): { html: string } {
+  const escapeHtml = (s: string) =>
+    s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+  // Process token-by-token to avoid double-highlighting nested matches.
+  const tokens: Array<{ kind: string; text: string }> = [];
+  const src = code;
+  let i = 0;
+  const KEYWORDS = new Set([
+    "SELECT","FROM","WHERE","WITH","AS","INNER","LEFT","RIGHT","FULL","JOIN","ON",
+    "GROUP","BY","ORDER","ASC","DESC","HAVING","LIMIT","DISTINCT","CASE","WHEN","THEN",
+    "ELSE","END","AND","OR","NOT","NULL","IS","BETWEEN","IN","DECLARE","DEFAULT","DATE",
+    "OVER","PARTITION","ROWS","RANGE","UNBOUNDED","PRECEDING","FOLLOWING","CURRENT","ROW",
+  ]);
+  const FUNCS = new Set([
+    "COUNT","SUM","AVG","MIN","MAX","ROUND","COUNTIF","NULLIF","COALESCE","CAST","SAFE_CAST",
+    "FORMAT_DATE","TIMESTAMP_DIFF","DATE_DIFF","DATE","CURRENT_DATE","LAG","LEAD","ROW_NUMBER","RANK","NTILE",
+  ]);
+
+  while (i < src.length) {
+    const ch = src[i];
+    // Line comment
+    if (ch === "-" && src[i + 1] === "-") {
+      let j = i;
+      while (j < src.length && src[j] !== "\n") j++;
+      tokens.push({ kind: "comment", text: src.slice(i, j) });
+      i = j;
+      continue;
+    }
+    // String literal (single quotes)
+    if (ch === "'") {
+      let j = i + 1;
+      while (j < src.length && src[j] !== "'") j++;
+      tokens.push({ kind: "string", text: src.slice(i, j + 1) });
+      i = j + 1;
+      continue;
+    }
+    // Backtick identifier (BigQuery table refs)
+    if (ch === "`") {
+      let j = i + 1;
+      while (j < src.length && src[j] !== "`") j++;
+      tokens.push({ kind: "ident", text: src.slice(i, j + 1) });
+      i = j + 1;
+      continue;
+    }
+    // Number
+    if (/[0-9]/.test(ch)) {
+      let j = i;
+      while (j < src.length && /[0-9.]/.test(src[j])) j++;
+      tokens.push({ kind: "number", text: src.slice(i, j) });
+      i = j;
+      continue;
+    }
+    // Word (keyword / function / identifier)
+    if (/[A-Za-z_]/.test(ch)) {
+      let j = i;
+      while (j < src.length && /[A-Za-z0-9_]/.test(src[j])) j++;
+      const word = src.slice(i, j);
+      const upper = word.toUpperCase();
+      let kind = "word";
+      if (KEYWORDS.has(upper)) kind = "kw";
+      else if (FUNCS.has(upper)) kind = "fn";
+      tokens.push({ kind, text: word });
+      i = j;
+      continue;
+    }
+    // Default: punctuation / whitespace
+    let j = i;
+    while (
+      j < src.length &&
+      !/[A-Za-z_0-9'`-]/.test(src[j]) &&
+      !(src[j] === "-" && src[j + 1] === "-")
+    ) {
+      j++;
+    }
+    if (j === i) j = i + 1;
+    tokens.push({ kind: "punct", text: src.slice(i, j) });
+    i = j;
+  }
+
+  const COLOR: Record<string, string> = {
+    comment: "#6B6660",
+    string: "#C8A99B",
+    ident: "#A8C4B0",
+    number: "#E0B760",
+    kw: "#A4F5C8",
+    fn: "#ECE6D6",
+    word: "rgba(236,230,214,0.85)",
+    punct: "rgba(236,230,214,0.55)",
+  };
+
+  const html = tokens
+    .map((t) => {
+      const escaped = escapeHtml(t.text);
+      const color = COLOR[t.kind] ?? "rgba(236,230,214,0.85)";
+      const style = t.kind === "kw" ? "font-weight:600" : "";
+      return `<span style="color:${color};${style}">${escaped}</span>`;
+    })
+    .join("");
+
+  return { html };
+}
+
+function SqlViewer({ code }: { code: string }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const lines = code.split("\n");
+  const cteCount = (code.match(/^\w+ AS \(/gm) || []).length;
+  const lineCount = lines.length;
+
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // ignore
+    }
+  };
+
+  const { html } = highlightSql(code);
+
+  return (
+    <div className="mb-10 pt-6 border-t border-hairline">
+      <div className="flex items-baseline justify-between mb-3 flex-wrap gap-3">
+        <div>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted">
+            Requête SQL · audit complet
+          </p>
+          <p className="serif-italic text-text-muted text-sm mt-1">
+            {cteCount} CTEs · {lineCount} lignes · BigQuery
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="mono uppercase tracking-widest text-[11px] text-thread border-b border-thread hover:opacity-80 transition"
+          >
+            {open ? "Masquer" : "Voir la requête"} →
+          </button>
+          {open && (
+            <button
+              type="button"
+              onClick={onCopy}
+              className="mono uppercase tracking-widest text-[11px] text-text-muted hover:text-thread border-b border-hairline hover:border-thread transition"
+            >
+              {copied ? "Copié" : "Copier"} ◇
+            </button>
+          )}
+        </div>
+      </div>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="sql-body"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
+            className="overflow-hidden"
+          >
+            <div
+              className="rounded-md overflow-hidden border border-hairline"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(10,12,15,0.95) 0%, rgba(7,8,10,0.98) 100%)",
+                boxShadow: "inset 0 0 0 1px rgba(164,245,200,0.06)",
+              }}
+            >
+              <div
+                className="overflow-auto"
+                style={{
+                  maxHeight: "min(540px, 70vh)",
+                  fontFamily: "var(--font-mono), ui-monospace, monospace",
+                  fontSize: 12,
+                  lineHeight: 1.55,
+                  padding: "16px 18px",
+                }}
+              >
+                <pre
+                  style={{
+                    margin: 0,
+                    whiteSpace: "pre",
+                    color: "rgba(236,230,214,0.85)",
+                  }}
+                  dangerouslySetInnerHTML={{ __html: html }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: () => void }) {
   return (
     <>
@@ -274,6 +476,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
           </div>
         </div>
       )}
+      {project.sqlQuery && <SqlViewer code={project.sqlQuery} />}
       {(project.liveUrl || project.repoUrl) && (
         <div className="flex gap-6 pt-6 border-t border-hairline">
           {project.liveUrl && (
