@@ -1,8 +1,9 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Stars, Html, Line } from "@react-three/drei";
+import { Stars, Line, Sparkles, MeshDistortMaterial, Text } from "@react-three/drei";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import * as THREE from "three";
 import {
   projects,
@@ -25,6 +26,64 @@ const PAPER_HEX: Record<string, string> = {
   "paper-blush": "#C8A99B",
   "paper-stone": "#8E8B83",
 };
+
+// ---------------------------------------------------------------------------
+// Planet visual variant config
+// ---------------------------------------------------------------------------
+interface PlanetVariant {
+  distort: number;
+  speed: number;
+  emissiveColor: string;
+  emissiveIntensity: number;
+  hasRing?: boolean;
+  breathe?: boolean;
+  angularDistort?: boolean;
+}
+
+const PLANET_VARIANTS: Record<string, PlanetVariant> = {
+  levels: {
+    distort: 0.08,
+    speed: 0.3,
+    emissiveColor: "#A4F5C8",
+    emissiveIntensity: 0.04,
+  },
+  energizer: {
+    distort: 0.22,
+    speed: 0.8,
+    emissiveColor: "#A4F5C8",
+    emissiveIntensity: 0.08,
+  },
+  mirakl: {
+    distort: 0.12,
+    speed: 0.4,
+    emissiveColor: "#A4F5C8",
+    emissiveIntensity: 0.05,
+    hasRing: true,
+  },
+  "music-agency": {
+    distort: 0.15,
+    speed: 0.5,
+    emissiveColor: "#A4F5C8",
+    emissiveIntensity: 0.06,
+    breathe: true,
+  },
+  thelook: {
+    distort: 0.25,
+    speed: 0.15,
+    emissiveColor: "#A4F5C8",
+    emissiveIntensity: 0.05,
+    angularDistort: true,
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Open card type discriminator
+// ---------------------------------------------------------------------------
+type OpenCard =
+  | { type: "planet"; project: Project }
+  | { type: "soft"; skillSlug: string }
+  | { type: "info"; infoId: string }
+  | { type: "openclaw" };
 
 // ---------------------------------------------------------------------------
 // Star definitions per planet
@@ -81,237 +140,350 @@ function getStarsForPlanet(slug: string): StarDef[] {
 }
 
 // ---------------------------------------------------------------------------
-// Card components (HTML overlays inside drei <Html>)
+// Overlay card components (rendered OUTSIDE Canvas)
 // ---------------------------------------------------------------------------
-function CloseBtn({ onClose }: { onClose: () => void }) {
+
+function OverlayCloseBtn({ onClose }: { onClose: () => void }) {
   return (
     <button
       onClick={onClose}
-      className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center text-text-muted hover:text-text transition text-xs"
       aria-label="Fermer"
+      className="absolute top-6 right-6 text-text-muted hover:text-thread transition mono uppercase tracking-[0.3em] text-[10px]"
     >
-      ×
+      fermer ✕
     </button>
   );
 }
 
-function SoftSkillCard({ skillSlug, onClose }: { skillSlug: string; onClose: () => void }) {
-  const skill = softSkills.find((s) => s.slug === skillSlug);
-  if (!skill) return null;
-  return (
-    <div className="relative bg-[#07080A]/95 backdrop-blur border border-[#1F2521] rounded-md p-4 max-w-[240px] text-[#ECE6D6]">
-      <CloseBtn onClose={onClose} />
-      <p className="mono uppercase tracking-[0.25em] text-[9px] text-[#6B6660] mb-1">{skill.label}</p>
-      <p className="font-[var(--font-serif)] italic text-sm leading-relaxed">&ldquo;{skill.quote}&rdquo;</p>
-    </div>
-  );
-}
-
-function CvCard({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="relative bg-[#07080A]/95 backdrop-blur border border-[#1F2521] rounded-md p-4 max-w-[260px] text-[#ECE6D6]">
-      <CloseBtn onClose={onClose} />
-      <p className="mono uppercase tracking-[0.25em] text-[9px] text-[#6B6660] mb-2">parcours</p>
-      <p className="text-xs mb-1">{profile.cvCurrent}</p>
-      <p className="text-xs text-[#6B6660] mb-1">{profile.cvPrevious}</p>
-      <p className="text-xs text-[#6B6660] mb-3">{profile.formation}</p>
-      <a
-        href={profile.cvPdf}
-        target="_blank"
-        rel="noreferrer"
-        className="mono uppercase tracking-widest text-[9px] text-[#A4F5C8] hover:underline"
-      >
-        télécharger CV ↗
-      </a>
-    </div>
-  );
-}
-
-function StackCard({ onClose }: { onClose: () => void }) {
-  const categories = ["lang", "data", "cloud", "ai", "other"] as const;
-  const catLabels: Record<string, string> = {
-    lang: "langages",
-    data: "data",
-    cloud: "cloud",
-    ai: "IA",
-    other: "outils",
+function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: () => void }) {
+  const chapterRoman: Record<string, string> = {
+    i: "I", ii: "II", iii: "III", iv: "IV", v: "V",
   };
   return (
-    <div className="relative bg-[#07080A]/95 backdrop-blur border border-[#1F2521] rounded-md p-4 max-w-[280px] text-[#ECE6D6]">
-      <CloseBtn onClose={onClose} />
-      <p className="mono uppercase tracking-[0.25em] text-[9px] text-[#6B6660] mb-3">stack</p>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-        {categories.map((cat) => {
-          const items = stack.filter((t) => t.category === cat);
-          if (items.length === 0) return null;
-          return (
-            <div key={cat}>
-              <p className="mono uppercase tracking-widest text-[8px] text-[#6B6660] mb-1">{catLabels[cat]}</p>
-              <div className="flex flex-col gap-0.5">
-                {items.map((t) => (
-                  <span key={t.label} className="text-[11px] text-[#ECE6D6]/80">
-                    {t.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function LanguagesCard({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="relative bg-[#07080A]/95 backdrop-blur border border-[#1F2521] rounded-md p-4 max-w-[220px] text-[#ECE6D6]">
-      <CloseBtn onClose={onClose} />
-      <p className="mono uppercase tracking-[0.25em] text-[9px] text-[#6B6660] mb-3">langues</p>
-      <div className="flex flex-col gap-2">
-        {profile.languages.map((lang) => (
-          <div key={lang.label} className="flex justify-between items-baseline gap-4">
-            <span className="text-sm">{lang.label}</span>
-            <span className="mono text-[10px] text-[#6B6660]">{lang.level}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function HobbiesCard({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="relative bg-[#07080A]/95 backdrop-blur border border-[#1F2521] rounded-md p-4 max-w-[220px] text-[#ECE6D6]">
-      <CloseBtn onClose={onClose} />
-      <p className="mono uppercase tracking-[0.25em] text-[9px] text-[#6B6660] mb-3">orbites</p>
-      <div className="flex flex-col gap-1.5">
-        {hobbies.map((h) => (
-          <div key={h.label} className="text-sm">
-            {h.label}
-            {h.detail && <span className="text-[#6B6660] text-xs"> — {h.detail}</span>}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ContactCard({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="relative bg-[#07080A]/95 backdrop-blur border border-[#1F2521] rounded-md p-4 max-w-[240px] text-[#ECE6D6]">
-      <CloseBtn onClose={onClose} />
-      <p className="mono uppercase tracking-[0.25em] text-[9px] text-[#6B6660] mb-3">contact</p>
-      <div className="flex flex-col gap-2 text-sm">
-        <a href={`mailto:${profile.email}`} className="hover:text-[#A4F5C8] transition truncate">
-          {profile.email}
-        </a>
-        <a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-[#A4F5C8] transition truncate">
-          {profile.linkedin}
-        </a>
-        <a href={profile.github} target="_blank" rel="noreferrer" className="hover:text-[#A4F5C8] transition truncate">
-          {profile.github}
-        </a>
-        <span className="text-[#6B6660]">{profile.phone}</span>
-      </div>
-    </div>
-  );
-}
-
-function ProjectDetailCard({ project, onClose }: { project: Project; onClose: () => void }) {
-  return (
-    <div className="relative bg-[#07080A]/95 backdrop-blur border border-[#1F2521] rounded-md p-4 max-w-[280px] text-[#ECE6D6]">
-      <CloseBtn onClose={onClose} />
-      <p className="mono uppercase tracking-[0.25em] text-[9px] text-[#6B6660] mb-1">
-        chapitre {project.chapter}
+    <>
+      <OverlayCloseBtn onClose={onClose} />
+      <header className="mb-10">
+        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">
+          chapitre {chapterRoman[project.chapter] ?? project.chapter}.
+        </p>
+        <h2
+          className="serif-display text-text leading-none mb-4"
+          style={{ fontSize: "clamp(48px, 7vw, 96px)" }}
+        >
+          {project.title}
+        </h2>
+        {project.role && (
+          <p className="mono uppercase tracking-widest text-[11px] text-text-muted">
+            {project.role}
+          </p>
+        )}
+      </header>
+      <p className="serif-italic text-2xl leading-snug text-text mb-10 max-w-2xl">
+        {project.pitch}
       </p>
-      <h3 className="font-[var(--font-serif)] italic text-xl leading-tight mb-1">{project.title}</h3>
-      {project.role && (
-        <p className="mono text-[10px] text-[#A4F5C8] uppercase tracking-widest mb-2">{project.role}</p>
-      )}
-      <p className="text-xs text-[#ECE6D6]/70 mb-3 leading-relaxed line-clamp-4">{project.pitch}</p>
-      <ul className="mb-3 flex flex-col gap-1">
-        {project.achievements.slice(0, 3).map((a) => (
-          <li key={a} className="text-xs text-[#ECE6D6]/60 flex gap-1.5">
-            <span className="text-[#A4F5C8] shrink-0">—</span>
-            <span className="line-clamp-2">{a}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="flex flex-wrap gap-1">
-        {project.stack.slice(0, 4).map((t) => (
-          <TechPill key={t} label={t} />
-        ))}
+      <div className="grid md:grid-cols-2 gap-12 mb-10">
+        <div>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">stack</p>
+          <div className="flex flex-wrap gap-2">
+            {project.stack.map((s) => (
+              <TechPill key={s} label={s} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">
+            accomplissements
+          </p>
+          <ul className="space-y-3">
+            {project.achievements.map((a, i) => (
+              <li key={i} className="flex gap-3 text-base text-text leading-snug">
+                <span className="text-thread mt-1.5 text-xs shrink-0">●</span>
+                <span>{a}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
       {(project.liveUrl || project.repoUrl) && (
-        <div className="mt-3 flex gap-3">
+        <div className="flex gap-6 pt-6 border-t border-hairline">
           {project.liveUrl && (
-            <a href={project.liveUrl} target="_blank" rel="noreferrer" className="mono text-[9px] uppercase tracking-widest text-[#A4F5C8] hover:underline">
-              live ↗
+            <a
+              href={project.liveUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mono uppercase tracking-widest text-[11px] text-thread border-b border-thread hover:opacity-80"
+            >
+              voir live →
             </a>
           )}
           {project.repoUrl && (
-            <a href={project.repoUrl} target="_blank" rel="noreferrer" className="mono text-[9px] uppercase tracking-widest text-[#A4F5C8] hover:underline">
-              repo ↗
+            <a
+              href={project.repoUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mono uppercase tracking-widest text-[11px] text-text-muted hover:text-thread border-b border-hairline hover:border-thread transition"
+            >
+              github →
             </a>
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }
 
-function StarProjectCard({ onClose }: { onClose: () => void }) {
+function SoftSkillOverlayCard({ skillSlug, onClose }: { skillSlug: string; onClose: () => void }) {
+  const skill = softSkills.find((s) => s.slug === skillSlug);
+  if (!skill) return null;
   return (
-    <div className="relative bg-[#07080A]/95 backdrop-blur border border-[#A4F5C8]/20 rounded-md p-4 max-w-[280px] text-[#ECE6D6]">
-      <CloseBtn onClose={onClose} />
-      <p className="mono uppercase tracking-[0.25em] text-[9px] text-[#A4F5C8]/60 mb-1">étoile fixe</p>
-      <h3 className="font-[var(--font-serif)] italic text-xl leading-tight mb-1 text-[#A4F5C8]">
-        {starProject.title}
-      </h3>
-      <p className="text-xs text-[#ECE6D6]/70 mb-3 leading-relaxed">{starProject.pitch}</p>
-      <ul className="mb-3 flex flex-col gap-1">
-        {starProject.achievements.slice(0, 3).map((a) => (
-          <li key={a} className="text-xs text-[#ECE6D6]/60 flex gap-1.5">
-            <span className="text-[#A4F5C8] shrink-0">—</span>
-            <span className="line-clamp-2">{a}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="flex flex-wrap gap-1">
-        {starProject.stack.slice(0, 4).map((t) => (
-          <TechPill key={t} label={t} />
-        ))}
+    <>
+      <OverlayCloseBtn onClose={onClose} />
+      <header className="mb-12 text-center">
+        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">soft skill</p>
+        <h2
+          className="serif-display text-text leading-none"
+          style={{ fontSize: "clamp(48px, 7vw, 96px)" }}
+        >
+          {skill.label.toLowerCase()}
+        </h2>
+      </header>
+      <blockquote className="serif-italic text-3xl md:text-4xl leading-snug text-text-muted text-center max-w-xl mx-auto">
+        &laquo; {skill.quote} &raquo;
+      </blockquote>
+      <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted text-center mt-8">
+        tendu entre : {skill.linkedProjectSlugs.join(" · ")}
+      </p>
+    </>
+  );
+}
+
+function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => void }) {
+  const titles: Record<string, string> = {
+    cv: "parcours",
+    stack: "stack",
+    languages: "langues",
+    hobbies: "orbites",
+    contact: "contact",
+  };
+
+  const categories = ["lang", "data", "cloud", "ai", "other"] as const;
+  const catLabels: Record<string, string> = {
+    lang: "langages", data: "data", cloud: "cloud", ai: "IA", other: "outils",
+  };
+
+  return (
+    <>
+      <OverlayCloseBtn onClose={onClose} />
+      <header className="mb-12">
+        <h2
+          className="serif-display text-text leading-none"
+          style={{ fontSize: "clamp(40px, 6vw, 80px)" }}
+        >
+          {titles[infoId] ?? infoId}
+        </h2>
+      </header>
+
+      {infoId === "cv" && (
+        <div className="space-y-6">
+          <div>
+            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">poste actuel</p>
+            <p className="text-lg text-text leading-relaxed">{profile.cvCurrent}</p>
+          </div>
+          <div>
+            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">parcours</p>
+            <p className="text-base text-text-muted leading-relaxed">{profile.cvPrevious}</p>
+          </div>
+          <div>
+            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">formation</p>
+            <p className="text-base text-text-muted leading-relaxed">{profile.formation}</p>
+          </div>
+          <div className="pt-6 border-t border-hairline">
+            <a
+              href={profile.cvPdf}
+              target="_blank"
+              rel="noreferrer"
+              className="mono uppercase tracking-widest text-[11px] text-thread border-b border-thread hover:opacity-80"
+            >
+              télécharger CV ↗
+            </a>
+          </div>
+        </div>
+      )}
+
+      {infoId === "stack" && (
+        <div className="grid md:grid-cols-2 gap-10">
+          {categories.map((cat) => {
+            const items = stack.filter((t) => t.category === cat);
+            if (items.length === 0) return null;
+            return (
+              <div key={cat}>
+                <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">
+                  {catLabels[cat]}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {items.map((t) => (
+                    <TechPill key={t.label} label={t.label} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {infoId === "languages" && (
+        <div className="space-y-6">
+          {profile.languages.map((lang) => (
+            <div key={lang.label} className="flex justify-between items-baseline border-b border-hairline pb-4">
+              <span className="text-xl text-text">{lang.label}</span>
+              <span className="mono text-[11px] text-text-muted uppercase tracking-widest">{lang.level}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {infoId === "hobbies" && (
+        <div className="space-y-4">
+          {hobbies.map((h) => (
+            <div key={h.label} className="flex gap-3 items-baseline">
+              <span className="text-thread text-xs">●</span>
+              <span className="text-lg text-text">{h.label}</span>
+              {h.detail && <span className="text-text-muted text-base">— {h.detail}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {infoId === "contact" && (
+        <div className="space-y-6">
+          <a href={`mailto:${profile.email}`} className="block text-xl text-text hover:text-thread transition">
+            {profile.email}
+          </a>
+          <a href={profile.linkedin} target="_blank" rel="noreferrer" className="block text-xl text-text hover:text-thread transition">
+            {profile.linkedin}
+          </a>
+          <a href={profile.github} target="_blank" rel="noreferrer" className="block text-xl text-text hover:text-thread transition">
+            {profile.github}
+          </a>
+          <p className="text-text-muted text-base">{profile.phone}</p>
+        </div>
+      )}
+    </>
+  );
+}
+
+function OpenClawOverlayCard({ onClose }: { onClose: () => void }) {
+  return (
+    <>
+      <OverlayCloseBtn onClose={onClose} />
+      <header className="mb-12 text-center">
+        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">
+          étoile cardinale
+        </p>
+        <h2
+          className="serif-display text-text leading-none"
+          style={{ fontSize: "clamp(56px, 8vw, 128px)" }}
+        >
+          openclaw<span className="text-thread">.</span>
+        </h2>
+        <p className="serif-italic text-text-muted text-xl mt-4">
+          agents inspired by Captain Claw &apos;97
+        </p>
+      </header>
+      <p className="serif-italic text-2xl leading-snug text-text mb-10 max-w-2xl mx-auto text-center">
+        {starProject.pitch}
+      </p>
+      <div className="grid md:grid-cols-2 gap-12 mb-10">
+        <div>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">stack</p>
+          <div className="flex flex-wrap gap-2">
+            {starProject.stack.map((s) => (
+              <TechPill key={s} label={s} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">
+            accomplissements
+          </p>
+          <ul className="space-y-3">
+            {starProject.achievements.map((a, i) => (
+              <li key={i} className="flex gap-3 text-base text-text leading-snug">
+                <span className="text-thread mt-1.5 text-xs shrink-0">●</span>
+                <span>{a}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
       {starProject.repoUrl && (
-        <a
-          href={starProject.repoUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-block mono text-[9px] uppercase tracking-widest text-[#A4F5C8] hover:underline"
-        >
-          repo ↗
-        </a>
+        <div className="pt-6 border-t border-hairline">
+          <a
+            href={starProject.repoUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mono uppercase tracking-widest text-[11px] text-text-muted hover:text-thread border-b border-hairline hover:border-thread transition"
+          >
+            github →
+          </a>
+        </div>
       )}
-    </div>
+    </>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Inline card dispatcher (inside Html)
+// Full-screen overlay
 // ---------------------------------------------------------------------------
-function StarCard({ starId, onClose }: { starId: string; onClose: () => void }) {
-  if (starId === "openclaw") return <StarProjectCard onClose={onClose} />;
-
-  const [type, value] = starId.split(":");
-  if (type === "soft") return <SoftSkillCard skillSlug={value} onClose={onClose} />;
-  if (type === "info") {
-    if (value === "cv") return <CvCard onClose={onClose} />;
-    if (value === "stack") return <StackCard onClose={onClose} />;
-    if (value === "languages") return <LanguagesCard onClose={onClose} />;
-    if (value === "hobbies") return <HobbiesCard onClose={onClose} />;
-    if (value === "contact") return <ContactCard onClose={onClose} />;
-  }
-  return null;
+function CardOverlay({
+  openCard,
+  onClose,
+}: {
+  openCard: OpenCard | null;
+  onClose: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {openCard && (
+        <motion.div
+          key="overlay-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 z-50 grid place-items-center bg-paper-deep/80 backdrop-blur-md p-6"
+          style={{ backgroundColor: "rgba(7,8,10,0.80)" }}
+        >
+          <motion.article
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 40, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-3xl overflow-y-auto bg-paper-deep/95 border border-hairline rounded-lg p-12 md:p-16 shadow-2xl"
+            style={{
+              maxHeight: "85vh",
+              backgroundColor: "rgba(7,8,10,0.97)",
+              borderColor: "#1F2521",
+            }}
+          >
+            {openCard.type === "planet" && (
+              <ProjectOverlayCard project={openCard.project} onClose={onClose} />
+            )}
+            {openCard.type === "soft" && (
+              <SoftSkillOverlayCard skillSlug={openCard.skillSlug} onClose={onClose} />
+            )}
+            {openCard.type === "info" && (
+              <InfoOverlayCard infoId={openCard.infoId} onClose={onClose} />
+            )}
+            {openCard.type === "openclaw" && (
+              <OpenClawOverlayCard onClose={onClose} />
+            )}
+          </motion.article>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -322,25 +494,29 @@ interface SatStarProps {
   starId: string;
   label: string;
   icon: string;
-  isOpen: boolean;
   onSelect: (id: string) => void;
-  onClose: () => void;
 }
 
-function SatStar({ position, starId, label, icon, isOpen, onSelect, onClose }: SatStarProps) {
+function SatStar({ position, starId, label, icon, onSelect }: SatStarProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     document.body.style.cursor = hovered ? "pointer" : "auto";
-    return () => { document.body.style.cursor = "auto"; };
+    return () => {
+      document.body.style.cursor = "auto";
+    };
   }, [hovered]);
 
   useFrame((_, dt) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y += dt * 0.5;
+      // Very slow self-rotation
+      meshRef.current.rotation.y += dt * 0.03;
       const targetScale = hovered ? 1.3 : 1.0;
-      meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+      meshRef.current.scale.lerp(
+        new THREE.Vector3(targetScale, targetScale, targetScale),
+        0.1
+      );
     }
   });
 
@@ -348,9 +524,15 @@ function SatStar({ position, starId, label, icon, isOpen, onSelect, onClose }: S
     <group position={position}>
       <mesh
         ref={meshRef}
-        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+        }}
         onPointerOut={() => setHovered(false)}
-        onClick={(e) => { e.stopPropagation(); onSelect(starId); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(starId);
+        }}
       >
         <sphereGeometry args={[0.18, 16, 16]} />
         <meshStandardMaterial
@@ -362,83 +544,62 @@ function SatStar({ position, starId, label, icon, isOpen, onSelect, onClose }: S
         />
       </mesh>
 
-      {/* Label below star */}
-      <Html center distanceFactor={8} style={{ pointerEvents: "none" }}>
-        <span
-          style={{
-            fontFamily: "var(--font-mono, monospace)",
-            fontSize: "9px",
-            textTransform: "uppercase",
-            letterSpacing: "0.2em",
-            color: hovered ? "#A4F5C8" : "#6B6660",
-            whiteSpace: "nowrap",
-            marginTop: "18px",
-            display: "block",
-            transition: "color 0.2s",
-          }}
-        >
-          {icon} {label}
-        </span>
-      </Html>
-
-      {/* Info card when open */}
-      {isOpen && (
-        <Html
-          center
-          distanceFactor={5}
-          transform={false}
-          style={{ pointerEvents: "auto" }}
-          zIndexRange={[100, 200]}
-        >
-          <StarCard starId={starId} onClose={onClose} />
-        </Html>
-      )}
+      {/* Label below star — using Text from drei */}
+      <Text
+        position={[0, -0.38, 0]}
+        fontSize={0.12}
+        color={hovered ? "#A4F5C8" : "#6B6660"}
+        anchorX="center"
+        anchorY="top"
+        outlineWidth={0}
+      >
+        {icon} {label}
+      </Text>
     </group>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Planet mesh
+// Planet mesh — variant-driven with MeshDistortMaterial + atmosphere
 // ---------------------------------------------------------------------------
 interface PlanetMeshProps {
   project: Project;
   posX: number;
   isFocused: boolean;
-  openStar: string | null;
-  openPlanet: boolean;
   onSelectStar: (id: string) => void;
   onSelectPlanet: () => void;
-  onClosePanels: () => void;
 }
 
 function PlanetMesh({
   project,
   posX,
   isFocused,
-  openStar,
-  openPlanet,
   onSelectStar,
   onSelectPlanet,
-  onClosePanels,
 }: PlanetMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
+  const atmosphereRef = useRef<THREE.Mesh>(null);
   const orbitRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
+  const variant = PLANET_VARIANTS[project.slug] ?? PLANET_VARIANTS.levels;
   const stars = getStarsForPlanet(project.slug);
   const N = stars.length;
   const ORBIT_R = 2.5;
+  const color = PAPER_HEX[project.paperColor] ?? "#ECE6D6";
 
   useEffect(() => {
     document.body.style.cursor = hovered && isFocused ? "pointer" : "auto";
-    return () => { document.body.style.cursor = "auto"; };
+    return () => {
+      document.body.style.cursor = "auto";
+    };
   }, [hovered, isFocused]);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     if (!groupRef.current || !meshRef.current) return;
 
-    // Scale lerp
+    // Scale lerp (focus)
     const targetScale = isFocused ? 1.35 : 1.0;
     const cs = groupRef.current.scale.x;
     const ns = cs + (targetScale - cs) * 0.06;
@@ -447,99 +608,98 @@ function PlanetMesh({
     // Planet self-rotation
     meshRef.current.rotation.y += dt * 0.15;
 
-    // Orbit rotation when focused
-    if (orbitRef.current) {
-      if (isFocused) {
-        orbitRef.current.rotation.y += dt * 0.3;
-      }
+    // Breathing scale for music-agency
+    if (variant.breathe && meshRef.current) {
+      const breath = 1 + Math.sin(state.clock.elapsedTime * 0.5) * 0.04;
+      meshRef.current.scale.setScalar(breath);
+    }
+
+    // Orbit rotation (slowed to 0.06)
+    if (orbitRef.current && isFocused) {
+      orbitRef.current.rotation.y += dt * 0.06;
     }
   });
 
-  const color = PAPER_HEX[project.paperColor] ?? "#ECE6D6";
-
   return (
     <group ref={groupRef} position={[posX, 0, 0]}>
-      {/* Main planet sphere */}
+      {/* Atmosphere shell */}
+      <mesh ref={atmosphereRef} scale={1.08}>
+        <sphereGeometry args={[1.2, 32, 32]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0.12}
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      {/* Main planet sphere with MeshDistortMaterial */}
       <mesh
         ref={meshRef}
-        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+        }}
         onPointerOut={() => setHovered(false)}
         onClick={(e) => {
           e.stopPropagation();
           if (isFocused) onSelectPlanet();
         }}
       >
-        <sphereGeometry args={[1.2, 48, 48]} />
-        <meshStandardMaterial
+        <sphereGeometry args={[1.2, 96, 96]} />
+        <MeshDistortMaterial
           color={color}
           roughness={0.85}
           metalness={0}
-          emissive="#A4F5C8"
-          emissiveIntensity={isFocused ? 0.08 : 0}
+          distort={variant.distort}
+          speed={variant.speed}
+          emissive={variant.emissiveColor}
+          emissiveIntensity={isFocused ? variant.emissiveIntensity * 2 : variant.emissiveIntensity}
         />
       </mesh>
 
-      {/* Planet label (always, fades in on focus) */}
-      <Html center distanceFactor={10} position={[0, -1.8, 0]} style={{ pointerEvents: "none" }}>
-        <div
-          style={{
-            textAlign: "center",
-            opacity: isFocused ? 1 : 0.35,
-            transition: "opacity 0.4s",
-            pointerEvents: "none",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "var(--font-mono, monospace)",
-              fontSize: "9px",
-              textTransform: "uppercase",
-              letterSpacing: "0.3em",
-              color: "#6B6660",
-              marginBottom: "2px",
-            }}
-          >
-            {project.chapter}
-          </p>
-          <p
-            style={{
-              fontFamily: "var(--font-serif, Georgia, serif)",
-              fontStyle: "italic",
-              fontSize: "13px",
-              color: isFocused ? "#ECE6D6" : "#6B6660",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {project.title}
-          </p>
-          {isFocused && (
-            <p
-              style={{
-                fontFamily: "var(--font-mono, monospace)",
-                fontSize: "8px",
-                color: "#A4F5C8",
-                marginTop: "4px",
-                letterSpacing: "0.2em",
-              }}
-            >
-              clic pour explorer
-            </p>
-          )}
-        </div>
-      </Html>
+      {/* Saturn ring for Mirakl */}
+      {variant.hasRing && (
+        <mesh rotation={[Math.PI / 2.2, 0, 0.2]}>
+          <ringGeometry args={[1.5, 1.9, 64]} />
+          <meshBasicMaterial
+            color={PAPER_HEX["paper-cream"]}
+            opacity={0.25}
+            transparent
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
 
-      {/* Project detail card when planet is clicked */}
-      {isFocused && openPlanet && (
-        <Html
-          center
-          distanceFactor={4}
-          transform={false}
-          style={{ pointerEvents: "auto" }}
-          zIndexRange={[100, 200]}
-          position={[0, 0.5, 0]}
+      {/* Planet label rendered with drei Text (no Html) */}
+      <Text
+        position={[0, -1.85, 0]}
+        fontSize={0.095}
+        color={isFocused ? "#6B6660" : "#3A3D38"}
+        anchorX="center"
+        anchorY="top"
+      >
+        {project.chapter}
+      </Text>
+      <Text
+        position={[0, -2.1, 0]}
+        fontSize={0.13}
+        color={isFocused ? "#ECE6D6" : "#6B6660"}
+        anchorX="center"
+        anchorY="top"
+      >
+        {project.title}
+      </Text>
+      {isFocused && (
+        <Text
+          position={[0, -2.42, 0]}
+          fontSize={0.09}
+          color="#A4F5C8"
+          anchorX="center"
+          anchorY="top"
         >
-          <ProjectDetailCard project={project} onClose={onClosePanels} />
-        </Html>
+          clic pour explorer
+        </Text>
       )}
 
       {/* Satellite stars orbit group */}
@@ -548,7 +708,7 @@ function PlanetMesh({
           {stars.map((star, i) => {
             const angle = (i / N) * Math.PI * 2;
             const sx = Math.cos(angle) * ORBIT_R;
-            const sy = Math.sin(angle) * 0.3; // slight elevation variation
+            const sy = Math.sin(angle) * 0.3;
             const sz = Math.sin(angle) * ORBIT_R;
             return (
               <SatStar
@@ -557,9 +717,7 @@ function PlanetMesh({
                 starId={star.id}
                 label={star.label}
                 icon={star.icon}
-                isOpen={openStar === star.id}
                 onSelect={onSelectStar}
-                onClose={onClosePanels}
               />
             );
           })}
@@ -570,84 +728,107 @@ function PlanetMesh({
 }
 
 // ---------------------------------------------------------------------------
-// OpenClaw fixed star
+// OpenClaw — dramatic north star, pinned to camera.x top-center
 // ---------------------------------------------------------------------------
 interface OpenClawStarProps {
-  isOpen: boolean;
+  cameraX: number;
   onSelect: () => void;
-  onClose: () => void;
 }
 
-function OpenClawStar({ isOpen, onSelect, onClose }: OpenClawStarProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
+function OpenClawStar({ cameraX, onSelect }: OpenClawStarProps) {
+  const groupRef = useRef<THREE.Group>(null);
+  const innerRef = useRef<THREE.Mesh>(null);
+  const spikesRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     document.body.style.cursor = hovered ? "pointer" : "auto";
-    return () => { document.body.style.cursor = "auto"; };
+    return () => {
+      document.body.style.cursor = "auto";
+    };
   }, [hovered]);
 
   useFrame((_, dt) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += dt * 0.2;
-      meshRef.current.rotation.x += dt * 0.1;
+    if (groupRef.current) {
+      // Track camera.x horizontally, stay pinned at top
+      groupRef.current.position.x +=
+        (cameraX - groupRef.current.position.x) * 0.08;
+    }
+    if (innerRef.current) {
+      innerRef.current.rotation.y += dt * 0.2;
+      innerRef.current.rotation.x += dt * 0.05;
+    }
+    if (spikesRef.current) {
+      spikesRef.current.rotation.z += dt * 0.05;
     }
   });
 
+  const spikeMat = (
+    <meshStandardMaterial
+      color="#ECE6D6"
+      emissive="#A4F5C8"
+      emissiveIntensity={1.5}
+      toneMapped={false}
+    />
+  );
+
   return (
-    <group position={[3, 4.5, -3]}>
-      <pointLight color="#A4F5C8" intensity={hovered ? 4 : 2} distance={8} decay={2} />
+    <group ref={groupRef} position={[cameraX, 5, -2]}>
+      <pointLight color="#A4F5C8" intensity={hovered ? 3.5 : 2} distance={10} decay={2} />
+
+      {/* Outer atmosphere halo */}
+      <mesh scale={1.4}>
+        <sphereGeometry args={[0.9, 32, 32]} />
+        <meshBasicMaterial color="#A4F5C8" transparent opacity={0.18} side={THREE.BackSide} />
+      </mesh>
+
+      {/* Sparkles */}
+      <Sparkles count={40} scale={3} size={6} speed={0.3} color="#A4F5C8" />
+
+      {/* Inner sphere */}
       <mesh
-        ref={meshRef}
-        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
+        ref={innerRef}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+        }}
         onPointerOut={() => setHovered(false)}
-        onClick={(e) => { e.stopPropagation(); onSelect(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
       >
-        <sphereGeometry args={[0.45, 24, 24]} />
+        <sphereGeometry args={[0.9, 32, 32]} />
         <meshStandardMaterial
-          color="#A4F5C8"
+          color="#ECE6D6"
           emissive="#A4F5C8"
-          emissiveIntensity={hovered ? 1.4 : 0.9}
-          roughness={0.2}
-          metalness={0.1}
+          emissiveIntensity={hovered ? 1.6 : 1.2}
+          toneMapped={false}
+          roughness={0.3}
+          metalness={0}
         />
       </mesh>
 
-      <Html center distanceFactor={8} style={{ pointerEvents: "none" }}>
-        <div
-          style={{
-            textAlign: "center",
-            marginTop: "32px",
-            opacity: hovered ? 1 : 0.7,
-            transition: "opacity 0.2s",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "var(--font-mono, monospace)",
-              fontSize: "8px",
-              textTransform: "uppercase",
-              letterSpacing: "0.25em",
-              color: "#A4F5C8",
-              whiteSpace: "nowrap",
-            }}
-          >
-            OpenClaw ✦
-          </p>
-        </div>
-      </Html>
+      {/* Star spikes — 4 elongated boxes at 0/45/90/135 degrees */}
+      <group ref={spikesRef}>
+        {[0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4].map((rot, i) => (
+          <mesh key={i} rotation={[0, 0, rot]}>
+            <boxGeometry args={[0.05, 2.2, 0.05]} />
+            {spikeMat}
+          </mesh>
+        ))}
+      </group>
 
-      {isOpen && (
-        <Html
-          center
-          distanceFactor={5}
-          transform={false}
-          style={{ pointerEvents: "auto" }}
-          zIndexRange={[100, 200]}
-        >
-          <StarProjectCard onClose={onClose} />
-        </Html>
-      )}
+      {/* Label */}
+      <Text
+        position={[0, -1.4, 0]}
+        fontSize={0.18}
+        color="#A4F5C8"
+        anchorX="center"
+        anchorY="top"
+      >
+        openclaw
+      </Text>
     </group>
   );
 }
@@ -656,7 +837,6 @@ function OpenClawStar({ isOpen, onSelect, onClose }: OpenClawStarProps) {
 // Connecting thread line between planets
 // ---------------------------------------------------------------------------
 function PlanetConnector() {
-  const N = projects.length;
   const points = projects.map((_, i) => new THREE.Vector3(i * 6 - 12, 0, 0));
   return (
     <Line
@@ -675,24 +855,15 @@ function PlanetConnector() {
 // ---------------------------------------------------------------------------
 interface UniverseProps {
   index: number;
-  openStar: string | null;
-  openPlanet: boolean;
   onSelectStar: (id: string) => void;
-  onSelectPlanet: () => void;
-  onClosePanels: () => void;
+  onSelectPlanet: (project: Project) => void;
 }
 
-function Universe({
-  index,
-  openStar,
-  openPlanet,
-  onSelectStar,
-  onSelectPlanet,
-  onClosePanels,
-}: UniverseProps) {
+function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
   const { camera } = useThree();
   const camTarget = useRef(new THREE.Vector3(0, 0, 6));
   const lookTarget = useRef(new THREE.Vector3(0, 0, 0));
+  const [cameraX, setCameraX] = useState(-12);
 
   useFrame(() => {
     const tx = index * 6 - 12;
@@ -701,14 +872,9 @@ function Universe({
 
     (camera as THREE.PerspectiveCamera).position.lerp(camTarget.current, 0.06);
     camera.lookAt(lookTarget.current);
+
+    setCameraX((camera as THREE.PerspectiveCamera).position.x);
   });
-
-  const [openClawOpen, setOpenClawOpen] = useState(false);
-
-  useEffect(() => {
-    if (openStar === "openclaw") setOpenClawOpen(true);
-    else setOpenClawOpen(false);
-  }, [openStar]);
 
   return (
     <group>
@@ -720,20 +886,116 @@ function Universe({
           project={p}
           posX={i * 6 - 12}
           isFocused={i === index}
-          openStar={openStar}
-          openPlanet={openPlanet}
           onSelectStar={onSelectStar}
-          onSelectPlanet={onSelectPlanet}
-          onClosePanels={onClosePanels}
+          onSelectPlanet={() => onSelectPlanet(p)}
         />
       ))}
 
       <OpenClawStar
-        isOpen={openClawOpen}
+        cameraX={cameraX}
         onSelect={() => onSelectStar("openclaw")}
-        onClose={onClosePanels}
       />
     </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Intro overlay
+// ---------------------------------------------------------------------------
+function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
+  useEffect(() => {
+    const timeout = setTimeout(onDismiss, 3200);
+    const onAny = () => onDismiss();
+    window.addEventListener("keydown", onAny);
+    window.addEventListener("click", onAny);
+    window.addEventListener("wheel", onAny);
+    window.addEventListener("touchstart", onAny);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("keydown", onAny);
+      window.removeEventListener("click", onAny);
+      window.removeEventListener("wheel", onAny);
+      window.removeEventListener("touchstart", onAny);
+    };
+  }, [onDismiss]);
+
+  return (
+    <motion.div
+      key="intro"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.8 }}
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center pointer-events-auto select-none"
+      style={{ backgroundColor: "rgba(7,8,10,0.92)", backdropFilter: "blur(4px)" }}
+    >
+      <motion.p
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
+        className="serif-italic text-text-muted text-xl mb-10"
+      >
+        aurian<span className="text-thread">.</span>
+      </motion.p>
+
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.55, duration: 0.9 }}
+        className="serif-display text-text text-center"
+        style={{ fontSize: "clamp(64px, 12vw, 160px)" }}
+      >
+        un univers<span className="text-thread">.</span>
+      </motion.h1>
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.0, duration: 0.8 }}
+        className="mono uppercase tracking-[0.3em] text-[11px] text-text-muted mt-10"
+      >
+        5 planètes. des étoiles. naviguez avec ← → ou la molette.
+      </motion.p>
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 1, 0] }}
+        transition={{ delay: 1.6, duration: 1.4, repeat: Infinity }}
+        className="mono uppercase tracking-[0.4em] text-[10px] text-thread mt-8"
+      >
+        press any key to enter
+      </motion.p>
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Chapter caption (fades in on index change, auto-dismisses)
+// ---------------------------------------------------------------------------
+const CHAPTER_NAMES = ["I", "II", "III", "IV", "V"];
+
+function ChapterCaption({ index, visible }: { index: number; visible: boolean }) {
+  const project = projects[index];
+  return (
+    <AnimatePresence mode="wait">
+      {visible && (
+        <motion.div
+          key={`caption-${index}`}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.5 }}
+          className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none z-20"
+        >
+          <p className="mono uppercase tracking-[0.4em] text-[11px] text-thread mb-3">
+            chapitre {CHAPTER_NAMES[index]}
+          </p>
+          <p className="serif-display text-text" style={{ fontSize: "clamp(40px, 6vw, 80px)" }}>
+            {project.title}
+          </p>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -742,35 +1004,70 @@ function Universe({
 // ---------------------------------------------------------------------------
 export function PortfolioUniverse() {
   const [index, setIndex] = useState(0);
-  const [openStar, setOpenStar] = useState<string | null>(null);
-  const [openPlanet, setOpenPlanet] = useState(false);
+  const [openCard, setOpenCard] = useState<OpenCard | null>(null);
+  const [introDismissed, setIntroDismissed] = useState(false);
+  const [captionVisible, setCaptionVisible] = useState(false);
 
-  const closePanels = useCallback(() => {
-    setOpenStar(null);
-    setOpenPlanet(false);
+  const closeCard = useCallback(() => setOpenCard(null), []);
+
+  const handleSelectStar = useCallback(
+    (id: string) => {
+      if (id === "openclaw") {
+        setOpenCard({ type: "openclaw" });
+        return;
+      }
+      const [type, value] = id.split(":");
+      if (type === "soft") setOpenCard({ type: "soft", skillSlug: value });
+      else if (type === "info") setOpenCard({ type: "info", infoId: value });
+    },
+    []
+  );
+
+  const handleSelectPlanet = useCallback((project: Project) => {
+    setOpenCard({ type: "planet", project });
   }, []);
 
+  const goTo = useCallback(
+    (newIndex: number) => {
+      setIndex(newIndex);
+      closeCard();
+      // Show chapter caption, hide after 1.5s
+      setCaptionVisible(true);
+      setTimeout(() => setCaptionVisible(false), 1500);
+    },
+    [closeCard]
+  );
+
   const next = useCallback(() => {
-    setIndex((i) => Math.min(i + 1, projects.length - 1));
-    closePanels();
-  }, [closePanels]);
+    goTo(Math.min(index + 1, projects.length - 1));
+  }, [goTo, index]);
 
   const prev = useCallback(() => {
-    setIndex((i) => Math.max(i - 1, 0));
-    closePanels();
-  }, [closePanels]);
+    goTo(Math.max(index - 1, 0));
+  }, [goTo, index]);
+
+  // Show initial caption on first load (after intro dismissed)
+  useEffect(() => {
+    if (introDismissed) {
+      setCaptionVisible(true);
+      const t = setTimeout(() => setCaptionVisible(false), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [introDismissed]);
 
   // Keyboard + wheel navigation
   useEffect(() => {
+    if (!introDismissed) return;
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") next();
       else if (e.key === "ArrowLeft") prev();
-      else if (e.key === "Escape") closePanels();
+      else if (e.key === "Escape") closeCard();
     };
 
     let lock = false;
     const onWheel = (e: WheelEvent) => {
-      if (lock) return;
+      if (lock || openCard) return;
       const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       if (Math.abs(d) < 25) return;
       lock = true;
@@ -784,10 +1081,11 @@ export function PortfolioUniverse() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("wheel", onWheel);
     };
-  }, [next, prev, closePanels]);
+  }, [next, prev, closeCard, introDismissed, openCard]);
 
   // Touch swipe support
   useEffect(() => {
+    if (!introDismissed) return;
     let touchStartX = 0;
     let touchStartY = 0;
     let swipeLock = false;
@@ -798,13 +1096,12 @@ export function PortfolioUniverse() {
     };
 
     const onTouchEnd = (e: TouchEvent) => {
-      if (swipeLock) return;
+      if (swipeLock || openCard) return;
       const dx = e.changedTouches[0].clientX - touchStartX;
       const dy = e.changedTouches[0].clientY - touchStartY;
       if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return;
       swipeLock = true;
       setTimeout(() => { swipeLock = false; }, 600);
-      // Horizontal swipe takes priority; fall back to vertical
       const delta = Math.abs(dx) > Math.abs(dy) ? dx : dy;
       delta < 0 ? next() : prev();
     };
@@ -815,7 +1112,7 @@ export function PortfolioUniverse() {
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [next, prev]);
+  }, [next, prev, introDismissed, openCard]);
 
   return (
     <div className="fixed inset-0 w-full h-full">
@@ -831,16 +1128,15 @@ export function PortfolioUniverse() {
         <directionalLight position={[5, 6, 5]} intensity={1.0} color="#f5efdf" />
         <directionalLight position={[-4, -2, -5]} intensity={0.25} color="#a8c4b0" />
 
-        <Stars radius={50} depth={40} count={1500} factor={3} saturation={0} fade speed={0.5} />
+        <Stars radius={50} depth={40} count={1500} factor={3} saturation={0} fade speed={0.3} />
 
-        <Universe
-          index={index}
-          openStar={openStar}
-          openPlanet={openPlanet}
-          onSelectStar={setOpenStar}
-          onSelectPlanet={() => setOpenPlanet(true)}
-          onClosePanels={closePanels}
-        />
+        {introDismissed && (
+          <Universe
+            index={index}
+            onSelectStar={handleSelectStar}
+            onSelectPlanet={handleSelectPlanet}
+          />
+        )}
       </Canvas>
 
       {/* Header overlay */}
@@ -853,30 +1149,71 @@ export function PortfolioUniverse() {
         </p>
       </header>
 
-      {/* Navigation */}
-      <nav className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-6 mono uppercase tracking-[0.3em] text-[11px] text-text-muted select-none">
-        <button
-          onClick={prev}
-          className="hover:text-thread transition"
-          aria-label="Planète précédente"
-        >
-          ← précédent
-        </button>
-        <span className="text-text">
-          {String(index + 1).padStart(2, "0")} / 0{projects.length}
-        </span>
-        <button
-          onClick={next}
-          className="hover:text-thread transition"
-          aria-label="Planète suivante"
-        >
-          suivant →
-        </button>
-      </nav>
+      {/* Minimap dots */}
+      {introDismissed && (
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-3 z-10">
+          {projects.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              aria-label={`planète ${i + 1}`}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                i === index
+                  ? "scale-150"
+                  : "hover:opacity-60"
+              }`}
+              style={{
+                backgroundColor:
+                  i === index ? "#A4F5C8" : "#3A3D38",
+              }}
+            />
+          ))}
+        </div>
+      )}
 
-      <p className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 mono uppercase tracking-[0.3em] text-[9px] text-text-subtle select-none pointer-events-none">
-        ← → ou molette pour naviguer · clic étoile pour explorer
-      </p>
+      {/* Navigation */}
+      {introDismissed && (
+        <nav className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-6 mono uppercase tracking-[0.3em] text-[11px] text-text-muted select-none">
+          <button
+            onClick={prev}
+            className="hover:text-thread transition"
+            aria-label="Planète précédente"
+          >
+            ← précédent
+          </button>
+          <span className="text-text">
+            {String(index + 1).padStart(2, "0")} / 0{projects.length}
+          </span>
+          <button
+            onClick={next}
+            className="hover:text-thread transition"
+            aria-label="Planète suivante"
+          >
+            suivant →
+          </button>
+        </nav>
+      )}
+
+      {introDismissed && (
+        <p className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 mono uppercase tracking-[0.3em] text-[9px] text-text-subtle select-none pointer-events-none">
+          ← → ou molette pour naviguer · clic étoile pour explorer
+        </p>
+      )}
+
+      {/* Chapter caption */}
+      {introDismissed && !openCard && (
+        <ChapterCaption index={index} visible={captionVisible} />
+      )}
+
+      {/* Fullscreen card overlay */}
+      <CardOverlay openCard={openCard} onClose={closeCard} />
+
+      {/* Intro overlay */}
+      <AnimatePresence>
+        {!introDismissed && (
+          <IntroOverlay onDismiss={() => setIntroDismissed(true)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

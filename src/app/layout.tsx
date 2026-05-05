@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Inter_Tight, IBM_Plex_Mono } from "next/font/google";
+import { Fraunces, Inter_Tight, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const serif = Instrument_Serif({
+const serif = Fraunces({
   subsets: ["latin"],
-  weight: "400",
+  weight: "variable",
   style: ["normal", "italic"],
   variable: "--font-serif",
   display: "swap",
+  axes: ["opsz", "SOFT", "WONK"],
 });
 
 const sans = Inter_Tight({

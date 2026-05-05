@@ -40,7 +40,19 @@ body {
   z-index: 100;
 }
 
-.serif-italic { font-family: var(--font-serif); font-style: italic; }
+.serif-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  letter-spacing: -0.02em;
+}
+.serif-display {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
 .mono { font-family: var(--font-mono); }
 
 @keyframes fade-up {
