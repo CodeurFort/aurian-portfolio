@@ -191,7 +191,7 @@ function OverlayCloseBtn({ onClose }: { onClose: () => void }) {
     <button
       onClick={onClose}
       aria-label="Fermer"
-      className="absolute top-6 right-6 text-text-muted hover:text-thread transition mono uppercase tracking-[0.3em] text-[10px]"
+      className="absolute top-3 right-3 sm:top-6 sm:right-6 text-text-muted hover:text-thread transition mono uppercase tracking-[0.3em] text-[10px]"
     >
       Fermer ✕
     </button>
@@ -404,13 +404,13 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
-      <header className="mb-10">
+      <header className="mb-8 sm:mb-10">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">
           {CHAPTER_LABELS[project.slug] ?? `Chapitre ${project.chapter}`}.
         </p>
         <h2
           className="serif-display text-text leading-none mb-4"
-          style={{ fontSize: "clamp(48px, 7vw, 96px)" }}
+          style={{ fontSize: "clamp(34px, 7vw, 96px)" }}
         >
           {project.title}.
         </h2>
@@ -420,10 +420,10 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
           </p>
         )}
       </header>
-      <p className="serif-italic text-2xl leading-snug text-text mb-10 max-w-2xl">
+      <p className="serif-italic text-lg sm:text-2xl leading-snug text-text mb-8 sm:mb-10 max-w-2xl">
         {project.pitch}
       </p>
-      <div className="grid md:grid-cols-2 gap-12 mb-10">
+      <div className="grid md:grid-cols-2 gap-8 md:gap-12 mb-8 sm:mb-10">
         <div>
           <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">Stack</p>
           <div className="flex flex-wrap gap-2">
@@ -554,13 +554,13 @@ function StackOverlayCard({
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
-      <header className="mb-10">
+      <header className="mb-8 sm:mb-10">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">
           Stack pertinente · « {project.title} »
         </p>
         <h2
           className="serif-display text-text leading-none"
-          style={{ fontSize: "clamp(48px, 7vw, 96px)" }}
+          style={{ fontSize: "clamp(34px, 7vw, 96px)" }}
         >
           Stack<span className="text-thread">.</span>
         </h2>
@@ -595,10 +595,10 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
-      <header className="mb-12">
+      <header className="mb-8 sm:mb-12">
         <h2
           className="serif-display text-text leading-none"
-          style={{ fontSize: "clamp(40px, 6vw, 80px)" }}
+          style={{ fontSize: "clamp(32px, 6vw, 80px)" }}
         >
           {titles[infoId] ?? infoId}
         </h2>
@@ -733,21 +733,21 @@ function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
-      <header className="mb-10 text-center">
-        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">
+      <header className="mb-8 sm:mb-10 text-center">
+        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4 sm:mb-6">
           Volcanique
         </p>
         <h2
           className="serif-display text-text leading-none"
-          style={{ fontSize: "clamp(72px, 11vw, 168px)" }}
+          style={{ fontSize: "clamp(44px, 11vw, 168px)" }}
         >
           {profile.name}<span className="text-thread">.</span>
         </h2>
-        <p className="serif-italic text-text-muted text-xl mt-6 max-w-md mx-auto">
+        <p className="serif-italic text-text-muted text-base sm:text-xl mt-4 sm:mt-6 max-w-md mx-auto">
           {profile.tagline}
         </p>
       </header>
-      <p className="serif-italic text-xl md:text-2xl leading-snug text-text mb-12 max-w-2xl mx-auto text-center">
+      <p className="serif-italic text-lg sm:text-xl md:text-2xl leading-snug text-text mb-8 sm:mb-12 max-w-2xl mx-auto text-center">
         {profile.manifesto}
       </p>
       <div className="grid md:grid-cols-2 gap-8 pt-8 border-t border-hairline">
@@ -803,7 +803,7 @@ function CardOverlay({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 z-50 grid place-items-center bg-paper-deep/80 backdrop-blur-md p-6"
+          className="fixed inset-0 z-50 grid place-items-center bg-paper-deep/80 backdrop-blur-md p-3 sm:p-6"
           style={{ backgroundColor: "rgba(7,8,10,0.80)" }}
         >
           <motion.article
@@ -812,9 +812,9 @@ function CardOverlay({
             exit={{ y: 40, opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-3xl overflow-y-auto bg-paper-deep/95 border border-hairline rounded-lg p-12 md:p-16 shadow-2xl"
+            className="relative w-full max-w-3xl overflow-y-auto bg-paper-deep/95 border border-hairline rounded-lg p-5 sm:p-10 md:p-16 shadow-2xl"
             style={{
-              maxHeight: "85vh",
+              maxHeight: "92vh",
               backgroundColor: "rgba(7,8,10,0.97)",
               borderColor: "#1F2521",
             }}
