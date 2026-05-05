@@ -273,48 +273,48 @@ export const projectQualities: Record<string, ProjectQuality> = {
 
 export const softSkillBlocks: SoftSkillBlock[] = [
   {
-    theme: "communication & synthèse",
+    theme: "Communication & synthèse",
     qualities: [
-      "capacités rédactionnelles",
-      "écoute active",
-      "aisance verbale",
-      "sait pitcher",
-      "qualités relationnelles",
+      "Capacités rédactionnelles",
+      "Écoute active",
+      "Aisance verbale",
+      "Prise de parole et pitch",
+      "Qualités relationnelles",
     ],
     context:
-      "écouter, synthétiser, transmettre. la matière brute devient un récit lisible pour le métier.",
+      "Écouter, synthétiser, transmettre. La matière brute devient un récit lisible pour le métier.",
   },
   {
-    theme: "initiative & autonomie",
+    theme: "Initiative & autonomie",
     qualities: [
-      "force de proposition",
-      "autonomie",
-      "à l'aise dans l'inconnu",
-      "rigueur",
+      "Force de proposition",
+      "Autonomie",
+      "Confort en environnement incertain",
+      "Rigueur",
     ],
     context:
-      "identifier les manques, proposer une direction, exécuter sans supervision permanente.",
+      "Identifier les manques, proposer une direction, exécuter sans supervision permanente.",
   },
   {
-    theme: "collaboration",
+    theme: "Collaboration",
     qualities: [
-      "travail en équipe",
-      "adaptabilité",
-      "curiosité métier",
+      "Travail en équipe",
+      "Adaptabilité",
+      "Curiosité métier",
     ],
     context:
-      "construire avec d'autres. les meilleures idées naissent rarement seul devant un écran.",
+      "Construire avec d'autres. La qualité d'une livraison se joue autant dans l'échange que dans le code.",
   },
   {
-    theme: "humour & écoute",
+    theme: "Posture & sang-froid",
     qualities: [
-      "second degré",
-      "écoute attentive",
-      "calme sous pression",
-      "détendre la pièce",
+      "Calme sous pression",
+      "Recul",
+      "Esprit d'équipe",
+      "Sens de l'humain",
     ],
     context:
-      "savoir relâcher la pression et faire rire quand il faut. on bosse mieux entre humains qui s'aiment bien qu'entre profils LinkedIn.",
+      "Garder son calme dans les moments tendus, rester clair sous contrainte, préserver une dynamique d'équipe saine.",
   },
 ];
 
@@ -610,44 +610,44 @@ export const projectQualitiesEn: Record<string, ProjectQuality> = {
 
 export const softSkillBlocksEn: SoftSkillBlock[] = [
   {
-    theme: "communication & synthesis",
+    theme: "Communication & synthesis",
     qualities: [
-      "writing skills",
-      "active listening",
-      "verbal ease",
-      "comfortable pitching",
-      "people skills",
+      "Writing skills",
+      "Active listening",
+      "Verbal fluency",
+      "Public speaking and pitching",
+      "Interpersonal skills",
     ],
     context:
-      "listen, synthesize, transmit. raw matter becomes a story the business can read.",
+      "Listen, synthesize, transmit. Raw material becomes a story the business can read.",
   },
   {
-    theme: "initiative & autonomy",
+    theme: "Initiative & autonomy",
     qualities: [
-      "drive to propose",
-      "autonomy",
-      "comfortable with the unknown",
-      "rigor",
+      "Drive to propose",
+      "Autonomy",
+      "Comfortable in uncertain environments",
+      "Rigor",
     ],
     context:
-      "spotting gaps, proposing a direction, executing without permanent supervision.",
+      "Spotting gaps, proposing a direction, executing without permanent supervision.",
   },
   {
-    theme: "collaboration",
-    qualities: ["teamwork", "adaptability", "domain curiosity"],
+    theme: "Collaboration",
+    qualities: ["Teamwork", "Adaptability", "Domain curiosity"],
     context:
-      "building with others. the best ideas rarely show up alone in front of a screen.",
+      "Building with others. Delivery quality is decided as much in the conversation as in the code.",
   },
   {
-    theme: "humour & ear",
+    theme: "Composure & poise",
     qualities: [
-      "dry humour",
-      "attentive listening",
-      "calm under pressure",
-      "easing the room",
+      "Calm under pressure",
+      "Perspective",
+      "Team spirit",
+      "Human sense",
     ],
     context:
-      "knowing when to release pressure and crack a joke. work flows better between humans who like each other than between LinkedIn profiles.",
+      "Staying calm in tense moments, remaining clear under constraint, preserving a healthy team dynamic.",
   },
 ];
 

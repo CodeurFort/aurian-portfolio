@@ -928,40 +928,10 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
 function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
   const ui = useUi();
   const { profile } = useContent();
-  const basePath = process.env.NEXT_PUBLIC_USE_BASE_PATH === "true" ? "/aurian-portfolio" : "";
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
-      {/* Small portrait, top-right of the card */}
-      <img
-        src={`${basePath}/aurian-portrait.jpg`}
-        alt={profile.name}
-        className="absolute hidden sm:block"
-        style={{
-          top: 28,
-          right: 56,
-          width: 96,
-          height: 96,
-          objectFit: "cover",
-          borderRadius: "50%",
-          border: "1px solid rgba(164,245,200,0.35)",
-          boxShadow: "0 4px 18px rgba(0,0,0,0.55), 0 0 14px rgba(164,245,200,0.12)",
-        }}
-      />
       <header className="mb-8 sm:mb-10 text-center">
-        {/* Mobile-only portrait — centered above name */}
-        <img
-          src={`${basePath}/aurian-portrait.jpg`}
-          alt={profile.name}
-          className="sm:hidden mx-auto mb-5"
-          style={{
-            width: 80,
-            height: 80,
-            objectFit: "cover",
-            borderRadius: "50%",
-            border: "1px solid rgba(164,245,200,0.35)",
-          }}
-        />
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4 sm:mb-6">
           {ui.identityChapter}
         </p>
