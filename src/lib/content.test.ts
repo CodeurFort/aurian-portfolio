@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { projects, softSkills, hobbies, stack, profile, outroQuote } from "./content";
+import { projects, softSkills, hobbies, stack, profile, outroQuote, starProject } from "./content";
 
 describe("content", () => {
   it("exposes 5 projects in narrative order", () => {
@@ -9,7 +9,7 @@ describe("content", () => {
       "energizer",
       "mirakl",
       "music-agency",
-      "openclaw",
+      "thelook",
     ]);
   });
 
@@ -20,10 +20,17 @@ describe("content", () => {
     }
   });
 
-  it("openclaw has 3 moons", () => {
-    const oc = projects.find((p) => p.slug === "openclaw");
-    expect(oc?.moons).toHaveLength(3);
-    expect(oc?.moons?.map((m) => m.name)).toEqual(["Webdev", "Vidéo", "Assistance"]);
+  it("thelook is the 5th project with correct slug", () => {
+    const tl = projects.find((p) => p.slug === "thelook");
+    expect(tl).toBeDefined();
+    expect(tl?.title).toBe("TheLook Analytics");
+    expect(tl?.chapter).toBe("v");
+  });
+
+  it("starProject exports openclaw data", () => {
+    expect(starProject.slug).toBe("openclaw");
+    expect(starProject.title).toBe("OpenClaw");
+    expect(starProject.stack.length).toBeGreaterThan(0);
   });
 
   it("exposes 4 soft skills with project links", () => {
@@ -36,10 +43,21 @@ describe("content", () => {
     }
   });
 
+  it("softSkills do not reference openclaw", () => {
+    for (const s of softSkills) {
+      expect(s.linkedProjectSlugs).not.toContain("openclaw");
+    }
+  });
+
   it("exposes hobbies, stack, profile, outroQuote", () => {
     expect(hobbies.length).toBeGreaterThanOrEqual(7);
     expect(stack.length).toBeGreaterThanOrEqual(10);
     expect(profile.email.length).toBeGreaterThan(0);
     expect(outroQuote.length).toBeGreaterThan(0);
+  });
+
+  it("profile has languages and phone", () => {
+    expect(profile.languages).toHaveLength(3);
+    expect(profile.phone.length).toBeGreaterThan(0);
   });
 });

@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
-      <body className="grain bg-paper-bg text-text antialiased">{children}</body>
+      <body className="grain bg-paper-bg text-text antialiased overflow-hidden">{children}</body>
     </html>
   );
 }

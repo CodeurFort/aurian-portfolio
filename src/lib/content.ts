@@ -50,11 +50,12 @@ export interface Profile {
   linkedin: string;
   github: string;
   twitter?: string;
+  phone: string;
   cvPdf: string;
   cvCurrent: string;
   cvPrevious: string;
   formation: string;
-  languages: { code: string; level: string }[];
+  languages: { label: string; level: string }[];
 }
 
 const placeholder = (key: string) => `[À FOURNIR — ${key}]`;
@@ -62,7 +63,7 @@ const placeholder = (key: string) => `[À FOURNIR — ${key}]`;
 export const projects: Project[] = [
   {
     slug: "levels",
-    chapter: "01",
+    chapter: "i",
     title: "Levels",
     paperColor: "paper-cream",
     pitch: placeholder("levels.pitch"),
@@ -76,7 +77,7 @@ export const projects: Project[] = [
   },
   {
     slug: "energizer",
-    chapter: "02",
+    chapter: "ii",
     title: "Energizer SEO / GEO / AEO",
     paperColor: "paper-mint",
     pitch:
@@ -91,7 +92,7 @@ export const projects: Project[] = [
   },
   {
     slug: "mirakl",
-    chapter: "03",
+    chapter: "iii",
     title: "Mirakl Prospector",
     paperColor: "paper-ochre",
     pitch: placeholder("mirakl.pitch"),
@@ -105,7 +106,7 @@ export const projects: Project[] = [
   },
   {
     slug: "music-agency",
-    chapter: "04",
+    chapter: "iv",
     title: "Music Agency — 5 Dust",
     paperColor: "paper-blush",
     pitch: placeholder("music.pitch"),
@@ -117,53 +118,51 @@ export const projects: Project[] = [
     stack: ["Dust", "[À FOURNIR — stack]"],
   },
   {
-    slug: "openclaw",
-    chapter: "05",
-    title: "Openclaw",
+    slug: "thelook",
+    chapter: "v",
+    title: "TheLook Analytics",
     paperColor: "paper-stone",
-    pitch: placeholder("openclaw.pitch"),
+    role: "audit SQL avancé",
+    pitch:
+      "audit complet d'une marketplace fictive (TheLook eCommerce). 11 CTEs imbriquées, window functions pour cohort analysis, KPIs business : LTV, retention, panier moyen, performance par catégorie.",
     achievements: [
-      placeholder("openclaw.achievement.1"),
-      placeholder("openclaw.achievement.2"),
-      placeholder("openclaw.achievement.3"),
+      "11 CTEs orchestrées en pipeline d'analyse",
+      "Window functions : RANK, LAG, NTILE pour cohortes",
+      "Dashboard Looker Studio avec 8 KPIs business",
+      "Recommandations stratégiques pitchées au sponsor",
     ],
-    stack: ["Claude", "Anthropic SDK", "Node", "[À FOURNIR — stack]"],
-    repoUrl: placeholder("openclaw.cpp.repo"),
-    moons: [
-      {
-        name: "Webdev",
-        pitch: placeholder("openclaw.moon.webdev"),
-        bullets: [placeholder("moon.webdev.case.1"), placeholder("moon.webdev.case.2")],
-        stack: ["Next.js", "[À FOURNIR]"],
-      },
-      {
-        name: "Vidéo",
-        pitch: placeholder("openclaw.moon.video"),
-        bullets: [placeholder("moon.video.case.1"), placeholder("moon.video.case.2")],
-        stack: ["[À FOURNIR]"],
-      },
-      {
-        name: "Assistance",
-        pitch: placeholder("openclaw.moon.assist"),
-        bullets: [placeholder("moon.assist.case.1"), placeholder("moon.assist.case.2")],
-        stack: ["Dust", "[À FOURNIR]"],
-      },
-    ],
+    stack: ["SQL", "BigQuery", "Looker Studio", "Pandas"],
+    liveUrl: undefined,
+    repoUrl: undefined,
   },
 ];
+
+/** OpenClaw — fixed star in the 3D universe, not a planet. */
+export const starProject = {
+  slug: "openclaw",
+  title: "OpenClaw",
+  pitch: placeholder("openclaw.pitch"),
+  stack: ["Claude", "Anthropic SDK", "Node", "[À FOURNIR — stack]"],
+  achievements: [
+    placeholder("openclaw.achievement.1"),
+    placeholder("openclaw.achievement.2"),
+    placeholder("openclaw.achievement.3"),
+  ],
+  repoUrl: placeholder("openclaw.cpp.repo"),
+};
 
 export const softSkills: SoftSkill[] = [
   {
     slug: "creativite",
     label: "Créativité",
     quote: "quand le code rencontre l'intuition",
-    linkedProjectSlugs: ["levels", "music-agency", "openclaw"],
+    linkedProjectSlugs: ["levels", "music-agency", "thelook"],
   },
   {
     slug: "adaptabilite",
     label: "Adaptabilité",
     quote: "d'un univers à l'autre, sans perdre le fil",
-    linkedProjectSlugs: ["mirakl", "energizer", "openclaw"],
+    linkedProjectSlugs: ["mirakl", "energizer", "thelook"],
   },
   {
     slug: "travailleur",
@@ -175,7 +174,7 @@ export const softSkills: SoftSkill[] = [
     slug: "sociabilite",
     label: "Sociabilité",
     quote: "comprendre l'humain avant l'outil",
-    linkedProjectSlugs: ["music-agency", "openclaw"],
+    linkedProjectSlugs: ["music-agency", "mirakl"],
   },
 ];
 
@@ -216,14 +215,15 @@ export const profile: Profile = {
   linkedin: placeholder("contact.linkedin"),
   github: placeholder("contact.github"),
   twitter: undefined,
+  phone: "06 13 53 45 69",
   cvPdf: "/cv-aurian.pdf",
   cvCurrent: "VSOLUTION — automation, dev web, agents IA (avril 2026 → présent)",
   cvPrevious: placeholder("cv.previousRole"),
   formation: placeholder("cv.formation"),
   languages: [
-    { code: "FR", level: "natif" },
-    { code: "EN", level: "C1 (TOEFL)" },
-    { code: "ES", level: "B1" },
+    { label: "Français", level: "natif" },
+    { label: "English", level: "C1 (TOEFL)" },
+    { label: "Español", level: "B1" },
   ],
 };
 
