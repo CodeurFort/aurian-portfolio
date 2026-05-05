@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import * as THREE from "three";
 import {
   projects,
-  softSkillBlocks,
+  projectQualities,
   profile,
   hobbies,
   stack,
@@ -80,7 +80,7 @@ const PLANET_VARIANTS: Record<string, PlanetVariant> = {
 // ---------------------------------------------------------------------------
 type OpenCard =
   | { type: "planet"; project: Project }
-  | { type: "softblocks" }
+  | { type: "quality"; planetSlug: string }
   | { type: "info"; infoId: string }
   | { type: "identity" };
 
@@ -104,20 +104,34 @@ const PLANET_INFO: Record<string, string[]> = {
   thelook: ["stack", "qualites", "languages"],
 };
 
+type StarShape = "cone" | "octa" | "spike" | "tetra" | "sphere" | "box";
+
 interface StarDef {
   id: string;
   label: string;
   icon: string;
+  shape: StarShape;
 }
+
+const STAR_SHAPES: Record<string, StarShape> = {
+  cv: "cone",
+  stack: "octa",
+  qualites: "spike",
+  languages: "tetra",
+  hobbies: "sphere",
+  contact: "box",
+};
 
 function getStarsForPlanet(slug: string): StarDef[] {
   const infoIds = PLANET_INFO[slug] ?? ["cv", "stack", "qualites"];
   return infoIds.map((iid) => {
     const def = INFO_STARS.find((s) => s.id === iid) ?? INFO_STARS[0];
+    const id = iid === "qualites" ? `quality:${slug}` : `info:${iid}`;
     return {
-      id: `info:${iid}`,
+      id,
       label: def.label,
       icon: def.icon,
+      shape: STAR_SHAPES[iid] ?? "octa",
     };
   });
 }
@@ -215,44 +229,33 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
   );
 }
 
-function SoftBlocksOverlayCard({ onClose }: { onClose: () => void }) {
+function QualityOverlayCard({
+  planetSlug,
+  onClose,
+}: {
+  planetSlug: string;
+  onClose: () => void;
+}) {
+  const project = projects.find((p) => p.slug === planetSlug);
+  const quality = projectQualities[planetSlug];
+  if (!project || !quality) return null;
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
-      <header className="mb-12">
-        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">qualités</p>
+      <header className="mb-10 text-center">
+        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">
+          qualité tendue avec « {project.title} »
+        </p>
         <h2
           className="serif-display text-text leading-none"
-          style={{ fontSize: "clamp(48px, 7vw, 96px)" }}
+          style={{ fontSize: "clamp(64px, 10vw, 144px)" }}
         >
-          ce qui me porte.
+          {quality.label}<span className="text-thread">.</span>
         </h2>
       </header>
-      <div className="grid md:grid-cols-3 gap-6">
-        {softSkillBlocks.map((block) => (
-          <article
-            key={block.theme}
-            className="border border-hairline rounded-lg p-6 bg-paper-ink/40"
-          >
-            <p className="mono uppercase tracking-[0.25em] text-[10px] text-thread mb-4">
-              {block.theme}
-            </p>
-            <ul className="space-y-2 mb-5">
-              {block.qualities.map((q) => (
-                <li
-                  key={q}
-                  className="serif-italic text-lg text-text leading-snug"
-                >
-                  {q}
-                </li>
-              ))}
-            </ul>
-            <p className="text-sm text-text-muted leading-relaxed">
-              {block.context}
-            </p>
-          </article>
-        ))}
-      </div>
+      <p className="serif-italic text-2xl md:text-3xl leading-snug text-text-muted text-center max-w-2xl mx-auto">
+        {quality.context}
+      </p>
     </>
   );
 }
@@ -361,12 +364,11 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
             {profile.email}
           </a>
           <a href={profile.linkedin} target="_blank" rel="noreferrer" className="block text-xl text-text hover:text-thread transition">
-            {profile.linkedin}
+            linkedin.com/in/aurian-bingangoye
           </a>
           <a href={profile.github} target="_blank" rel="noreferrer" className="block text-xl text-text hover:text-thread transition">
-            {profile.github}
+            github.com/CodeurFort
           </a>
-          <p className="text-text-muted text-base">{profile.phone}</p>
         </div>
       )}
     </>
@@ -383,11 +385,11 @@ function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
         </p>
         <h2
           className="serif-display text-text leading-none"
-          style={{ fontSize: "clamp(64px, 9vw, 144px)" }}
+          style={{ fontSize: "clamp(72px, 11vw, 168px)" }}
         >
-          {profile.name}<span className="text-thread">.</span>
+          BEYOND<span className="text-thread">.</span>
         </h2>
-        <p className="serif-italic text-text-muted text-xl mt-4 max-w-md mx-auto">
+        <p className="serif-italic text-text-muted text-xl mt-6 max-w-md mx-auto">
           {profile.tagline}
         </p>
       </header>
@@ -399,11 +401,10 @@ function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
           <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">contact</p>
           <a
             href={`mailto:${profile.email}`}
-            className="block text-base text-text hover:text-thread transition mb-1"
+            className="block text-base text-text hover:text-thread transition"
           >
             {profile.email}
           </a>
-          <p className="text-base text-text-muted">{profile.phone}</p>
         </div>
         <div>
           <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">liens</p>
@@ -467,13 +468,10 @@ function CardOverlay({
             {openCard.type === "planet" && (
               <ProjectOverlayCard project={openCard.project} onClose={onClose} />
             )}
-            {openCard.type === "softblocks" && (
-              <SoftBlocksOverlayCard onClose={onClose} />
+            {openCard.type === "quality" && (
+              <QualityOverlayCard planetSlug={openCard.planetSlug} onClose={onClose} />
             )}
-            {openCard.type === "info" && openCard.infoId === "qualites" && (
-              <SoftBlocksOverlayCard onClose={onClose} />
-            )}
-            {openCard.type === "info" && openCard.infoId !== "qualites" && (
+            {openCard.type === "info" && (
               <InfoOverlayCard infoId={openCard.infoId} onClose={onClose} />
             )}
             {openCard.type === "identity" && (
@@ -493,11 +491,11 @@ interface SatStarProps {
   position: [number, number, number];
   starId: string;
   label: string;
-  icon: string;
+  shape: StarShape;
   onSelect: (id: string) => void;
 }
 
-function SatStar({ position, starId, label, icon, onSelect }: SatStarProps) {
+function SatStar({ position, starId, label, shape, onSelect }: SatStarProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -510,15 +508,58 @@ function SatStar({ position, starId, label, icon, onSelect }: SatStarProps) {
 
   useFrame((_, dt) => {
     if (meshRef.current) {
-      // Very slow self-rotation
-      meshRef.current.rotation.y += dt * 0.03;
-      const targetScale = hovered ? 1.3 : 1.0;
+      // Each shape spins on its own axis for character
+      const r = meshRef.current.rotation;
+      switch (shape) {
+        case "cone":
+          r.y += dt * 0.05;
+          break;
+        case "octa":
+          r.y += dt * 0.08;
+          r.x += dt * 0.02;
+          break;
+        case "spike":
+          r.y += dt * 0.12;
+          r.z += dt * 0.04;
+          break;
+        case "tetra":
+          r.x += dt * 0.05;
+          r.y += dt * 0.04;
+          break;
+        case "sphere":
+          r.y += dt * 0.02;
+          break;
+        case "box":
+          r.x += dt * 0.03;
+          r.y += dt * 0.05;
+          break;
+      }
+
+      const targetScale = hovered ? 1.4 : 1.0;
       meshRef.current.scale.lerp(
         new THREE.Vector3(targetScale, targetScale, targetScale),
         0.1
       );
     }
   });
+
+  // Geometry per category — smaller and singular
+  const geometry = (() => {
+    switch (shape) {
+      case "cone":
+        return <coneGeometry args={[0.085, 0.18, 4]} />; // pyramid for cv
+      case "octa":
+        return <octahedronGeometry args={[0.11, 0]} />; // diamond for stack
+      case "spike":
+        return <icosahedronGeometry args={[0.10, 0]} />; // crystal for qualités
+      case "tetra":
+        return <tetrahedronGeometry args={[0.12, 0]} />; // sharp triangle for languages
+      case "sphere":
+        return <sphereGeometry args={[0.085, 12, 12]} />; // tiny moon for hobbies
+      case "box":
+        return <boxGeometry args={[0.14, 0.14, 0.14]} />; // cube for contact
+    }
+  })();
 
   return (
     <group position={position}>
@@ -534,26 +575,27 @@ function SatStar({ position, starId, label, icon, onSelect }: SatStarProps) {
           onSelect(starId);
         }}
       >
-        <sphereGeometry args={[0.18, 16, 16]} />
+        {geometry}
         <meshStandardMaterial
           color="#ECE6D6"
           emissive="#A4F5C8"
-          emissiveIntensity={hovered ? 1.2 : 0.6}
-          roughness={0.4}
-          metalness={0.1}
+          emissiveIntensity={hovered ? 1.4 : 0.55}
+          roughness={0.35}
+          metalness={0.15}
+          flatShading
         />
       </mesh>
 
-      {/* Label below star — using Text from drei */}
+      {/* Label below star */}
       <Text
-        position={[0, -0.38, 0]}
-        fontSize={0.12}
+        position={[0, -0.28, 0]}
+        fontSize={0.10}
         color={hovered ? "#A4F5C8" : "#6B6660"}
         anchorX="center"
         anchorY="top"
         outlineWidth={0}
       >
-        {icon} {label}
+        {label}
       </Text>
     </group>
   );
@@ -716,7 +758,7 @@ function PlanetMesh({
                 position={[sx, sy, sz]}
                 starId={star.id}
                 label={star.label}
-                icon={star.icon}
+                shape={star.shape}
                 onSelect={onSelectStar}
               />
             );
@@ -821,22 +863,22 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
 
       {/* Label */}
       <Text
-        position={[0, -1.4, 0]}
-        fontSize={0.22}
+        position={[0, -1.45, 0]}
+        fontSize={0.28}
         color="#A4F5C8"
         anchorX="center"
         anchorY="top"
-        letterSpacing={0.05}
+        letterSpacing={0.18}
       >
-        Aurian
+        BEYOND
       </Text>
       <Text
-        position={[0, -1.7, 0]}
-        fontSize={0.09}
+        position={[0, -1.85, 0]}
+        fontSize={0.085}
         color="#6B6660"
         anchorX="center"
         anchorY="top"
-        letterSpacing={0.15}
+        letterSpacing={0.18}
       >
         étoile polaire · clic pour explorer
       </Text>
@@ -1036,6 +1078,7 @@ export function PortfolioUniverse() {
       }
       const [type, value] = id.split(":");
       if (type === "info") setOpenCard({ type: "info", infoId: value });
+      else if (type === "quality") setOpenCard({ type: "quality", planetSlug: value });
     },
     []
   );

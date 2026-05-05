@@ -32,6 +32,11 @@ export interface SoftSkillBlock {
   context: string;
 }
 
+export interface ProjectQuality {
+  label: string;
+  context: string;
+}
+
 export interface Hobby {
   label: string;
   detail?: string;
@@ -50,7 +55,6 @@ export interface Profile {
   linkedin: string;
   github: string;
   twitter?: string;
-  phone: string;
   cvPdf: string;
   cvCurrent: string;
   cvPrevious: string;
@@ -138,6 +142,34 @@ export const projects: Project[] = [
   },
 ];
 
+export const projectQualities: Record<string, ProjectQuality> = {
+  levels: {
+    label: "autonomie",
+    context:
+      "construit seul, du concept à la mise en ligne. design, dev, déploiement, itérations. personne pour valider à ma place : il fallait trancher.",
+  },
+  energizer: {
+    label: "esprit analytique",
+    context:
+      "découper un problème flou (visibilité d'une marque sur tous les moteurs) en pipeline mesurable, scoré, auto-correcteur. raisonner par couches.",
+  },
+  mirakl: {
+    label: "sens stratégique",
+    context:
+      "identifier le bon angle d'attaque, prioriser les leads, restituer une recommandation que le sponsor peut activer la semaine d'après.",
+  },
+  "music-agency": {
+    label: "adaptabilité",
+    context:
+      "industrie musicale, codes culturels spécifiques. traduire l'instinct artistique d'un label en process et en outils sans tuer la magie.",
+  },
+  thelook: {
+    label: "rigueur",
+    context:
+      "11 CTEs imbriquées, window functions, vérification croisée des KPIs avant restitution. un chiffre faux et toute la reco s'effondre.",
+  },
+};
+
 export const softSkillBlocks: SoftSkillBlock[] = [
   {
     theme: "communication & synthèse",
@@ -184,14 +216,14 @@ export const hobbies: Hobby[] = [
 export const stack: StackTool[] = [
   { label: "Python", category: "lang" },
   { label: "SQL", category: "lang" },
-  { label: "JavaScript", category: "lang" },
   { label: "TypeScript", category: "lang" },
-  { label: "C++", category: "lang" },
+  { label: "JavaScript", category: "lang" },
   { label: "Power BI", category: "data" },
-  { label: "Tableau", category: "data" },
   { label: "Looker Studio", category: "data" },
+  { label: "Google Analytics", category: "data" },
   { label: "BigQuery", category: "data" },
-  { label: "Airtable", category: "data" },
+  { label: "Dataiku", category: "data" },
+  { label: "Hubspot", category: "data" },
   { label: "Supabase", category: "cloud" },
   { label: "Firebase", category: "cloud" },
   { label: "Vercel", category: "cloud" },
@@ -201,27 +233,30 @@ export const stack: StackTool[] = [
   { label: "Claude", category: "ai" },
   { label: "Anthropic SDK", category: "ai" },
   { label: "OpenClaw", category: "ai" },
+  { label: "Make", category: "other" },
+  { label: "n8n", category: "other" },
+  { label: "Zapier", category: "other" },
+  { label: "Power Automate", category: "other" },
   { label: "Notion", category: "other" },
-  { label: "Slack", category: "other" },
 ];
 
 export const profile: Profile = {
-  name: "Aurian",
-  tagline: "constructeur d'outils. là où la donnée rencontre l'intuition.",
+  name: "BEYOND",
+  tagline:
+    "automatisation, agents IA, data, stratégie digitale. transformer une idée en workflow concret.",
   manifesto:
-    "j'aime les projets qui ont du sens : structurer ce qui n'existait pas, transformer une intuition en produit, lire la donnée pour décider. ce portfolio est un univers, pas une grille. naviguez à votre rythme.",
-  email: "aurian.bingangoye@protonmail.com",
+    "étudiant en MSc AI Applied to Business. j'aime construire des outils qui mêlent IA, data et exécution opérationnelle : prototyper vite, mesurer, itérer. ce portfolio est un univers, pas une grille. naviguez à votre rythme.",
+  email: "aurianreal@gmail.com",
   linkedin: "https://www.linkedin.com/in/aurian-bingangoye",
   github: "https://github.com/CodeurFort",
   twitter: undefined,
-  phone: "06 13 53 45 69",
   cvPdf: "/cv-aurian.pdf",
   cvCurrent:
-    "VSOLUTION : automation, dev web, agents IA (avril 2026, présent)",
+    "VSOLUTION : alternant Automatisation, Agents IA & Performance Digitale (2026, en cours). création d'Energizer, approfondissement d'OpenClaw, prototypage d'automatisations.",
   cvPrevious:
-    "Le Chalet Studio : bras droit marketing & data analyst (2024). +22% de clics mensuels, engagement 8,3%, +10% d'abonnés en 2 mois.",
+    "Le Chalet Studio : bras droit Marketing & Data Analyst, été 2024 (+22% de clics, +10% d'abonnés en 2 mois). Odillon SARL : consultant depuis 2021, RH d'une équipe de 5, création de Chronodil.",
   formation:
-    "MSc AI Applied to Business, Eugenia School (2026). Licence AES, Paris 1 Panthéon-Sorbonne (2025). Bac mention bien (Math, SES), Lycée français Blaise Pascal du Gabon (2021).",
+    "MSc AI Applied to Business, Eugenia School (2026, en cours). Licence AES, Paris 1 Panthéon-Sorbonne (2025). Bac mention bien (Math, SES), Lycée français Blaise Pascal du Gabon (2021). Certifications : TOEFL, PIX.",
   languages: [
     { label: "Français", level: "natif" },
     { label: "English", level: "C1 (TOEFL)" },
