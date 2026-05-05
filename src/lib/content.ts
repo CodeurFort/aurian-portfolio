@@ -95,7 +95,7 @@ export const projects: Project[] = [
     paperColor: "paper-cream",
     role: "conception, dev, design solo",
     status: "ongoing",
-    visuals: ["/screenshots/levels-app.png"],
+    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png"],
     pitch:
       "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs avec historique journalier complet et planification multi-horizons : la semaine, le mois, l'année, la vie. L'utilisateur définit ses objectifs, valide au fil de la journée, consulte son historique passé et projette ses cibles sur tous les horizons. PWA single-file, synchronisation temps réel multi-appareils.",
     achievements: [
@@ -132,7 +132,7 @@ export const projects: Project[] = [
     paperColor: "paper-ochre",
     role: "lead dev, scoring engine, design",
     status: "done",
-    visuals: ["/visuals/mirakl-scoring.svg"],
+    visuals: ["/visuals/mirakl-scoring.svg", "/visuals/mirakl-pitch-2.jpg", "/visuals/mirakl-pitch-3.jpg", "/visuals/mirakl-pitch-1.jpg"],
     pitch:
       "Application BDR conçue pour le hackathon Mirakl x Eugenia School 2026 (finaliste). Elle identifie des sellers adaptés à une marketplace : depuis la base Mirakl (Supabase, alimentée chaque semaine par un scrapping automatisé) ou en ciblant des sellers selon des critères pondérés (catégorie, géo, prix, customer, saisonnalité, signaux marketplace). On peut aussi entrer un nom de seller : le scrapping se fait alors en direct, puis le matching avec une marketplace présente. Ensuite, l'app rédige une séquence d'outreach BDR personnalisable selon la stratégie commerciale et les événements, regénérable au prompt, enrichie par Better Contact (Apify en fallback) et envoyée via SMTP.",
     achievements: [
@@ -424,7 +424,7 @@ export const projectsEn: Project[] = [
     paperColor: "paper-cream",
     role: "concept, dev, design (solo)",
     status: "ongoing",
-    visuals: ["/screenshots/levels-app.png"],
+    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png"],
     pitch:
       "Discipline plays out in LEVELS: become the hero of your own story. A web app for goal tracking with full daily history and multi-horizon planning across the week, month, year and life. The user defines goals, validates them throughout the day, browses past history and projects targets onto every horizon. Single-file PWA, real-time sync across devices.",
     achievements: [
@@ -461,7 +461,7 @@ export const projectsEn: Project[] = [
     paperColor: "paper-ochre",
     role: "lead dev, scoring engine, design",
     status: "done",
-    visuals: ["/visuals/mirakl-scoring.svg"],
+    visuals: ["/visuals/mirakl-scoring.svg", "/visuals/mirakl-pitch-2.jpg", "/visuals/mirakl-pitch-3.jpg", "/visuals/mirakl-pitch-1.jpg"],
     pitch:
       "BDR app built for the Mirakl x Eugenia School 2026 hackathon (finalist). It identifies sellers fit for a marketplace: from the Mirakl base (Supabase, fed weekly by an automated scrape) or by targeting sellers with weighted criteria (category, geo, price, customer, seasonality, marketplace signals). You can also enter a seller name: scraping is then done live, then matched with a relevant marketplace. Next, the app drafts a customizable BDR outreach sequence aligned with the commercial strategy and events, regeneratable by prompt, enriched via Better Contact (Apify fallback) and sent through SMTP.",
     achievements: [
