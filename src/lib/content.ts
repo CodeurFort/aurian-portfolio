@@ -66,6 +66,7 @@ export interface Certification {
   date: string; // free-form: "04/07/2025", "2021", "à venir"
   issuer: string; // institution that delivered it
   pdfUrl?: string; // downloadable artefact
+  logoUrl?: string; // institution logo (svg or png)
   pending?: boolean; // true = diplôme à venir
 }
 
@@ -384,6 +385,7 @@ export const certifications: Certification[] = [
     date: "04/07/2025",
     issuer: "Université Paris 1 Panthéon-Sorbonne",
     pdfUrl: "/visuals/certifications/pix-2025.pdf",
+    logoUrl: "/visuals/certifications/logos/pix.svg",
   },
   {
     slug: "licence-aes",
@@ -391,6 +393,7 @@ export const certifications: Certification[] = [
     date: "2025",
     issuer: "Paris 1 Panthéon-Sorbonne",
     pending: true,
+    logoUrl: "/visuals/certifications/logos/paris1.svg",
   },
   {
     slug: "bac",
@@ -398,6 +401,7 @@ export const certifications: Certification[] = [
     level: "Mention Bien",
     date: "2021",
     issuer: "Lycée français Blaise Pascal, Libreville",
+    logoUrl: "/visuals/certifications/logos/blaise-pascal.png",
   },
   {
     slug: "toefl",
@@ -405,6 +409,7 @@ export const certifications: Certification[] = [
     level: "C1",
     date: "—",
     issuer: "ETS",
+    logoUrl: "/visuals/certifications/logos/toefl.svg",
   },
 ];
 
@@ -673,6 +678,7 @@ export const certificationsEn: Certification[] = [
     date: "04/07/2025",
     issuer: "Université Paris 1 Panthéon-Sorbonne",
     pdfUrl: "/visuals/certifications/pix-2025.pdf",
+    logoUrl: "/visuals/certifications/logos/pix.svg",
   },
   {
     slug: "licence-aes",
@@ -680,6 +686,7 @@ export const certificationsEn: Certification[] = [
     date: "2025",
     issuer: "Paris 1 Panthéon-Sorbonne",
     pending: true,
+    logoUrl: "/visuals/certifications/logos/paris1.svg",
   },
   {
     slug: "bac",
@@ -687,6 +694,7 @@ export const certificationsEn: Certification[] = [
     level: "Honours (Mention Bien)",
     date: "2021",
     issuer: "Lycée français Blaise Pascal, Libreville",
+    logoUrl: "/visuals/certifications/logos/blaise-pascal.png",
   },
   {
     slug: "toefl",
@@ -694,6 +702,7 @@ export const certificationsEn: Certification[] = [
     level: "C1",
     date: "—",
     issuer: "ETS",
+    logoUrl: "/visuals/certifications/logos/toefl.svg",
   },
 ];
 

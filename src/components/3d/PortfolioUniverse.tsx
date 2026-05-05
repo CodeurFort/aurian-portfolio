@@ -802,8 +802,25 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
           {certifications.map((c) => (
             <div
               key={c.slug}
-              className="border-b border-hairline pb-5 last:border-0 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3"
+              className="border-b border-hairline pb-5 last:border-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
             >
+              {c.logoUrl && (
+                <div
+                  className="flex-shrink-0 flex items-center justify-center rounded"
+                  style={{
+                    width: 56,
+                    height: 56,
+                    background: "rgba(236,230,214,0.96)",
+                    padding: 8,
+                  }}
+                >
+                  <img
+                    src={`${basePath}${c.logoUrl}`}
+                    alt={`${c.issuer} logo`}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
                   <span
