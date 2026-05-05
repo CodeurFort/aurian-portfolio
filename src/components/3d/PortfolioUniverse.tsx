@@ -2565,11 +2565,11 @@ export function PortfolioUniverse() {
         )}
       </AnimatePresence>
 
-      {/* Language toggle — always visible (landing + universe) */}
-      <LangToggle z={70} />
+      {/* Language toggle — hidden while an overlay is open (avoids collision with close button) */}
+      {!openCard && <LangToggle z={70} />}
 
-      {/* Social dock (LinkedIn + GitHub) — appears after landing */}
-      {introDismissed && <SocialDock z={70} />}
+      {/* Social dock (LinkedIn + GitHub) — appears after landing, hidden during overlays */}
+      {introDismissed && !openCard && <SocialDock z={70} />}
     </div>
   );
 }
