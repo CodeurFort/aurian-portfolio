@@ -9,6 +9,15 @@ import { type Project } from "@/lib/content";
 import { useContent, useUi, useLang } from "@/lib/i18n";
 import { LangToggle } from "@/components/LangToggle";
 import { SocialDock } from "@/components/SocialDock";
+import { SoundToggle } from "@/components/SoundToggle";
+import {
+  initSound,
+  playBlip,
+  playTap,
+  playWhoosh,
+  startEruptionRumble,
+  stopEruptionRumble,
+} from "@/lib/sound";
 import { TechPill } from "@/components/ui/TechPill";
 import { Chatbot } from "@/components/Chatbot";
 import { PlanetTransition, pickVariant } from "@/components/PlanetTransition";
@@ -657,9 +666,36 @@ function StackOverlayCard({
   );
 }
 
+// Compact mastery bar used to ventilate dense blocks in the legend overlays.
+// Animates from 0 → value once on mount, mint accent on a faint mint track.
+function MasteryBar({ value, delay = 0 }: { value: number; delay?: number }) {
+  const clamped = Math.max(0, Math.min(100, value));
+  return (
+    <div className="flex items-center gap-3 mb-4">
+      <div
+        className="flex-1 h-[4px] rounded-full overflow-hidden"
+        style={{ background: "rgba(164,245,200,0.10)" }}
+      >
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${clamped}%` }}
+          transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1], delay }}
+          className="h-full"
+          style={{
+            background: "linear-gradient(90deg, rgba(164,245,200,0.55), #A4F5C8)",
+          }}
+        />
+      </div>
+      <span className="mono text-[10px] text-text-muted tracking-widest tabular-nums">
+        {clamped}%
+      </span>
+    </div>
+  );
+}
+
 function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => void }) {
   const ui = useUi();
-  const { projects, projectQualities, profile, hobbies, stack, certifications, softSkillBlocks } = useContent();
+  const { projects, projectQualities, profile, hobbies, stack, stackCategoryLevels, certifications, softSkillBlocks } = useContent();
   const basePath = process.env.NEXT_PUBLIC_USE_BASE_PATH === "true" ? "/aurian-portfolio" : "";
   const titles: Record<string, string> = {
     cv: ui.infoCv,
@@ -717,14 +753,16 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
 
       {infoId === "stack" && (
         <div className="grid md:grid-cols-2 gap-10">
-          {categories.map((cat) => {
+          {categories.map((cat, i) => {
             const items = stack.filter((t) => t.category === cat);
             if (items.length === 0) return null;
+            const level = stackCategoryLevels[cat];
             return (
               <div key={cat}>
-                <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">
+                <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">
                   {catLabels[cat]}
                 </p>
+                <MasteryBar value={level} delay={i * 0.08} />
                 <div className="flex flex-wrap gap-2">
                   {items.map((t) => (
                     <TechPill key={t.label} label={t.label} />
@@ -779,7 +817,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
               {ui.softSkillsIntro}
             </p>
             <div className="space-y-6">
-              {softSkillBlocks.map((b) => (
+              {softSkillBlocks.map((b, i) => (
                 <div key={b.theme} className="pb-5 border-b border-hairline last:border-0">
                   <p
                     className="serif-display text-text mb-3"
@@ -787,6 +825,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
                   >
                     {b.theme}<span className="text-thread">.</span>
                   </p>
+                  <MasteryBar value={b.level} delay={i * 0.08} />
                   <div className="flex flex-wrap gap-2 mb-3">
                     {b.qualities.map((q) => (
                       <span
@@ -2332,6 +2371,7 @@ export function PortfolioUniverse() {
 
   // Legend click → run FX, then open overlay
   const handleLegendSelect = useCallback((id: string) => {
+    playBlip();
     if (id === "identity") {
       setLegendFx({
         kind: "expand",
@@ -2353,11 +2393,13 @@ export function PortfolioUniverse() {
   }, []);
 
   const handleSelectPlanet = useCallback((project: Project) => {
+    playTap();
     setOpenCard({ type: "planet", project });
   }, []);
 
   const goTo = useCallback(
     (newIndex: number) => {
+      playWhoosh();
       setIndex(newIndex);
       closeCard();
       // Trigger hyperspace warp overlay
@@ -2391,6 +2433,15 @@ export function PortfolioUniverse() {
       };
     }
   }, [introDismissed]);
+
+  // Volcanic rumble while the eruption (planet 4) is active
+  useEffect(() => {
+    if (introDismissed && index === 3) {
+      startEruptionRumble();
+      return () => stopEruptionRumble();
+    }
+    stopEruptionRumble();
+  }, [introDismissed, index]);
 
   // Keyboard + wheel navigation
   useEffect(() => {
@@ -2652,6 +2703,9 @@ export function PortfolioUniverse() {
 
       {/* Language toggle — hidden while an overlay is open (avoids collision with close button) */}
       {!openCard && <LangToggle z={70} />}
+
+      {/* Sound toggle — sits left of LangToggle */}
+      {!openCard && <SoundToggle z={70} />}
 
       {/* Social dock (LinkedIn + GitHub) — appears after landing, hidden during overlays */}
       {introDismissed && !openCard && <SocialDock z={70} />}

@@ -39,6 +39,7 @@ export interface SoftSkillBlock {
   theme: string;
   qualities: string[];
   context: string;
+  level: number; // 0–100, displayed as a mastery bar
 }
 
 export interface ProjectQuality {
@@ -283,6 +284,7 @@ export const softSkillBlocks: SoftSkillBlock[] = [
     ],
     context:
       "Écouter, synthétiser, transmettre. La matière brute devient un récit lisible pour le métier.",
+    level: 88,
   },
   {
     theme: "Initiative & autonomie",
@@ -294,6 +296,7 @@ export const softSkillBlocks: SoftSkillBlock[] = [
     ],
     context:
       "Identifier les manques, proposer une direction, exécuter sans supervision permanente.",
+    level: 82,
   },
   {
     theme: "Collaboration",
@@ -304,6 +307,7 @@ export const softSkillBlocks: SoftSkillBlock[] = [
     ],
     context:
       "Construire avec d'autres. La qualité d'une livraison se joue autant dans l'échange que dans le code.",
+    level: 86,
   },
   {
     theme: "Posture & sang-froid",
@@ -315,6 +319,7 @@ export const softSkillBlocks: SoftSkillBlock[] = [
     ],
     context:
       "Garder son calme dans les moments tendus, rester clair sous contrainte, préserver une dynamique d'équipe saine.",
+    level: 78,
   },
 ];
 
@@ -355,6 +360,16 @@ export const stack: StackTool[] = [
   { label: "Power Automate", category: "other" },
   { label: "Notion", category: "other" },
 ];
+
+// Self-assessed mastery per stack category (0–100). Drives the digest bars
+// rendered in the global Stack overlay (legend → Stack star).
+export const stackCategoryLevels: Record<StackTool["category"], number> = {
+  lang: 78,
+  data: 86,
+  cloud: 68,
+  ai: 84,
+  other: 74,
+};
 
 export const profile: Profile = {
   name: "Moi",
@@ -620,6 +635,7 @@ export const softSkillBlocksEn: SoftSkillBlock[] = [
     ],
     context:
       "Listen, synthesize, transmit. Raw material becomes a story the business can read.",
+    level: 88,
   },
   {
     theme: "Initiative & autonomy",
@@ -631,12 +647,14 @@ export const softSkillBlocksEn: SoftSkillBlock[] = [
     ],
     context:
       "Spotting gaps, proposing a direction, executing without permanent supervision.",
+    level: 82,
   },
   {
     theme: "Collaboration",
     qualities: ["Teamwork", "Adaptability", "Domain curiosity"],
     context:
       "Building with others. Delivery quality is decided as much in the conversation as in the code.",
+    level: 86,
   },
   {
     theme: "Composure & poise",
@@ -648,6 +666,7 @@ export const softSkillBlocksEn: SoftSkillBlock[] = [
     ],
     context:
       "Staying calm in tense moments, remaining clear under constraint, preserving a healthy team dynamic.",
+    level: 78,
   },
 ];
 

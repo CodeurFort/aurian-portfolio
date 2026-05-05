@@ -99,6 +99,7 @@ import {
   hobbiesEn,
   stack,
   stackEn,
+  stackCategoryLevels,
   profile,
   profileEn,
   certifications,
@@ -108,13 +109,14 @@ import {
 export function useContent() {
   const { lang } = useLang();
   return lang === "fr"
-    ? { projects, projectQualities, softSkillBlocks, hobbies, stack, profile, certifications }
+    ? { projects, projectQualities, softSkillBlocks, hobbies, stack, stackCategoryLevels, profile, certifications }
     : {
         projects: projectsEn,
         projectQualities: projectQualitiesEn,
         softSkillBlocks: softSkillBlocksEn,
         hobbies: hobbiesEn,
         stack: stackEn,
+        stackCategoryLevels,
         profile: profileEn,
         certifications: certificationsEn,
       };
@@ -188,6 +190,9 @@ const UI_TEXT = {
     catOther: "Outils",
     // Identity
     identityChapter: "Volcanique",
+    // Sound
+    soundOn: "Couper le son",
+    soundOff: "Activer le son",
     // Chatbot
     botBadge: "Aurian · Bot",
     botPrompt: "Qu'aimerais-tu savoir ?",
@@ -291,6 +296,8 @@ const UI_TEXT = {
     catAi: "AI",
     catOther: "Tools",
     identityChapter: "Volcanic",
+    soundOn: "Mute sound",
+    soundOff: "Enable sound",
     botBadge: "Aurian · Bot",
     botPrompt: "What would you like to know?",
     botMenuLabel: "Pick a question",
