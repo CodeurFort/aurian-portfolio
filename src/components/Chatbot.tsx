@@ -91,7 +91,7 @@ function reply(topic: Topic, planetSlug?: string): Reply {
         .map((p) => `« ${p.title} » : ${capitalize(p.pitch.split(".")[0])}.`)
         .join(" ");
       return {
-        text: `J'ai cinq lumières dans mon univers. ${list}`,
+        text: `Voici mes cinq projets. ${list}`,
         next: "projects",
       };
     }
@@ -246,7 +246,7 @@ export function Chatbot() {
           id: "greet",
           from: "bot",
           text:
-            "Bienvenue dans mon univers. Cinq lumières, un fil de menthe. Choisis une étoile pour commencer.",
+            "Salut. Je suis Aurian, version bot. Pose-moi une question.",
         },
       ]);
       setMenu(MENUS.root);
@@ -432,7 +432,7 @@ export function Chatbot() {
               style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
             >
               <p className="mono uppercase tracking-[0.4em] text-[9px] text-thread">
-                guide · univers
+                Aurian · Bot
               </p>
               <p className="serif-italic text-text mt-1" style={{ fontSize: 18 }}>
                 Qu'aimerais-tu savoir ?
