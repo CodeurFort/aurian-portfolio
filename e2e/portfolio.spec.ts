@@ -9,7 +9,7 @@ test("universe loads with title", async ({ page }) => {
     }
   });
   await page.goto("/");
-  await expect(page.getByText(/aurian\./)).toBeVisible();
+  await expect(page.getByText(/Aurian\./i).first()).toBeVisible();
   await expect(page.locator("canvas")).toBeVisible();
   expect(errors).toEqual([]);
 });

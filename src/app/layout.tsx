@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter_Tight, IBM_Plex_Mono } from "next/font/google";
+import { EB_Garamond, Inter_Tight, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const serif = Fraunces({
+const serif = EB_Garamond({
   subsets: ["latin"],
-  weight: "variable",
+  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-serif",
   display: "swap",
-  axes: ["opsz", "SOFT", "WONK"],
 });
 
 const sans = Inter_Tight({
@@ -26,11 +25,11 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "aurian. — portfolio",
+  title: "Aurian. portfolio",
   description: "Une nuit éditoriale. Cinq planètes de papier. Des fils de menthe.",
-  metadataBase: new URL("https://aurian.dev"),
+  metadataBase: new URL("https://codeurfort.github.io/aurian-portfolio"),
   openGraph: {
-    title: "aurian. — portfolio",
+    title: "Aurian. portfolio",
     description: "Une nuit éditoriale. Cinq planètes de papier. Des fils de menthe.",
     images: ["/og-image.png"],
     type: "website",

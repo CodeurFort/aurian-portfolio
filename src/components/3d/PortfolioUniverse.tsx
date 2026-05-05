@@ -7,11 +7,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import * as THREE from "three";
 import {
   projects,
-  softSkills,
+  softSkillBlocks,
   profile,
   hobbies,
   stack,
-  starProject,
   type Project,
 } from "@/lib/content";
 import { TechPill } from "@/components/ui/TechPill";
@@ -81,9 +80,9 @@ const PLANET_VARIANTS: Record<string, PlanetVariant> = {
 // ---------------------------------------------------------------------------
 type OpenCard =
   | { type: "planet"; project: Project }
-  | { type: "soft"; skillSlug: string }
+  | { type: "softblocks" }
   | { type: "info"; infoId: string }
-  | { type: "openclaw" };
+  | { type: "identity" };
 
 // ---------------------------------------------------------------------------
 // Star definitions per planet
@@ -91,52 +90,36 @@ type OpenCard =
 const INFO_STARS = [
   { id: "cv", label: "parcours", icon: "▲" },
   { id: "stack", label: "stack", icon: "◆" },
-  { id: "languages", label: "langues", icon: "✦" },
+  { id: "qualites", label: "qualités", icon: "✦" },
+  { id: "languages", label: "langues", icon: "✧" },
   { id: "hobbies", label: "orbites", icon: "○" },
   { id: "contact", label: "contact", icon: "@" },
 ];
 
 const PLANET_INFO: Record<string, string[]> = {
-  levels: ["cv", "stack"],
-  energizer: ["stack", "languages"],
-  mirakl: ["contact", "hobbies"],
-  "music-agency": ["hobbies", "cv"],
-  thelook: ["languages", "stack"],
+  levels: ["cv", "stack", "qualites"],
+  energizer: ["stack", "qualites", "languages"],
+  mirakl: ["cv", "qualites", "contact"],
+  "music-agency": ["hobbies", "qualites", "cv"],
+  thelook: ["stack", "qualites", "languages"],
 };
 
 interface StarDef {
   id: string;
   label: string;
   icon: string;
-  type: "soft" | "info";
-  data?: unknown;
 }
 
 function getStarsForPlanet(slug: string): StarDef[] {
-  const softForPlanet = softSkills
-    .filter((s) => s.linkedProjectSlugs.includes(slug))
-    .slice(0, 2)
-    .map((s) => ({
-      id: `soft:${s.slug}`,
-      label: s.label,
-      icon: "✦",
-      type: "soft" as const,
-      data: s,
-    }));
-
-  const infoIds = PLANET_INFO[slug] ?? ["cv", "stack"];
-  const infoStars = infoIds.map((iid) => {
+  const infoIds = PLANET_INFO[slug] ?? ["cv", "stack", "qualites"];
+  return infoIds.map((iid) => {
     const def = INFO_STARS.find((s) => s.id === iid) ?? INFO_STARS[0];
     return {
       id: `info:${iid}`,
       label: def.label,
       icon: def.icon,
-      type: "info" as const,
-      data: iid,
     };
   });
-
-  return [...softForPlanet, ...infoStars];
 }
 
 // ---------------------------------------------------------------------------
@@ -232,27 +215,44 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
   );
 }
 
-function SoftSkillOverlayCard({ skillSlug, onClose }: { skillSlug: string; onClose: () => void }) {
-  const skill = softSkills.find((s) => s.slug === skillSlug);
-  if (!skill) return null;
+function SoftBlocksOverlayCard({ onClose }: { onClose: () => void }) {
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
-      <header className="mb-12 text-center">
-        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">soft skill</p>
+      <header className="mb-12">
+        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">qualités</p>
         <h2
           className="serif-display text-text leading-none"
           style={{ fontSize: "clamp(48px, 7vw, 96px)" }}
         >
-          {skill.label.toLowerCase()}
+          ce qui me porte.
         </h2>
       </header>
-      <blockquote className="serif-italic text-3xl md:text-4xl leading-snug text-text-muted text-center max-w-xl mx-auto">
-        &laquo; {skill.quote} &raquo;
-      </blockquote>
-      <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted text-center mt-8">
-        tendu entre : {skill.linkedProjectSlugs.join(" · ")}
-      </p>
+      <div className="grid md:grid-cols-3 gap-6">
+        {softSkillBlocks.map((block) => (
+          <article
+            key={block.theme}
+            className="border border-hairline rounded-lg p-6 bg-paper-ink/40"
+          >
+            <p className="mono uppercase tracking-[0.25em] text-[10px] text-thread mb-4">
+              {block.theme}
+            </p>
+            <ul className="space-y-2 mb-5">
+              {block.qualities.map((q) => (
+                <li
+                  key={q}
+                  className="serif-italic text-lg text-text leading-snug"
+                >
+                  {q}
+                </li>
+              ))}
+            </ul>
+            <p className="text-sm text-text-muted leading-relaxed">
+              {block.context}
+            </p>
+          </article>
+        ))}
+      </div>
     </>
   );
 }
@@ -261,6 +261,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
   const titles: Record<string, string> = {
     cv: "parcours",
     stack: "stack",
+    qualites: "qualités",
     languages: "langues",
     hobbies: "orbites",
     contact: "contact",
@@ -348,7 +349,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
             <div key={h.label} className="flex gap-3 items-baseline">
               <span className="text-thread text-xs">●</span>
               <span className="text-lg text-text">{h.label}</span>
-              {h.detail && <span className="text-text-muted text-base">— {h.detail}</span>}
+              {h.detail && <span className="text-text-muted text-base">· {h.detail}</span>}
             </div>
           ))}
         </div>
@@ -372,62 +373,58 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
   );
 }
 
-function OpenClawOverlayCard({ onClose }: { onClose: () => void }) {
+function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
-      <header className="mb-12 text-center">
+      <header className="mb-10 text-center">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">
-          étoile cardinale
+          étoile polaire
         </p>
         <h2
           className="serif-display text-text leading-none"
-          style={{ fontSize: "clamp(56px, 8vw, 128px)" }}
+          style={{ fontSize: "clamp(64px, 9vw, 144px)" }}
         >
-          openclaw<span className="text-thread">.</span>
+          {profile.name}<span className="text-thread">.</span>
         </h2>
-        <p className="serif-italic text-text-muted text-xl mt-4">
-          agents inspired by Captain Claw &apos;97
+        <p className="serif-italic text-text-muted text-xl mt-4 max-w-md mx-auto">
+          {profile.tagline}
         </p>
       </header>
-      <p className="serif-italic text-2xl leading-snug text-text mb-10 max-w-2xl mx-auto text-center">
-        {starProject.pitch}
+      <p className="serif-italic text-xl md:text-2xl leading-snug text-text mb-12 max-w-2xl mx-auto text-center">
+        {profile.manifesto}
       </p>
-      <div className="grid md:grid-cols-2 gap-12 mb-10">
+      <div className="grid md:grid-cols-2 gap-8 pt-8 border-t border-hairline">
         <div>
-          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">stack</p>
-          <div className="flex flex-wrap gap-2">
-            {starProject.stack.map((s) => (
-              <TechPill key={s} label={s} />
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">
-            accomplissements
-          </p>
-          <ul className="space-y-3">
-            {starProject.achievements.map((a, i) => (
-              <li key={i} className="flex gap-3 text-base text-text leading-snug">
-                <span className="text-thread mt-1.5 text-xs shrink-0">●</span>
-                <span>{a}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      {starProject.repoUrl && (
-        <div className="pt-6 border-t border-hairline">
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">contact</p>
           <a
-            href={starProject.repoUrl}
+            href={`mailto:${profile.email}`}
+            className="block text-base text-text hover:text-thread transition mb-1"
+          >
+            {profile.email}
+          </a>
+          <p className="text-base text-text-muted">{profile.phone}</p>
+        </div>
+        <div>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">liens</p>
+          <a
+            href={profile.linkedin}
             target="_blank"
             rel="noreferrer"
-            className="mono uppercase tracking-widest text-[11px] text-text-muted hover:text-thread border-b border-hairline hover:border-thread transition"
+            className="block text-base text-text hover:text-thread transition mb-1"
           >
-            github →
+            linkedin.com/in/aurian-bingangoye
+          </a>
+          <a
+            href={profile.github}
+            target="_blank"
+            rel="noreferrer"
+            className="block text-base text-text hover:text-thread transition"
+          >
+            github.com/CodeurFort
           </a>
         </div>
-      )}
+      </div>
     </>
   );
 }
@@ -470,14 +467,17 @@ function CardOverlay({
             {openCard.type === "planet" && (
               <ProjectOverlayCard project={openCard.project} onClose={onClose} />
             )}
-            {openCard.type === "soft" && (
-              <SoftSkillOverlayCard skillSlug={openCard.skillSlug} onClose={onClose} />
+            {openCard.type === "softblocks" && (
+              <SoftBlocksOverlayCard onClose={onClose} />
             )}
-            {openCard.type === "info" && (
+            {openCard.type === "info" && openCard.infoId === "qualites" && (
+              <SoftBlocksOverlayCard onClose={onClose} />
+            )}
+            {openCard.type === "info" && openCard.infoId !== "qualites" && (
               <InfoOverlayCard infoId={openCard.infoId} onClose={onClose} />
             )}
-            {openCard.type === "openclaw" && (
-              <OpenClawOverlayCard onClose={onClose} />
+            {openCard.type === "identity" && (
+              <IdentityOverlayCard onClose={onClose} />
             )}
           </motion.article>
         </motion.div>
@@ -728,14 +728,14 @@ function PlanetMesh({
 }
 
 // ---------------------------------------------------------------------------
-// OpenClaw — dramatic north star, pinned to camera.x top-center
+// IdentityStar — dramatic polar star (Aurian), pinned to camera.x top-center
 // ---------------------------------------------------------------------------
-interface OpenClawStarProps {
+interface IdentityStarProps {
   cameraX: number;
   onSelect: () => void;
 }
 
-function OpenClawStar({ cameraX, onSelect }: OpenClawStarProps) {
+function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
   const groupRef = useRef<THREE.Group>(null);
   const innerRef = useRef<THREE.Mesh>(null);
   const spikesRef = useRef<THREE.Group>(null);
@@ -822,12 +822,23 @@ function OpenClawStar({ cameraX, onSelect }: OpenClawStarProps) {
       {/* Label */}
       <Text
         position={[0, -1.4, 0]}
-        fontSize={0.18}
+        fontSize={0.22}
         color="#A4F5C8"
         anchorX="center"
         anchorY="top"
+        letterSpacing={0.05}
       >
-        openclaw
+        Aurian
+      </Text>
+      <Text
+        position={[0, -1.7, 0]}
+        fontSize={0.09}
+        color="#6B6660"
+        anchorX="center"
+        anchorY="top"
+        letterSpacing={0.15}
+      >
+        étoile polaire · clic pour explorer
       </Text>
     </group>
   );
@@ -870,7 +881,14 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
     camTarget.current.set(tx, 0, 6);
     lookTarget.current.set(tx, 0, 0);
 
-    (camera as THREE.PerspectiveCamera).position.lerp(camTarget.current, 0.06);
+    // Adaptive lerp : fast for long-distance wraparound (5 -> 1 etc.),
+    // smooth for adjacent-planet transitions.
+    const distance = Math.abs(
+      (camera as THREE.PerspectiveCamera).position.x - tx
+    );
+    const lerpFactor = distance > 12 ? 0.18 : 0.06;
+
+    (camera as THREE.PerspectiveCamera).position.lerp(camTarget.current, lerpFactor);
     camera.lookAt(lookTarget.current);
 
     setCameraX((camera as THREE.PerspectiveCamera).position.x);
@@ -891,9 +909,9 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
         />
       ))}
 
-      <OpenClawStar
+      <IdentityStar
         cameraX={cameraX}
-        onSelect={() => onSelectStar("openclaw")}
+        onSelect={() => onSelectStar("identity")}
       />
     </group>
   );
@@ -935,7 +953,7 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
         transition={{ delay: 0.3, duration: 0.8 }}
         className="serif-italic text-text-muted text-xl mb-10"
       >
-        aurian<span className="text-thread">.</span>
+        Aurian<span className="text-thread">.</span>
       </motion.p>
 
       <motion.h1
@@ -954,7 +972,7 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
         transition={{ delay: 1.0, duration: 0.8 }}
         className="mono uppercase tracking-[0.3em] text-[11px] text-text-muted mt-10"
       >
-        5 planètes. des étoiles. naviguez avec ← → ou la molette.
+        5 planètes. une étoile polaire. naviguez avec les flèches ou la molette.
       </motion.p>
 
       <motion.p
@@ -1012,13 +1030,12 @@ export function PortfolioUniverse() {
 
   const handleSelectStar = useCallback(
     (id: string) => {
-      if (id === "openclaw") {
-        setOpenCard({ type: "openclaw" });
+      if (id === "identity") {
+        setOpenCard({ type: "identity" });
         return;
       }
       const [type, value] = id.split(":");
-      if (type === "soft") setOpenCard({ type: "soft", skillSlug: value });
-      else if (type === "info") setOpenCard({ type: "info", infoId: value });
+      if (type === "info") setOpenCard({ type: "info", infoId: value });
     },
     []
   );
@@ -1039,11 +1056,11 @@ export function PortfolioUniverse() {
   );
 
   const next = useCallback(() => {
-    goTo(Math.min(index + 1, projects.length - 1));
+    goTo((index + 1) % projects.length);
   }, [goTo, index]);
 
   const prev = useCallback(() => {
-    goTo(Math.max(index - 1, 0));
+    goTo((index - 1 + projects.length) % projects.length);
   }, [goTo, index]);
 
   // Show initial caption on first load (after intro dismissed)
@@ -1142,10 +1159,10 @@ export function PortfolioUniverse() {
       {/* Header overlay */}
       <header className="absolute top-6 left-6 z-10 pointer-events-none select-none">
         <p className="serif-italic text-text text-3xl">
-          aurian<span className="text-thread">.</span>
+          Aurian<span className="text-thread">.</span>
         </p>
         <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mt-1">
-          portfolio — univers
+          portfolio · univers
         </p>
       </header>
 
@@ -1171,32 +1188,83 @@ export function PortfolioUniverse() {
         </div>
       )}
 
-      {/* Navigation */}
+      {/* Big animated arrows */}
       {introDismissed && (
-        <nav className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-6 mono uppercase tracking-[0.3em] text-[11px] text-text-muted select-none">
-          <button
+        <>
+          <motion.button
             onClick={prev}
-            className="hover:text-thread transition"
             aria-label="Planète précédente"
+            className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 z-20 group"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            whileHover={{ scale: 1.18 }}
+            whileTap={{ scale: 0.92 }}
           >
-            ← précédent
-          </button>
-          <span className="text-text">
-            {String(index + 1).padStart(2, "0")} / 0{projects.length}
-          </span>
-          <button
+            <motion.svg
+              width="56"
+              height="56"
+              viewBox="0 0 56 56"
+              fill="none"
+              animate={{ x: [0, -6, 0] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              className="text-text-muted group-hover:text-thread transition-colors"
+            >
+              <circle cx="28" cy="28" r="27" stroke="currentColor" strokeWidth="0.8" opacity="0.4" />
+              <path
+                d="M34 16 L20 28 L34 40"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </motion.svg>
+          </motion.button>
+
+          <motion.button
             onClick={next}
-            className="hover:text-thread transition"
             aria-label="Planète suivante"
+            className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 z-20 group"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            whileHover={{ scale: 1.18 }}
+            whileTap={{ scale: 0.92 }}
           >
-            suivant →
-          </button>
-        </nav>
+            <motion.svg
+              width="56"
+              height="56"
+              viewBox="0 0 56 56"
+              fill="none"
+              animate={{ x: [0, 6, 0] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              className="text-text-muted group-hover:text-thread transition-colors"
+            >
+              <circle cx="28" cy="28" r="27" stroke="currentColor" strokeWidth="0.8" opacity="0.4" />
+              <path
+                d="M22 16 L36 28 L22 40"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </motion.svg>
+          </motion.button>
+        </>
+      )}
+
+      {/* Counter */}
+      {introDismissed && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 mono uppercase tracking-[0.4em] text-[11px] text-text-muted select-none pointer-events-none">
+          {String(index + 1).padStart(2, "0")} <span className="text-text-subtle">/</span> 0{projects.length}
+        </div>
       )}
 
       {introDismissed && (
         <p className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 mono uppercase tracking-[0.3em] text-[9px] text-text-subtle select-none pointer-events-none">
-          ← → ou molette pour naviguer · clic étoile pour explorer
+          flèches · molette · swipe
         </p>
       )}
 
