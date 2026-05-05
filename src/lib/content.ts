@@ -187,7 +187,7 @@ export const projects: Project[] = [
     paperColor: "paper-stone",
     role: "audit SQL avancé",
     pitch:
-      "audit complet d'une marketplace fictive (TheLook eCommerce). 11 CTEs imbriquées, window functions pour cohort analysis, KPIs business : LTV, retention, panier moyen, performance par catégorie.",
+      "audit complet d'une marketplace e-commerce. 11 CTEs imbriquées, window functions pour cohort analysis, KPIs business : LTV, retention, panier moyen, performance par catégorie.",
     achievements: [
       "11 CTEs orchestrées en pipeline d'analyse",
       "window functions : RANK, LAG, NTILE pour cohortes",

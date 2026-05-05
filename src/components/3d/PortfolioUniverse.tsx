@@ -14,6 +14,9 @@ import {
   type Project,
 } from "@/lib/content";
 import { TechPill } from "@/components/ui/TechPill";
+import { Chatbot } from "@/components/Chatbot";
+import { HyperspaceWarp } from "@/components/HyperspaceWarp";
+import { PlanetAmbient } from "@/components/PlanetAmbient";
 
 // ---------------------------------------------------------------------------
 // Color mapping
@@ -1698,6 +1701,7 @@ export function PortfolioUniverse() {
     color: string;
     next: OpenCard;
   } | null>(null);
+  const [warpTick, setWarpTick] = useState(0);
 
   const closeCard = useCallback(() => setOpenCard(null), []);
 
@@ -1745,9 +1749,12 @@ export function PortfolioUniverse() {
     (newIndex: number) => {
       setIndex(newIndex);
       closeCard();
-      // Show chapter caption, hide after 1.5s
-      setCaptionVisible(true);
-      setTimeout(() => setCaptionVisible(false), 1500);
+      // Trigger hyperspace warp overlay
+      setWarpTick((t) => t + 1);
+      // Show chapter caption (slightly delayed so warp plays first)
+      setCaptionVisible(false);
+      setTimeout(() => setCaptionVisible(true), 320);
+      setTimeout(() => setCaptionVisible(false), 1900);
     },
     [closeCard]
   );
@@ -1867,8 +1874,19 @@ export function PortfolioUniverse() {
         </p>
       </header>
 
+      {/* Per-planet ambient layer (signature effect tied to the focused planet) */}
+      {introDismissed && <PlanetAmbient slug={projects[index].slug} />}
+
+      {/* Hyperspace warp on transition */}
+      <AnimatePresence>
+        {warpTick > 0 && <HyperspaceWarp key={`warp-${warpTick}`} />}
+      </AnimatePresence>
+
       {/* Star legend (top right, pokemon-badge style) — clickable for global details */}
       {introDismissed && <StarLegend onSelect={handleLegendSelect} />}
+
+      {/* Chatbot guide (top-center, opens dropdown panel) */}
+      {introDismissed && <Chatbot />}
 
       {/* Legend FX overlay (convergence / expansion) */}
       <AnimatePresence>
