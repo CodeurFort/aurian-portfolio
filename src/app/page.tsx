@@ -3,6 +3,7 @@ import { Landing } from "@/components/sections/Landing";
 import { Prelude } from "@/components/sections/Prelude";
 import { ProjectPlanet } from "@/components/sections/ProjectPlanet";
 import { OpenclawPlanet } from "@/components/sections/OpenclawPlanet";
+import { Threads } from "@/components/sections/Threads";
 import { projects } from "@/lib/content";
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
       <ProjectPlanet project={mirakl} index={2} />
       <ProjectPlanet project={music} index={3} />
       <OpenclawPlanet project={openclaw} index={4} />
+      <Threads />
     </PageShell>
   );
 }
