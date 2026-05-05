@@ -300,8 +300,8 @@ export function Chatbot() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
         style={{
-          top: 24,
-          left: 210,
+          top: 36,
+          left: 250,
           width: 44,
           height: 44,
           borderRadius: 12,
@@ -400,7 +400,7 @@ export function Chatbot() {
             transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
             className="fixed z-[40] flex flex-col"
             style={{
-              top: 76,
+              top: 88,
               left: 24,
               width: "min(360px, calc(100vw - 48px))",
               height: "min(440px, calc(100vh - 120px))",
