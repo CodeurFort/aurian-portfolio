@@ -115,13 +115,13 @@ function reply(topic: Topic): Reply {
     case "formation":
       return {
         text:
-          "Ma formation est dans CV (le cône) dans la légende. Clique pour voir le parcours.",
+          "Ma formation est dans Parcours (le triangle) dans la légende. Clique pour voir le détail.",
         next: "formation",
       };
     case "cv":
       return {
         text:
-          "Mon parcours est dans CV (le cône) en haut à droite. Présent et passé y sont posés.",
+          "Mon parcours est dans Parcours (le triangle) en haut à droite. Présent, passé et CV à télécharger y sont posés.",
         next: "cv",
       };
     case "languages":

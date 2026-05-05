@@ -621,7 +621,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
           </div>
           <div className="pt-6 border-t border-hairline">
             <a
-              href={profile.cvPdf}
+              href={`${process.env.NEXT_PUBLIC_USE_BASE_PATH === "true" ? "/aurian-portfolio" : ""}${profile.cvPdf}`}
               target="_blank"
               rel="noreferrer"
               className="mono uppercase tracking-widest text-[11px] text-thread border-b border-thread hover:opacity-80"
