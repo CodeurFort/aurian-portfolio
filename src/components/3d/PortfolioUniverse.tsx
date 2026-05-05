@@ -37,6 +37,7 @@ interface PlanetVariant {
   hasRing?: boolean;
   breathe?: boolean;
   angularDistort?: boolean;
+  hasMoon?: boolean;
 }
 
 const PLANET_VARIANTS: Record<string, PlanetVariant> = {
@@ -62,9 +63,10 @@ const PLANET_VARIANTS: Record<string, PlanetVariant> = {
   "music-agency": {
     distort: 0.15,
     speed: 0.5,
-    emissiveColor: "#A4F5C8",
-    emissiveIntensity: 0.06,
+    emissiveColor: "#E5A1B9",
+    emissiveIntensity: 0.18,
     breathe: true,
+    hasMoon: true,
   },
   thelook: {
     distort: 0.25,
@@ -88,13 +90,21 @@ type OpenCard =
 // Star definitions per planet
 // ---------------------------------------------------------------------------
 const INFO_STARS = [
-  { id: "cv", label: "parcours", icon: "▲" },
-  { id: "stack", label: "stack", icon: "◆" },
-  { id: "qualites", label: "qualités", icon: "✦" },
-  { id: "languages", label: "langues", icon: "✧" },
-  { id: "hobbies", label: "orbites", icon: "○" },
-  { id: "contact", label: "contact", icon: "@" },
+  { id: "cv", label: "Parcours", icon: "▲" },
+  { id: "stack", label: "Stack", icon: "◆" },
+  { id: "qualites", label: "Qualités", icon: "✦" },
+  { id: "languages", label: "Langues", icon: "✧" },
+  { id: "hobbies", label: "Orbites", icon: "○" },
+  { id: "contact", label: "Contact", icon: "@" },
 ];
+
+const CHAPTER_LABELS: Record<string, string> = {
+  levels: "Chapitre I",
+  energizer: "Chapitre II",
+  mirakl: "Chapitre III",
+  "music-agency": "Exoplanète",
+  thelook: "Chapitre V",
+};
 
 const PLANET_INFO: Record<string, string[]> = {
   levels: ["cv", "stack", "qualites"],
@@ -134,12 +144,12 @@ const STAR_COLORS: Record<string, string> = {
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  cv: "parcours",
-  stack: "stack",
-  qualites: "qualité contextuelle",
-  languages: "langues",
-  hobbies: "orbites",
-  contact: "contact",
+  cv: "Parcours",
+  stack: "Stack",
+  qualites: "Qualité contextuelle",
+  languages: "Langues",
+  hobbies: "Orbites",
+  contact: "Contact",
 };
 
 function getStarsForPlanet(slug: string): StarDef[] {
@@ -168,21 +178,18 @@ function OverlayCloseBtn({ onClose }: { onClose: () => void }) {
       aria-label="Fermer"
       className="absolute top-6 right-6 text-text-muted hover:text-thread transition mono uppercase tracking-[0.3em] text-[10px]"
     >
-      fermer ✕
+      Fermer ✕
     </button>
   );
 }
 
 function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: () => void }) {
-  const chapterRoman: Record<string, string> = {
-    i: "I", ii: "II", iii: "III", iv: "IV", v: "V",
-  };
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
       <header className="mb-10">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">
-          chapitre {chapterRoman[project.chapter] ?? project.chapter}.
+          {CHAPTER_LABELS[project.slug] ?? `Chapitre ${project.chapter}`}.
         </p>
         <h2
           className="serif-display text-text leading-none mb-4"
@@ -201,7 +208,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
       </p>
       <div className="grid md:grid-cols-2 gap-12 mb-10">
         <div>
-          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">stack</p>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">Stack</p>
           <div className="flex flex-wrap gap-2">
             {project.stack.map((s) => (
               <TechPill key={s} label={s} />
@@ -210,7 +217,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
         </div>
         <div>
           <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">
-            accomplissements
+            Accomplissements
           </p>
           <ul className="space-y-3">
             {project.achievements.map((a, i) => (
@@ -231,7 +238,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
               rel="noreferrer"
               className="mono uppercase tracking-widest text-[11px] text-thread border-b border-thread hover:opacity-80"
             >
-              voir live →
+              Voir live →
             </a>
           )}
           {project.repoUrl && (
@@ -241,7 +248,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
               rel="noreferrer"
               className="mono uppercase tracking-widest text-[11px] text-text-muted hover:text-thread border-b border-hairline hover:border-thread transition"
             >
-              github →
+              Github →
             </a>
           )}
         </div>
@@ -265,7 +272,7 @@ function QualityOverlayCard({
       <OverlayCloseBtn onClose={onClose} />
       <header className="mb-10 text-center">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">
-          qualité tendue avec « {project.title} »
+          Qualité tendue avec « {project.title} »
         </p>
         <h2
           className="serif-display text-text leading-none"
@@ -283,17 +290,17 @@ function QualityOverlayCard({
 
 function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => void }) {
   const titles: Record<string, string> = {
-    cv: "parcours",
-    stack: "stack",
-    qualites: "qualités",
-    languages: "langues",
-    hobbies: "orbites",
-    contact: "contact",
+    cv: "Parcours",
+    stack: "Stack",
+    qualites: "Qualités",
+    languages: "Langues",
+    hobbies: "Orbites",
+    contact: "Contact",
   };
 
   const categories = ["lang", "data", "cloud", "ai", "other"] as const;
   const catLabels: Record<string, string> = {
-    lang: "langages", data: "data", cloud: "cloud", ai: "IA", other: "outils",
+    lang: "Langages", data: "Data", cloud: "Cloud", ai: "IA", other: "Outils",
   };
 
   return (
@@ -311,15 +318,15 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
       {infoId === "cv" && (
         <div className="space-y-6">
           <div>
-            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">poste actuel</p>
+            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">Poste actuel</p>
             <p className="text-lg text-text leading-relaxed">{profile.cvCurrent}</p>
           </div>
           <div>
-            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">parcours</p>
+            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">Parcours</p>
             <p className="text-base text-text-muted leading-relaxed">{profile.cvPrevious}</p>
           </div>
           <div>
-            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">formation</p>
+            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">Formation</p>
             <p className="text-base text-text-muted leading-relaxed">{profile.formation}</p>
           </div>
           <div className="pt-6 border-t border-hairline">
@@ -329,7 +336,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
               rel="noreferrer"
               className="mono uppercase tracking-widest text-[11px] text-thread border-b border-thread hover:opacity-80"
             >
-              télécharger CV ↗
+              Télécharger CV ↗
             </a>
           </div>
         </div>
@@ -402,7 +409,7 @@ function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
       <OverlayCloseBtn onClose={onClose} />
       <header className="mb-10 text-center">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">
-          étoile polaire
+          Volcanique
         </p>
         <h2
           className="serif-display text-text leading-none"
@@ -419,7 +426,7 @@ function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
       </p>
       <div className="grid md:grid-cols-2 gap-8 pt-8 border-t border-hairline">
         <div>
-          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">contact</p>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">Contact</p>
           <a
             href={`mailto:${profile.email}`}
             className="block text-base text-text hover:text-thread transition"
@@ -428,7 +435,7 @@ function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
           </a>
         </div>
         <div>
-          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">liens</p>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">Liens</p>
           <a
             href={profile.linkedin}
             target="_blank"
@@ -611,6 +618,34 @@ function SatStar({ position, starId, shape, color, onSelect }: SatStarProps) {
 }
 
 // ---------------------------------------------------------------------------
+// ExoMoon — visual signature for music-agency exoplanet
+// ---------------------------------------------------------------------------
+function ExoMoon() {
+  const groupRef = useRef<THREE.Group>(null);
+  const moonRef = useRef<THREE.Mesh>(null);
+
+  useFrame((_, dt) => {
+    if (groupRef.current) groupRef.current.rotation.y += dt * 0.45;
+    if (moonRef.current) moonRef.current.rotation.y += dt * 0.6;
+  });
+
+  return (
+    <group ref={groupRef} rotation={[0.4, 0, 0.2]}>
+      <mesh ref={moonRef} position={[1.85, 0.2, 0]}>
+        <sphereGeometry args={[0.18, 24, 24]} />
+        <meshStandardMaterial
+          color="#E5A1B9"
+          emissive="#E5A1B9"
+          emissiveIntensity={0.45}
+          roughness={0.6}
+          metalness={0.1}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Planet mesh — variant-driven with MeshDistortMaterial + atmosphere
 // ---------------------------------------------------------------------------
 interface PlanetMeshProps {
@@ -709,6 +744,9 @@ function PlanetMesh({
         />
       </mesh>
 
+      {/* Exoplanet moon for Music Agency */}
+      {variant.hasMoon && <ExoMoon />}
+
       {/* Saturn ring for Mirakl */}
       {variant.hasRing && (
         <mesh rotation={[Math.PI / 2.2, 0, 0.2]}>
@@ -720,37 +758,6 @@ function PlanetMesh({
             side={THREE.DoubleSide}
           />
         </mesh>
-      )}
-
-      {/* Planet label rendered with drei Text (no Html) */}
-      <Text
-        position={[0, -1.85, 0]}
-        fontSize={0.095}
-        color={isFocused ? "#6B6660" : "#3A3D38"}
-        anchorX="center"
-        anchorY="top"
-      >
-        {project.chapter}
-      </Text>
-      <Text
-        position={[0, -2.1, 0]}
-        fontSize={0.13}
-        color={isFocused ? "#ECE6D6" : "#6B6660"}
-        anchorX="center"
-        anchorY="top"
-      >
-        {project.title}
-      </Text>
-      {isFocused && (
-        <Text
-          position={[0, -2.42, 0]}
-          fontSize={0.09}
-          color="#A4F5C8"
-          anchorX="center"
-          anchorY="top"
-        >
-          clic pour explorer
-        </Text>
       )}
 
       {/* Satellite stars orbit group */}
@@ -959,9 +966,38 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
 }
 
 // ---------------------------------------------------------------------------
+// Typewriter hook — reveals text letter by letter
+// ---------------------------------------------------------------------------
+function useTypewriter(text: string, speed = 80, startDelay = 0) {
+  const [out, setOut] = useState("");
+  useEffect(() => {
+    setOut("");
+    let i = 0;
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const start = setTimeout(() => {
+      interval = setInterval(() => {
+        i += 1;
+        setOut(text.slice(0, i));
+        if (i >= text.length && interval) clearInterval(interval);
+      }, speed);
+    }, startDelay);
+    return () => {
+      clearTimeout(start);
+      if (interval) clearInterval(interval);
+    };
+  }, [text, speed, startDelay]);
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Intro overlay
 // ---------------------------------------------------------------------------
 function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
+  const intro = useTypewriter("Aurian", 95, 350);
+  const title = useTypewriter("L'Observatoire", 105, 1500);
+  const introDone = intro.length >= "Aurian".length;
+  const titleDone = title.length >= "L'Observatoire".length;
+
   useEffect(() => {
     const onAny = () => onDismiss();
     window.addEventListener("keydown", onAny);
@@ -986,42 +1022,51 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
       className="fixed inset-0 z-[60] flex flex-col items-center justify-center pointer-events-auto select-none"
       style={{ backgroundColor: "rgba(7,8,10,0.92)", backdropFilter: "blur(4px)" }}
     >
-      <motion.p
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.8 }}
-        className="serif-italic text-text-muted text-xl mb-10"
-      >
-        Aurian<span className="text-thread">.</span>
-      </motion.p>
+      <p className="serif-italic text-text-muted text-xl mb-10 min-h-[1.5em]">
+        {intro}
+        {introDone ? (
+          <span className="text-thread">.</span>
+        ) : (
+          <motion.span
+            className="inline-block ml-0.5 text-thread"
+            animate={{ opacity: [1, 0] }}
+            transition={{ duration: 0.55, repeat: Infinity, ease: "linear" }}
+          >
+            ▍
+          </motion.span>
+        )}
+      </p>
 
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.55, duration: 0.9 }}
-        className="serif-display text-text text-center"
+      <h1
+        className="serif-display text-text text-center min-h-[1em]"
         style={{ fontSize: "clamp(64px, 12vw, 160px)" }}
       >
-        un univers<span className="text-thread">.</span>
-      </motion.h1>
+        {title}
+        {titleDone ? (
+          <span className="text-thread">.</span>
+        ) : (
+          <motion.span
+            className="inline-block ml-2 text-thread"
+            animate={{ opacity: [1, 0] }}
+            transition={{ duration: 0.55, repeat: Infinity, ease: "linear" }}
+          >
+            ▍
+          </motion.span>
+        )}
+      </h1>
 
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.0, duration: 0.8 }}
-        className="mono uppercase tracking-[0.3em] text-[11px] text-text-muted mt-10"
-      >
-        5 planètes. une étoile polaire. naviguez avec les flèches ou la molette.
-      </motion.p>
-
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 1, 0] }}
-        transition={{ delay: 1.6, duration: 1.4, repeat: Infinity }}
-        className="mono uppercase tracking-[0.4em] text-[10px] text-thread mt-8"
-      >
-        press any key to enter
-      </motion.p>
+      <AnimatePresence>
+        {titleDone && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 0.45, 1] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            className="mono uppercase tracking-[0.4em] text-[10px] text-thread mt-12"
+          >
+            Appuyez sur une touche pour entrer
+          </motion.p>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -1029,10 +1074,9 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
 // ---------------------------------------------------------------------------
 // Chapter caption (fades in on index change, auto-dismisses)
 // ---------------------------------------------------------------------------
-const CHAPTER_NAMES = ["I", "II", "III", "IV", "V"];
-
 function ChapterCaption({ index, visible }: { index: number; visible: boolean }) {
   const project = projects[index];
+  const chapterLabel = CHAPTER_LABELS[project.slug] ?? `Chapitre ${project.chapter}`;
   return (
     <AnimatePresence mode="wait">
       {visible && (
@@ -1045,7 +1089,7 @@ function ChapterCaption({ index, visible }: { index: number; visible: boolean })
           className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none z-20"
         >
           <p className="mono uppercase tracking-[0.4em] text-[11px] text-thread mb-3">
-            chapitre {CHAPTER_NAMES[index]}
+            {chapterLabel}
           </p>
           <p className="serif-display text-text" style={{ fontSize: "clamp(40px, 6vw, 80px)" }}>
             {project.title}
@@ -1136,7 +1180,7 @@ function StarLegend() {
     >
       <div className="border rounded-md px-4 py-3.5" style={{ borderColor: "#1F2521" }}>
         <p className="mono uppercase tracking-[0.3em] text-[9px] text-text-subtle mb-3">
-          étoiles · badges
+          Étoiles
         </p>
         <ul className="space-y-2">
           {order.map(({ id, shape }) => (
@@ -1162,7 +1206,7 @@ function StarLegend() {
               </svg>
             </span>
             <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted">
-              étoile polaire
+              Volcanique
             </span>
           </li>
         </ul>
@@ -1317,34 +1361,12 @@ export function PortfolioUniverse() {
           Aurian<span className="text-thread">.</span>
         </p>
         <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mt-1">
-          portfolio · univers
+          Portfolio · Observatoire
         </p>
       </header>
 
       {/* Star legend (top right, pokemon-badge style) */}
       {introDismissed && <StarLegend />}
-
-      {/* Minimap dots */}
-      {introDismissed && (
-        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-3 z-10">
-          {projects.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              aria-label={`planète ${i + 1}`}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                i === index
-                  ? "scale-150"
-                  : "hover:opacity-60"
-              }`}
-              style={{
-                backgroundColor:
-                  i === index ? "#A4F5C8" : "#3A3D38",
-              }}
-            />
-          ))}
-        </div>
-      )}
 
       {/* Big animated arrows */}
       {introDismissed && (
@@ -1411,13 +1433,6 @@ export function PortfolioUniverse() {
             </motion.svg>
           </motion.button>
         </>
-      )}
-
-      {/* Counter */}
-      {introDismissed && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 mono uppercase tracking-[0.4em] text-[11px] text-text-muted select-none pointer-events-none">
-          {String(index + 1).padStart(2, "0")} <span className="text-text-subtle">/</span> 0{projects.length}
-        </div>
       )}
 
       {/* Chapter caption */}

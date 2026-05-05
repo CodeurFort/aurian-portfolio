@@ -144,29 +144,29 @@ export const projects: Project[] = [
 
 export const projectQualities: Record<string, ProjectQuality> = {
   levels: {
-    label: "autonomie",
+    label: "Autonomie",
     context:
-      "construit seul, du concept à la mise en ligne. design, dev, déploiement, itérations. personne pour valider à ma place : il fallait trancher.",
+      "Construit seul, du concept à la mise en ligne. Design, dev, déploiement, itérations. Personne pour valider à ma place : il fallait trancher.",
   },
   energizer: {
-    label: "esprit analytique",
+    label: "Esprit analytique",
     context:
-      "découper un problème flou (visibilité d'une marque sur tous les moteurs) en pipeline mesurable, scoré, auto-correcteur. raisonner par couches.",
+      "Découper un problème flou (visibilité d'une marque sur tous les moteurs) en pipeline mesurable, scoré, auto-correcteur. Raisonner par couches.",
   },
   mirakl: {
-    label: "sens stratégique",
+    label: "Sens stratégique",
     context:
-      "identifier le bon angle d'attaque, prioriser les leads, restituer une recommandation que le sponsor peut activer la semaine d'après.",
+      "Identifier le bon angle d'attaque, prioriser les leads, restituer une recommandation que le sponsor peut activer la semaine d'après.",
   },
   "music-agency": {
-    label: "adaptabilité",
+    label: "Adaptabilité",
     context:
-      "industrie musicale, codes culturels spécifiques. traduire l'instinct artistique d'un label en process et en outils sans tuer la magie.",
+      "Industrie musicale, codes culturels spécifiques. Traduire l'instinct artistique d'un label en process et en outils sans tuer la magie.",
   },
   thelook: {
-    label: "rigueur",
+    label: "Rigueur",
     context:
-      "11 CTEs imbriquées, window functions, vérification croisée des KPIs avant restitution. un chiffre faux et toute la reco s'effondre.",
+      "11 CTEs imbriquées, window functions, vérification croisée des KPIs avant restitution. Un chiffre faux et toute la reco s'effondre.",
   },
 };
 
