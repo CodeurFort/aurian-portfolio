@@ -3,7 +3,8 @@
 import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
-import { QuadraticBezierCurve3, Vector3, Group } from "three";
+import { QuadraticBezierCurve3, Vector3, Group, Mesh } from "three";
+import * as THREE from "three";
 import type { Project, SoftSkill } from "@/lib/content";
 
 // ── Colour mapping ──────────────────────────────────────────────────────────
@@ -87,21 +88,78 @@ function ThreadChain({
   );
 }
 
+// ── Single planet mesh with hover + click ─────────────────────────────────
+function Planet({
+  project,
+  isSelected,
+  onSelect,
+}: {
+  project: Project;
+  isSelected: boolean;
+  onSelect: (slug: string | null) => void;
+}) {
+  const meshRef = useRef<Mesh>(null);
+  const pos = to3D(project.slug);
+  const radius = toRadius(project.slug);
+  const color = paperHex[project.paperColor] ?? "#ECE6D6";
+  const targetScale = isSelected ? 1.18 : 1;
+
+  useFrame(() => {
+    if (!meshRef.current) return;
+    meshRef.current.scale.lerp(
+      new THREE.Vector3(targetScale, targetScale, targetScale),
+      0.12
+    );
+  });
+
+  return (
+    <mesh
+      ref={meshRef}
+      position={pos}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        document.body.style.cursor = "pointer";
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = "default";
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(isSelected ? null : project.slug);
+      }}
+    >
+      <sphereGeometry args={[radius, 32, 32]} />
+      <meshStandardMaterial
+        color={color}
+        roughness={0.9}
+        metalness={0}
+        emissive="#A4F5C8"
+        emissiveIntensity={isSelected ? 0.18 : 0}
+      />
+    </mesh>
+  );
+}
+
 // ── Rotating group containing planets + threads ────────────────────────────
 function SceneContent({
   projects,
   softSkills,
   activeIdx,
+  selectedSlug,
+  onSelectPlanet,
 }: {
   projects: Project[];
   softSkills: SoftSkill[];
   activeIdx: number | null;
+  selectedSlug: string | null;
+  onSelectPlanet: (slug: string | null) => void;
 }) {
   const groupRef = useRef<Group>(null!);
+  const paused = activeIdx !== null || selectedSlug !== null;
 
   useFrame((_, dt) => {
     if (!groupRef.current) return;
-    if (activeIdx === null) {
+    if (!paused) {
       groupRef.current.rotation.y += dt * 0.08;
     }
   });
@@ -109,21 +167,14 @@ function SceneContent({
   return (
     <group ref={groupRef}>
       {/* Planets */}
-      {projects.map((p) => {
-        const pos = to3D(p.slug);
-        const radius = toRadius(p.slug);
-        const color = paperHex[p.paperColor] ?? "#ECE6D6";
-        return (
-          <mesh key={p.slug} position={pos}>
-            <sphereGeometry args={[radius, 32, 32]} />
-            <meshStandardMaterial
-              color={color}
-              roughness={0.9}
-              metalness={0}
-            />
-          </mesh>
-        );
-      })}
+      {projects.map((p) => (
+        <Planet
+          key={p.slug}
+          project={p}
+          isSelected={selectedSlug === p.slug}
+          onSelect={onSelectPlanet}
+        />
+      ))}
 
       {/* Thread chains */}
       {softSkills.map((s, i) => {
@@ -145,9 +196,17 @@ export interface ThreadsSceneProps {
   softSkills: SoftSkill[];
   projects: Project[];
   activeIdx: number | null;
+  selectedSlug: string | null;
+  onSelectPlanet: (slug: string | null) => void;
 }
 
-export function ThreadsScene({ softSkills, projects, activeIdx }: ThreadsSceneProps) {
+export function ThreadsScene({
+  softSkills,
+  projects,
+  activeIdx,
+  selectedSlug,
+  onSelectPlanet,
+}: ThreadsSceneProps) {
   return (
     <Canvas
       dpr={[1, 1.5]}
@@ -164,6 +223,8 @@ export function ThreadsScene({ softSkills, projects, activeIdx }: ThreadsScenePr
         projects={projects}
         softSkills={softSkills}
         activeIdx={activeIdx}
+        selectedSlug={selectedSlug}
+        onSelectPlanet={onSelectPlanet}
       />
     </Canvas>
   );

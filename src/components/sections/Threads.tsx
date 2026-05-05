@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { projects, softSkills } from "@/lib/content";
 import { EditorialTitle } from "@/components/ui/EditorialTitle";
+import { ProjectDetailPanel } from "@/components/sections/ProjectDetailPanel";
 
 const ThreadsScene = dynamic(
   () => import("@/components/3d/ThreadsScene").then((m) => m.ThreadsScene),
@@ -19,6 +20,21 @@ const ThreadsScene = dynamic(
 
 export function Threads() {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+
+  // Close panel on Escape
+  useEffect(() => {
+    if (!selectedSlug) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedSlug(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedSlug]);
+
+  const selectedProject = selectedSlug
+    ? projects.find((p) => p.slug === selectedSlug) ?? null
+    : null;
 
   return (
     <section id="threads" className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24">
@@ -33,8 +49,25 @@ export function Threads() {
         </EditorialTitle>
       </div>
 
+      {/* Canvas wrapper — relative so panel can be absolute within it */}
       <div className="relative w-full max-w-5xl aspect-[4/5] md:aspect-[5/3]">
-        <ThreadsScene softSkills={softSkills} projects={projects} activeIdx={activeIdx} />
+        <ThreadsScene
+          softSkills={softSkills}
+          projects={projects}
+          activeIdx={activeIdx}
+          selectedSlug={selectedSlug}
+          onSelectPlanet={setSelectedSlug}
+        />
+
+        {/* Project detail panel — slides in over the right side of the canvas */}
+        <AnimatePresence>
+          {selectedProject && (
+            <ProjectDetailPanel
+              project={selectedProject}
+              onClose={() => setSelectedSlug(null)}
+            />
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="mt-12 grid md:grid-cols-2 gap-6 max-w-3xl w-full">
