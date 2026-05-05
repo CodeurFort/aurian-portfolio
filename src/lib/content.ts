@@ -96,7 +96,7 @@ export const projects: Project[] = [
     paperColor: "paper-cream",
     role: "conception, dev, design solo",
     status: "ongoing",
-    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png"],
+    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png", "/visuals/levels-achievements.png"],
     pitch:
       "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs avec historique journalier complet et planification multi-horizons : la semaine, le mois, l'année, la vie. L'utilisateur définit ses objectifs, valide au fil de la journée, consulte son historique passé et projette ses cibles sur tous les horizons. PWA single-file, synchronisation temps réel multi-appareils.",
     achievements: [
@@ -433,7 +433,7 @@ export const projectsEn: Project[] = [
     paperColor: "paper-cream",
     role: "concept, dev, design (solo)",
     status: "ongoing",
-    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png"],
+    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png", "/visuals/levels-achievements.png"],
     pitch:
       "Discipline plays out in LEVELS: become the hero of your own story. A web app for goal tracking with full daily history and multi-horizon planning across the week, month, year and life. The user defines goals, validates them throughout the day, browses past history and projects targets onto every horizon. Single-file PWA, real-time sync across devices.",
     achievements: [
