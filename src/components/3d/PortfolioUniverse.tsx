@@ -1380,13 +1380,21 @@ function PlanetMesh({
 interface IdentityStarProps {
   cameraX: number;
   onSelect: () => void;
+  eruption?: boolean;
 }
 
-function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
+function IdentityStar({ cameraX, onSelect, eruption = false }: IdentityStarProps) {
   const { lang } = useLang();
   const groupRef = useRef<THREE.Group>(null);
   const innerRef = useRef<THREE.Mesh>(null);
+  const innerMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const spikesRef = useRef<THREE.Group>(null);
+  const haloMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const lightRef = useRef<THREE.PointLight>(null);
+  const flame1Ref = useRef<THREE.Mesh>(null);
+  const flame2Ref = useRef<THREE.Mesh>(null);
+  const flame3Ref = useRef<THREE.Mesh>(null);
+  const flame4Ref = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
@@ -1396,42 +1404,117 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
     };
   }, [hovered]);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     if (groupRef.current) {
       // Track camera.x horizontally, stay pinned at top
       groupRef.current.position.x +=
         (cameraX - groupRef.current.position.x) * 0.08;
     }
     if (innerRef.current) {
-      innerRef.current.rotation.y += dt * 0.2;
-      innerRef.current.rotation.x += dt * 0.05;
+      innerRef.current.rotation.y += dt * (eruption ? 0.5 : 0.2);
+      innerRef.current.rotation.x += dt * (eruption ? 0.15 : 0.05);
     }
     if (spikesRef.current) {
-      spikesRef.current.rotation.z += dt * 0.05;
+      spikesRef.current.rotation.z += dt * (eruption ? 0.18 : 0.05);
+    }
+    // Eruption: animate halo, light, core pulses
+    if (eruption) {
+      const t = state.clock.elapsedTime;
+      const pulse = 0.5 + 0.5 * Math.sin(t * 4);
+      if (haloMatRef.current) {
+        haloMatRef.current.opacity = 0.28 + 0.22 * pulse;
+      }
+      if (lightRef.current) {
+        lightRef.current.intensity = (hovered ? 4.5 : 3.2) + pulse * 1.6;
+      }
+      if (innerMatRef.current) {
+        innerMatRef.current.emissiveIntensity =
+          (hovered ? 2.4 : 1.8) + pulse * 0.9;
+      }
+      // Lava flame tongues — rise up then loop
+      const flames = [flame1Ref, flame2Ref, flame3Ref, flame4Ref];
+      flames.forEach((ref, i) => {
+        if (!ref.current) return;
+        const phase = (t * 1.8 + i * 0.6) % 1.6;
+        const climb = phase / 1.6;
+        ref.current.position.y = 0.5 + climb * 1.6;
+        const fade = climb < 0.2 ? climb / 0.2 : 1 - (climb - 0.2) / 0.8;
+        const mat = ref.current.material as THREE.MeshBasicMaterial;
+        mat.opacity = Math.max(0, fade) * 0.85;
+        const sc = 0.6 + climb * 0.4;
+        ref.current.scale.set(sc * (1 - climb * 0.3), sc, sc * (1 - climb * 0.3));
+      });
     }
   });
 
+  // Eruption palette: lava-orange, deep red, gold flecks
+  const coreColor = eruption ? "#FFE0A0" : "#F5D6D0";
+  const emissiveColor = eruption ? "#FF5828" : "#E55B5B";
+  const haloColor = eruption ? "#FF6A2A" : "#E55B5B";
+  const labelColor = eruption ? "#FF8A2A" : "#E55B5B";
+  const sparkleColor = eruption ? "#FFB84A" : "#E55B5B";
+
   const spikeMat = (
     <meshStandardMaterial
-      color="#F5D6D0"
-      emissive="#E55B5B"
-      emissiveIntensity={1.5}
+      color={eruption ? "#FFC07A" : "#F5D6D0"}
+      emissive={emissiveColor}
+      emissiveIntensity={eruption ? 2.6 : 1.5}
       toneMapped={false}
     />
   );
 
   return (
     <group ref={groupRef} position={[cameraX, 5, -2]}>
-      <pointLight color="#E55B5B" intensity={hovered ? 3.5 : 2} distance={10} decay={2} />
+      <pointLight
+        ref={lightRef}
+        color={emissiveColor}
+        intensity={eruption ? 3.5 : hovered ? 3.5 : 2}
+        distance={eruption ? 14 : 10}
+        decay={2}
+      />
 
       {/* Outer atmosphere halo */}
-      <mesh scale={1.4}>
+      <mesh scale={eruption ? 1.7 : 1.4}>
         <sphereGeometry args={[0.9, 32, 32]} />
-        <meshBasicMaterial color="#E55B5B" transparent opacity={0.22} side={THREE.BackSide} />
+        <meshBasicMaterial
+          ref={haloMatRef}
+          color={haloColor}
+          transparent
+          opacity={eruption ? 0.4 : 0.22}
+          side={THREE.BackSide}
+        />
       </mesh>
 
       {/* Sparkles */}
-      <Sparkles count={40} scale={3} size={6} speed={0.3} color="#E55B5B" />
+      <Sparkles
+        count={eruption ? 80 : 40}
+        scale={eruption ? 4 : 3}
+        size={eruption ? 9 : 6}
+        speed={eruption ? 0.7 : 0.3}
+        color={sparkleColor}
+      />
+
+      {/* Eruption: rising flame tongues (lava droplets stretched into tear-drops) */}
+      {eruption && (
+        <>
+          <mesh ref={flame1Ref} position={[0, 0.5, 0]}>
+            <sphereGeometry args={[0.18, 12, 12]} />
+            <meshBasicMaterial color="#FF6A2A" transparent opacity={0} toneMapped={false} />
+          </mesh>
+          <mesh ref={flame2Ref} position={[0.4, 0.5, 0]}>
+            <sphereGeometry args={[0.14, 12, 12]} />
+            <meshBasicMaterial color="#FFB44A" transparent opacity={0} toneMapped={false} />
+          </mesh>
+          <mesh ref={flame3Ref} position={[-0.4, 0.5, 0]}>
+            <sphereGeometry args={[0.14, 12, 12]} />
+            <meshBasicMaterial color="#FF5828" transparent opacity={0} toneMapped={false} />
+          </mesh>
+          <mesh ref={flame4Ref} position={[0.15, 0.5, 0.3]}>
+            <sphereGeometry args={[0.12, 12, 12]} />
+            <meshBasicMaterial color="#FFE08A" transparent opacity={0} toneMapped={false} />
+          </mesh>
+        </>
+      )}
 
       {/* Inner sphere */}
       <mesh
@@ -1448,11 +1531,12 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
       >
         <sphereGeometry args={[0.9, 32, 32]} />
         <meshStandardMaterial
-          color="#F5D6D0"
-          emissive="#E55B5B"
-          emissiveIntensity={hovered ? 1.8 : 1.3}
+          ref={innerMatRef}
+          color={coreColor}
+          emissive={emissiveColor}
+          emissiveIntensity={eruption ? 2.2 : hovered ? 1.8 : 1.3}
           toneMapped={false}
-          roughness={0.3}
+          roughness={eruption ? 0.45 : 0.3}
           metalness={0}
         />
       </mesh>
@@ -1461,7 +1545,7 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
       <group ref={spikesRef}>
         {[0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4].map((rot, i) => (
           <mesh key={i} rotation={[0, 0, rot]}>
-            <boxGeometry args={[0.05, 2.2, 0.05]} />
+            <boxGeometry args={[eruption ? 0.07 : 0.05, eruption ? 2.6 : 2.2, eruption ? 0.07 : 0.05]} />
             {spikeMat}
           </mesh>
         ))}
@@ -1471,7 +1555,7 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
       <Text
         position={[0, -1.45, 0]}
         fontSize={0.32}
-        color="#E55B5B"
+        color={labelColor}
         anchorX="center"
         anchorY="top"
         letterSpacing={0.05}
@@ -1552,6 +1636,7 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
       <IdentityStar
         cameraX={cameraX}
         onSelect={() => onSelectStar("identity")}
+        eruption={index === 3}
       />
     </group>
   );
