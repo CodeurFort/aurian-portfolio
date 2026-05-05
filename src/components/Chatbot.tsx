@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   projects,
@@ -10,8 +10,10 @@ import {
   projectQualities,
 } from "@/lib/content";
 
-// Tone: guide d'observatoire, sobre, poétique. Univers (pas observatoire).
+// The bot IS Aurian (a bot version of him). Visitors address questions TO him.
+// Bot answers in first person ("je", "mes", "moi"), sobre & poétique.
 // Strict rule: no em dashes ("—"). Use periods, commas, parentheses.
+// No free chat: every step shows a fresh menu of predefined questions.
 
 interface Msg {
   id: string;
@@ -19,151 +21,183 @@ interface Msg {
   text: string;
 }
 
-const SUGGESTIONS = [
-  "qui es-tu",
-  "tes projets",
-  "ta stack",
-  "tes qualités",
-  "comment te contacter",
-  "tes loisirs",
-];
+type Topic =
+  | "root"
+  | "identity"
+  | "projects"
+  | "project"
+  | "stack"
+  | "qualities"
+  | "contact"
+  | "hobbies"
+  | "formation"
+  | "cv"
+  | "languages"
+  | "joke"
+  | "bot";
 
-function normalize(s: string) {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^\w\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+interface Reply {
+  text: string;
+  next: Topic;
 }
 
-function answer(query: string): string {
-  const q = normalize(query);
-  if (!q) return "posez votre question. l'univers écoute.";
+const ROOT_LABEL: Record<Topic, string> = {
+  root: "Menu",
+  identity: "Qui es-tu",
+  projects: "Tes projets",
+  project: "Explore une planète",
+  stack: "Ta stack",
+  qualities: "Tes qualités",
+  contact: "Comment te contacter",
+  hobbies: "Tes loisirs",
+  formation: "Ta formation",
+  cv: "Ton parcours",
+  languages: "Tes langues",
+  joke: "Une blague",
+  bot: "Qui es-tu, toi le bot",
+};
 
-  // Identity
-  if (
-    /\b(qui (es|est|t es)|presente|toi|ton nom|aurian|hello|salut|bonjour)\b/.test(
-      q
-    )
-  ) {
-    return `${profile.tagline} ${profile.manifesto}`;
-  }
+// Suggestion menus per topic — always 4-5 fresh choices that lead elsewhere.
+const MENUS: Record<Topic, Topic[]> = {
+  root: ["identity", "projects", "stack", "qualities", "contact"],
+  identity: ["projects", "cv", "qualities", "hobbies", "contact"],
+  projects: ["project", "stack", "qualities", "contact", "identity"],
+  project: ["projects", "stack", "qualities", "cv", "contact"],
+  stack: ["projects", "qualities", "cv", "formation", "contact"],
+  qualities: ["projects", "hobbies", "contact", "identity", "joke"],
+  contact: ["projects", "cv", "stack", "hobbies", "identity"],
+  hobbies: ["qualities", "projects", "languages", "contact", "joke"],
+  formation: ["cv", "stack", "projects", "languages", "contact"],
+  cv: ["projects", "stack", "formation", "languages", "contact"],
+  languages: ["formation", "cv", "hobbies", "contact", "identity"],
+  joke: ["projects", "hobbies", "qualities", "bot", "contact"],
+  bot: ["projects", "qualities", "joke", "contact", "identity"],
+};
 
-  // Specific planets
-  for (const p of projects) {
-    const slug = normalize(p.slug);
-    const title = normalize(p.title);
-    if (q.includes(slug) || q.includes(title)) {
-      return `« ${p.title} ». ${p.pitch}`;
+function capitalize(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function reply(topic: Topic, planetSlug?: string): Reply {
+  switch (topic) {
+    case "identity":
+      return {
+        text: `Je suis Aurian, version bot. ${capitalize(profile.tagline)} ${capitalize(profile.manifesto)}`,
+        next: "identity",
+      };
+    case "projects": {
+      const list = projects
+        .map((p) => `« ${p.title} » : ${capitalize(p.pitch.split(".")[0])}.`)
+        .join(" ");
+      return {
+        text: `J'ai cinq lumières dans mon univers. ${list}`,
+        next: "projects",
+      };
     }
+    case "project": {
+      const slug = planetSlug ?? projects[0].slug;
+      const p = projects.find((x) => x.slug === slug) ?? projects[0];
+      return {
+        text: `Pour « ${p.title} » : ${capitalize(p.pitch)}`,
+        next: "project",
+      };
+    }
+    case "stack": {
+      const byCat: Record<string, string[]> = {};
+      stack.forEach((s) => {
+        (byCat[s.category] ??= []).push(s.label);
+      });
+      const cats: Record<string, string> = {
+        lang: "Langages",
+        data: "Data",
+        cloud: "Cloud",
+        ai: "IA",
+        other: "Automatisation",
+      };
+      const txt = Object.entries(byCat)
+        .map(([k, v]) => `${cats[k] ?? k} : ${v.join(", ")}.`)
+        .join(" ");
+      return { text: `Voici ma stack. ${txt}`, next: "stack" };
+    }
+    case "qualities": {
+      const lines = Object.values(projectQualities)
+        .map(
+          (q) =>
+            `${capitalize(q.qualities[0])} × ${q.qualities[1]}, ${capitalize(q.phrase)}`
+        )
+        .join(" ");
+      return {
+        text: `Cinq paires, une par projet. ${lines}`,
+        next: "qualities",
+      };
+    }
+    case "contact":
+      return {
+        text: `Tu peux me joindre par email à ${profile.email}, sur LinkedIn (${profile.linkedin}) ou GitHub (${profile.github}).`,
+        next: "contact",
+      };
+    case "hobbies":
+      return {
+        text:
+          "À côté du code, j'aime : " +
+          hobbies
+            .map((h) => (h.detail ? `${h.label} (${h.detail})` : h.label))
+            .join(", ") +
+          ".",
+        next: "hobbies",
+      };
+    case "formation":
+      return {
+        text: `Ma formation : ${capitalize(profile.formation)}`,
+        next: "formation",
+      };
+    case "cv":
+      return {
+        text: `Actuellement : ${capitalize(profile.cvCurrent)} Précédemment : ${capitalize(profile.cvPrevious)}`,
+        next: "cv",
+      };
+    case "languages":
+      return {
+        text:
+          "Je parle " +
+          profile.languages.map((l) => `${l.label} (${l.level})`).join(", ") +
+          ".",
+        next: "languages",
+      };
+    case "joke":
+      return {
+        text:
+          "Voici. Deux étoiles entrent dans un bar. L'une dit à l'autre : « Tu brilles trop, on nous regarde ». La blague est faible, l'univers aussi parfois.",
+        next: "joke",
+      };
+    case "bot":
+      return {
+        text:
+          "Je suis une version bot d'Aurian. Un fragment d'éditorial qui répond pour lui pendant qu'il code ailleurs.",
+        next: "bot",
+      };
+    case "root":
+    default:
+      return {
+        text: "Que veux-tu savoir ? Choisis une question.",
+        next: "root",
+      };
   }
-
-  // Projects overview
-  if (
-    /\b(projet|planete|univers|portfolio|que fais|qu est ce que tu fais)\b/.test(
-      q
-    )
-  ) {
-    const list = projects
-      .map((p) => `« ${p.title} » : ${p.pitch.split(".")[0]}.`)
-      .join(" ");
-    return `cinq lumières dans l'univers. ${list}`;
-  }
-
-  // Stack
-  if (/\b(stack|techno|outil|langage|tool|tech)\b/.test(q)) {
-    const byCat: Record<string, string[]> = {};
-    stack.forEach((s) => {
-      (byCat[s.category] ??= []).push(s.label);
-    });
-    const cats: Record<string, string> = {
-      lang: "langages",
-      data: "data",
-      cloud: "cloud",
-      ai: "ia",
-      other: "automatisation",
-    };
-    return Object.entries(byCat)
-      .map(([k, v]) => `${cats[k] ?? k} : ${v.join(", ")}.`)
-      .join(" ");
-  }
-
-  // Qualities
-  if (/\b(qualite|soft skill|force|atout|caractere)\b/.test(q)) {
-    const lines = Object.values(projectQualities)
-      .map((q) => `${q.qualities[0]} × ${q.qualities[1]}, ${q.phrase.toLowerCase()}`)
-      .join(" ");
-    return `cinq paires, une par planète. ${lines}`;
-  }
-
-  // Contact
-  if (
-    /\b(contact|email|mail|linkedin|github|joindre|ecrire|message)\b/.test(q)
-  ) {
-    return `email : ${profile.email}. linkedin : ${profile.linkedin}. github : ${profile.github}.`;
-  }
-
-  // Hobbies
-  if (/\b(loisir|hobby|passion|musique|theatre|echec|jujitsu|poesie)\b/.test(q)) {
-    return (
-      "à côté du code : " +
-      hobbies
-        .map((h) => (h.detail ? `${h.label} (${h.detail})` : h.label))
-        .join(", ") +
-      "."
-    );
-  }
-
-  // Formation
-  if (/\b(formation|diplome|ecole|etude|msc|licence|bac)\b/.test(q)) {
-    return profile.formation;
-  }
-
-  // CV / experience
-  if (
-    /\b(cv|experience|stage|alternance|job|poste|emploi|parcours|travail)\b/.test(
-      q
-    )
-  ) {
-    return `actuellement : ${profile.cvCurrent} précédemment : ${profile.cvPrevious}`;
-  }
-
-  // Languages
-  if (/\b(langue|francais|anglais|espagnol|english)\b/.test(q)) {
-    return profile.languages.map((l) => `${l.label} (${l.level})`).join(", ") + ".";
-  }
-
-  // Easter eggs
-  if (/\b(qui es tu toi|t es qui|c est qui|le bot)\b/.test(q)) {
-    return "un fragment d'éditorial qui rêve d'être agent. en attendant, je guide.";
-  }
-  if (/\b(blague|drole|rire|fun)\b/.test(q)) {
-    return "deux étoiles entrent dans un bar. l'une dit à l'autre : « tu brilles trop, on nous regarde ». la blague est faible, l'univers aussi parfois.";
-  }
-
-  // Fallback
-  return "je ne sais pas répondre à cela. essayez : tes projets, ta stack, tes qualités, comment te contacter, tes loisirs.";
-}
-
-function useTypewriterText(text: string, speed = 14) {
-  const [out, setOut] = useState("");
-  useEffect(() => {
-    setOut("");
-    let i = 0;
-    const id = window.setInterval(() => {
-      i += 1;
-      setOut(text.slice(0, i));
-      if (i >= text.length) window.clearInterval(id);
-    }, speed);
-    return () => window.clearInterval(id);
-  }, [text, speed]);
-  return out;
 }
 
 function BotMessage({ text }: { text: string }) {
-  const typed = useTypewriterText(text, 12);
+  const [typed, setTyped] = useState("");
+  useEffect(() => {
+    setTyped("");
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 1;
+      setTyped(text.slice(0, i));
+      if (i >= text.length) window.clearInterval(id);
+    }, 12);
+    return () => window.clearInterval(id);
+  }, [text]);
   return (
     <div className="flex gap-2 items-start">
       <span
@@ -199,8 +233,9 @@ function BotMessage({ text }: { text: string }) {
 
 export function Chatbot() {
   const [open, setOpen] = useState(false);
-  const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Msg[]>([]);
+  const [menu, setMenu] = useState<Topic[]>(MENUS.root);
+  const [planetIndex, setPlanetIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   // Greet on first open
@@ -211,9 +246,10 @@ export function Chatbot() {
           id: "greet",
           from: "bot",
           text:
-            "bienvenue dans l'univers. cinq lumières, un fil de menthe. posez votre question.",
+            "Bienvenue dans mon univers. Cinq lumières, un fil de menthe. Choisis une étoile pour commencer.",
         },
       ]);
+      setMenu(MENUS.root);
     }
   }, [open, messages.length]);
 
@@ -221,55 +257,51 @@ export function Chatbot() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, open]);
+  }, [messages, open, menu]);
 
-  const send = (text: string) => {
-    const clean = text.trim();
-    if (!clean) return;
+  const ask = (topic: Topic) => {
+    // For "project", cycle through projects each click for variety.
+    let slug: string | undefined;
+    let userLabel = ROOT_LABEL[topic];
+    if (topic === "project") {
+      slug = projects[planetIndex % projects.length].slug;
+      userLabel = `« ${projects[planetIndex % projects.length].title} »`;
+      setPlanetIndex((i) => i + 1);
+    }
+    const r = reply(topic, slug);
     const userMsg: Msg = {
       id: `u-${Date.now()}`,
       from: "user",
-      text: clean,
+      text: userLabel,
     };
-    const reply = answer(clean);
     const botMsg: Msg = {
       id: `b-${Date.now()}`,
       from: "bot",
-      text: reply,
+      text: r.text,
     };
     setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    window.setTimeout(
-      () => setMessages((prev) => [...prev, botMsg]),
-      380 + Math.random() * 240
-    );
+    window.setTimeout(() => {
+      setMessages((prev) => [...prev, botMsg]);
+      setMenu(MENUS[r.next]);
+    }, 360);
   };
-
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    send(input);
-  };
-
-  const showSuggestions = useMemo(
-    () => messages.length <= 1,
-    [messages.length]
-  );
 
   return (
     <>
-      {/* Header launcher (top-center, between Portfolio · Univers and StarLegend) */}
+      {/* Header launcher (top-right, to the LEFT of the StarLegend) */}
       <motion.button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Fermer le guide" : "Ouvrir le guide"}
-        className="fixed top-6 left-1/2 z-[41] grid place-items-center select-none"
+        className="fixed z-[41] grid place-items-center select-none"
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.0, duration: 0.6, ease: "easeOut" }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
         style={{
-          transform: "translateX(-50%)",
+          top: 24,
+          right: 220,
           width: 44,
           height: 44,
           borderRadius: 12,
@@ -280,7 +312,6 @@ export function Chatbot() {
             "0 4px 18px rgba(0,0,0,0.55), 0 0 14px rgba(164,245,200,0.12)",
         }}
       >
-        {/* Tiny antenna pulse */}
         <motion.span
           aria-hidden
           className="absolute pointer-events-none"
@@ -304,7 +335,6 @@ export function Chatbot() {
           aria-hidden
           style={{ display: "block" }}
         >
-          {/* antenna */}
           <line
             x1="18"
             y1="4"
@@ -314,7 +344,6 @@ export function Chatbot() {
             strokeWidth="1.2"
             strokeLinecap="round"
           />
-          {/* head */}
           <rect
             x="6"
             y="9"
@@ -325,10 +354,8 @@ export function Chatbot() {
             stroke="rgba(236,230,214,0.85)"
             strokeWidth="1.3"
           />
-          {/* eyes */}
           <circle cx="13" cy="18" r="1.8" fill="#A4F5C8" />
           <circle cx="23" cy="18" r="1.8" fill="#A4F5C8" />
-          {/* mouth slit */}
           <line
             x1="14"
             y1="24"
@@ -338,7 +365,6 @@ export function Chatbot() {
             strokeWidth="1"
             strokeLinecap="round"
           />
-          {/* close glyph (overlays when open) */}
           {open && (
             <g>
               <line
@@ -368,15 +394,16 @@ export function Chatbot() {
         {open && (
           <motion.div
             key="chatbot-panel"
-            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            initial={{ opacity: 0, y: 10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            exit={{ opacity: 0, y: 6, scale: 0.97 }}
             transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
-            className="fixed top-[72px] left-1/2 z-[40] flex flex-col"
+            className="fixed z-[40] flex flex-col"
             style={{
-              transform: "translateX(-50%)",
-              width: "min(340px, calc(100vw - 32px))",
-              height: "min(420px, calc(100vh - 160px))",
+              top: 76,
+              right: 24,
+              width: "min(360px, calc(100vw - 32px))",
+              height: "min(440px, calc(100vh - 120px))",
               borderRadius: 16,
               background:
                 "linear-gradient(180deg, rgba(14,15,18,0.92) 0%, rgba(7,8,10,0.95) 100%)",
@@ -387,7 +414,6 @@ export function Chatbot() {
               overflow: "hidden",
             }}
           >
-            {/* starfield decoration */}
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none"
@@ -401,17 +427,18 @@ export function Chatbot() {
               }}
             />
 
-            {/* Header */}
-            <div className="px-5 pt-4 pb-3 relative" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div
+              className="px-5 pt-4 pb-3 relative"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+            >
               <p className="mono uppercase tracking-[0.4em] text-[9px] text-thread">
                 guide · univers
               </p>
               <p className="serif-italic text-text mt-1" style={{ fontSize: 18 }}>
-                qu'aimeriez-vous savoir ?
+                Qu'aimerais-tu savoir ?
               </p>
             </div>
 
-            {/* Messages */}
             <div
               ref={scrollRef}
               className="flex-1 overflow-y-auto px-5 py-4 relative"
@@ -441,84 +468,43 @@ export function Chatbot() {
                     </div>
                   )
                 )}
-
-                {showSuggestions && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {SUGGESTIONS.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => send(s)}
-                        className="mono lowercase transition-colors hover:bg-thread/10 hover:text-thread"
-                        style={{
-                          fontSize: 10,
-                          letterSpacing: "0.05em",
-                          padding: "5px 9px",
-                          borderRadius: 999,
-                          color: "rgba(236,230,214,0.65)",
-                          border: "1px solid rgba(164,245,200,0.18)",
-                          background: "transparent",
-                        }}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Input */}
-            <form
-              onSubmit={onSubmit}
-              className="relative px-4 py-3"
+            {/* Predefined menu (ALWAYS visible, no free input) */}
+            <div
+              className="px-4 py-3 relative"
               style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
             >
-              <div
-                className="flex items-center gap-2"
-                style={{
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  padding: "6px 12px",
-                }}
+              <p
+                className="mono uppercase tracking-[0.3em] text-[8px] mb-2"
+                style={{ color: "rgba(236,230,214,0.45)" }}
               >
-                <span
-                  className="mono"
-                  style={{ color: "#A4F5C8", fontSize: 11, opacity: 0.8 }}
-                >
-                  ›
-                </span>
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="posez une question…"
-                  className="flex-1 bg-transparent outline-none mono lowercase"
-                  style={{
-                    fontSize: 12,
-                    color: "rgba(236,230,214,0.9)",
-                    letterSpacing: "0.02em",
-                  }}
-                />
-                <button
-                  type="submit"
-                  aria-label="Envoyer"
-                  className="mono uppercase"
-                  style={{
-                    fontSize: 9,
-                    letterSpacing: "0.3em",
-                    color: "#A4F5C8",
-                    padding: "4px 8px",
-                    borderRadius: 999,
-                    background: "rgba(164,245,200,0.08)",
-                    border: "1px solid rgba(164,245,200,0.2)",
-                    cursor: "pointer",
-                  }}
-                >
-                  envoyer
-                </button>
+                Choisis une question
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {menu.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => ask(t)}
+                    className="mono transition-colors hover:bg-thread/10 hover:text-thread"
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: "0.05em",
+                      padding: "5px 9px",
+                      borderRadius: 999,
+                      color: "rgba(236,230,214,0.7)",
+                      border: "1px solid rgba(164,245,200,0.18)",
+                      background: "transparent",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {ROOT_LABEL[t]}
+                  </button>
+                ))}
               </div>
-            </form>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

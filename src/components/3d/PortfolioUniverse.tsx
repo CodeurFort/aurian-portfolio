@@ -15,7 +15,7 @@ import {
 } from "@/lib/content";
 import { TechPill } from "@/components/ui/TechPill";
 import { Chatbot } from "@/components/Chatbot";
-import { HyperspaceWarp } from "@/components/HyperspaceWarp";
+import { PlanetTransition, pickVariant } from "@/components/PlanetTransition";
 import { PlanetAmbient } from "@/components/PlanetAmbient";
 
 // ---------------------------------------------------------------------------
@@ -1954,10 +1954,11 @@ export function PortfolioUniverse() {
       closeCard();
       // Trigger hyperspace warp overlay
       setWarpTick((t) => t + 1);
-      // Show chapter caption (slightly delayed so warp plays first)
+      // Show chapter caption AFTER the transition has finished (~800ms)
+      // so the title never overlaps the streaks/wipe/shock visuals.
       setCaptionVisible(false);
-      setTimeout(() => setCaptionVisible(true), 320);
-      setTimeout(() => setCaptionVisible(false), 1900);
+      setTimeout(() => setCaptionVisible(true), 820);
+      setTimeout(() => setCaptionVisible(false), 2400);
     },
     [closeCard]
   );
@@ -2080,9 +2081,14 @@ export function PortfolioUniverse() {
       {/* Per-planet ambient layer (signature effect tied to the focused planet) */}
       {introDismissed && <PlanetAmbient slug={projects[index].slug} />}
 
-      {/* Hyperspace warp on transition */}
+      {/* Planet transition overlay (variant cycles per tick) */}
       <AnimatePresence>
-        {warpTick > 0 && <HyperspaceWarp key={`warp-${warpTick}`} />}
+        {warpTick > 0 && (
+          <PlanetTransition
+            tickKey={warpTick}
+            variant={pickVariant(warpTick)}
+          />
+        )}
       </AnimatePresence>
 
       {/* Star legend (top right, pokemon-badge style) — clickable for global details */}
