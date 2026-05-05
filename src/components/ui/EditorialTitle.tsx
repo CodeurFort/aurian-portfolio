@@ -20,7 +20,9 @@ export function EditorialTitle({
   as = "h2",
   className = "",
 }: EditorialTitleProps) {
-  const Tag = motion[as] as React.ElementType;
+  // Cast to avoid Framer Motion 12 strict children-typing issue on dynamic tags
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Tag = motion[as] as any;
   return (
     <Tag
       className={`serif-italic text-text ${sizes[size]} ${className}`}
