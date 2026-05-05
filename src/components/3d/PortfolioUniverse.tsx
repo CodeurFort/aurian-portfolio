@@ -2188,6 +2188,53 @@ export function PortfolioUniverse() {
       {/* Fullscreen card overlay */}
       <CardOverlay openCard={openCard} onClose={closeCard} />
 
+      {/* Back to landing button (bottom-left) */}
+      {introDismissed && (
+        <motion.button
+          type="button"
+          onClick={() => setIntroDismissed(false)}
+          aria-label="Retour à la landing"
+          className="fixed bottom-6 left-6 z-[40] flex items-center gap-2 group"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0, duration: 0.6, ease: "easeOut" }}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          style={{
+            padding: "8px 14px",
+            borderRadius: 999,
+            background:
+              "linear-gradient(160deg, rgba(20,22,27,0.9) 0%, rgba(7,8,10,0.95) 100%)",
+            border: "1px solid rgba(164,245,200,0.22)",
+            boxShadow:
+              "0 4px 18px rgba(0,0,0,0.55), 0 0 14px rgba(164,245,200,0.10)",
+          }}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            aria-hidden
+            style={{ display: "block" }}
+          >
+            <path
+              d="M10 3 L4 8 L10 13"
+              fill="none"
+              stroke="#A4F5C8"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span
+            className="mono uppercase tracking-[0.25em] text-[10px]"
+            style={{ color: "rgba(236,230,214,0.78)" }}
+          >
+            Retour
+          </span>
+        </motion.button>
+      )}
+
       {/* Intro overlay */}
       <AnimatePresence>
         {!introDismissed && (
