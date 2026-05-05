@@ -9,27 +9,130 @@ import { motion, AnimatePresence } from "framer-motion";
 const Z = 8;
 
 function LevelsAmbient() {
-  // Soft cream grid pulse
+  // Stained-glass modern dark: floating geometric glass shards with cool accents,
+  // discreet "leaded" grid, periodic diagonal light sweep.
+  const shards = useMemo(
+    () => [
+      { left: "8%", top: "14%", w: 240, h: 150, rotate: -8, color: "164,245,200", delay: 0 },
+      { left: "62%", top: "8%", w: 180, h: 220, rotate: 6, color: "200,169,155", delay: 0.4 },
+      { left: "30%", top: "58%", w: 280, h: 140, rotate: -4, color: "224,183,96", delay: 0.8 },
+      { left: "74%", top: "48%", w: 200, h: 200, rotate: 10, color: "164,245,200", delay: 1.2 },
+      { left: "12%", top: "72%", w: 160, h: 120, rotate: 14, color: "236,230,214", delay: 0.6 },
+      { left: "46%", top: "28%", w: 130, h: 180, rotate: -12, color: "200,169,155", delay: 1.0 },
+      { left: "82%", top: "76%", w: 150, h: 130, rotate: -6, color: "224,183,96", delay: 1.4 },
+    ],
+    []
+  );
+
   return (
     <motion.div
       key="amb-levels"
       initial={{ opacity: 0 }}
-      animate={{ opacity: [0, 0.18, 0.12, 0.18] }}
+      animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 2.2, repeat: Infinity, repeatType: "mirror" }}
-      className="fixed inset-0 pointer-events-none"
-      style={{
-        zIndex: Z,
-        backgroundImage:
-          "linear-gradient(rgba(236,230,214,0.18) 1px, transparent 1px), \
-           linear-gradient(90deg, rgba(236,230,214,0.18) 1px, transparent 1px)",
-        backgroundSize: "60px 60px, 60px 60px",
-        maskImage:
-          "radial-gradient(circle at center, rgba(0,0,0,0.5) 0%, transparent 65%)",
-        WebkitMaskImage:
-          "radial-gradient(circle at center, rgba(0,0,0,0.5) 0%, transparent 65%)",
-      }}
-    />
+      transition={{ duration: 1.0 }}
+      className="fixed inset-0 pointer-events-none overflow-hidden"
+      style={{ zIndex: Z }}
+    >
+      {/* deep base vignette tint */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(15,22,30,0.35) 0%, transparent 70%)",
+        }}
+      />
+
+      {/* leaded glass grid (very subtle, cathedral feel) */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(180,180,170,0.06) 1px, transparent 1px), \
+             linear-gradient(90deg, rgba(180,180,170,0.06) 1px, transparent 1px)",
+          backgroundSize: "140px 100px",
+          maskImage:
+            "radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, transparent 80%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, transparent 80%)",
+        }}
+      />
+
+      {/* glass shards */}
+      {shards.map((s, i) => (
+        <motion.div
+          key={i}
+          className="absolute"
+          style={{
+            left: s.left,
+            top: s.top,
+            width: s.w,
+            height: s.h,
+            mixBlendMode: "screen",
+          }}
+          initial={{ rotate: s.rotate, y: 0, opacity: 0 }}
+          animate={{
+            rotate: [s.rotate, s.rotate + 1.5, s.rotate, s.rotate - 1.5, s.rotate],
+            y: [0, -8, 0, 8, 0],
+            opacity: 1,
+          }}
+          transition={{
+            duration: 14 + i * 1.5,
+            delay: s.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, rgba(${s.color},0.22) 0%, rgba(${s.color},0.07) 60%, transparent 100%)`,
+              border: `1px solid rgba(${s.color},0.4)`,
+              borderRadius: 2,
+              boxShadow: `0 0 18px rgba(${s.color},0.18), inset 0 0 24px rgba(${s.color},0.10)`,
+            }}
+          />
+          {/* edge highlight */}
+          <div
+            className="absolute"
+            style={{
+              left: 0,
+              right: 0,
+              top: 0,
+              height: 1,
+              background: `linear-gradient(90deg, transparent 0%, rgba(${s.color},0.85) 50%, transparent 100%)`,
+            }}
+          />
+        </motion.div>
+      ))}
+
+      {/* diagonal light sweep (long, periodic) */}
+      <motion.div
+        aria-hidden
+        className="absolute"
+        style={{
+          left: 0,
+          top: "-20vh",
+          width: 260,
+          height: "140vh",
+          transform: "rotate(18deg)",
+          transformOrigin: "50% 50%",
+          background:
+            "linear-gradient(90deg, transparent 0%, rgba(236,230,214,0.08) 35%, rgba(164,245,200,0.22) 50%, rgba(236,230,214,0.08) 65%, transparent 100%)",
+          filter: "blur(10px)",
+          mixBlendMode: "screen",
+        }}
+        animate={{ x: ["-30vw", "120vw"] }}
+        transition={{
+          duration: 9,
+          repeat: Infinity,
+          ease: "easeInOut",
+          repeatDelay: 5,
+        }}
+      />
+    </motion.div>
   );
 }
 
