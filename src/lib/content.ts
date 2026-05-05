@@ -77,8 +77,9 @@ export const projects: Project[] = [
     paperColor: "paper-cream",
     role: "conception, dev, design solo",
     pitch:
-      "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs quotidiens. L'utilisateur définit ses objectifs du jour, valide au fil de la journée, suit sa régularité dans le temps et consulte ses tendances dans des récaps hebdomadaires. PWA single-file, synchronisation temps réel multi-appareils.",
+      "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs avec historique journalier complet et planification multi-horizons : la semaine, le mois, l'année, la vie. L'utilisateur définit ses objectifs, valide au fil de la journée, consulte son historique passé et projette ses cibles sur tous les horizons. PWA single-file, synchronisation temps réel multi-appareils.",
     achievements: [
+      "Historique journalier complet et planification multi-horizons (semaine, mois, année, vie) : feature centrale.",
       "Architecture single-file (HTML, CSS, JS dans un index.html) : zéro build, déploiement instantané.",
       "Synchronisation Firestore temps réel multi-appareils avec session unique anti-conflit.",
       "Système de dates custom : grace period 0h, 2h pour préserver la régularité de l'utilisateur.",
