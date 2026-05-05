@@ -4,6 +4,7 @@ import { Prelude } from "@/components/sections/Prelude";
 import { ProjectPlanet } from "@/components/sections/ProjectPlanet";
 import { OpenclawPlanet } from "@/components/sections/OpenclawPlanet";
 import { Threads } from "@/components/sections/Threads";
+import { StellarMap } from "@/components/sections/StellarMap";
 import { projects } from "@/lib/content";
 
 export default function Home() {
@@ -18,6 +19,7 @@ export default function Home() {
       <ProjectPlanet project={music} index={3} />
       <OpenclawPlanet project={openclaw} index={4} />
       <Threads />
+      <StellarMap />
     </PageShell>
   );
 }
