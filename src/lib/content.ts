@@ -77,7 +77,7 @@ export const projects: Project[] = [
     paperColor: "paper-cream",
     role: "conception, dev, design solo",
     pitch:
-      "Application web de suivi d'objectifs quotidiens. L'utilisateur définit ses objectifs du jour, valide au fil de la journée, suit sa régularité dans le temps et consulte ses tendances dans des récaps hebdomadaires. PWA single-file, synchronisation temps réel multi-appareils.",
+      "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs quotidiens. L'utilisateur définit ses objectifs du jour, valide au fil de la journée, suit sa régularité dans le temps et consulte ses tendances dans des récaps hebdomadaires. PWA single-file, synchronisation temps réel multi-appareils.",
     achievements: [
       "Architecture single-file (HTML, CSS, JS dans un index.html) : zéro build, déploiement instantané.",
       "Synchronisation Firestore temps réel multi-appareils avec session unique anti-conflit.",
