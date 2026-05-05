@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 380" width="640" height="380" role="img" aria-labelledby="title">
+  <title id="title">Energizer — pipeline diagnostic 5 étapes + Blog Redactor auto-révisé</title>
+  <defs>
+    <style><![CDATA[
+      .bg { fill: #0E0F12; }
+      .hair { stroke: #2A3530; stroke-width: 1; fill: none; }
+      .mint { stroke: #A4F5C8; stroke-width: 1.2; fill: none; }
+      .mint-fill { fill: #A4F5C8; }
+      .cream { fill: #ECE6D6; }
+      .muted { fill: #6B6660; }
+      .label { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; }
+      .num { font-family: Georgia, serif; font-style: italic; font-size: 18px; }
+      .title-mono { font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; }
+      .body { font-family: Georgia, serif; font-size: 13px; }
+      .body-i { font-family: Georgia, serif; font-style: italic; font-size: 12px; }
+    ]]></style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#A4F5C8" />
+    </marker>
+  </defs>
+  <rect class="bg" width="640" height="380" />
+
+  <!-- title -->
+  <text class="title-mono mint-fill" x="32" y="40">Energizer · pipeline</text>
+  <line class="hair" x1="32" y1="52" x2="608" y2="52" />
+
+  <!-- 5 step boxes -->
+  <g transform="translate(32,90)">
+    <g transform="translate(0,0)">
+      <rect class="hair" x="0" y="0" width="100" height="68" rx="3" />
+      <text class="num mint-fill" x="10" y="22">01</text>
+      <text class="label cream" x="10" y="44">Stratégie</text>
+      <text class="label muted" x="10" y="58">contexte</text>
+    </g>
+    <g transform="translate(120,0)">
+      <rect class="hair" x="0" y="0" width="100" height="68" rx="3" />
+      <text class="num mint-fill" x="10" y="22">02</text>
+      <text class="label cream" x="10" y="44">Veille</text>
+      <text class="label muted" x="10" y="58">scrap dense</text>
+    </g>
+    <g transform="translate(240,0)">
+      <rect class="hair" x="0" y="0" width="100" height="68" rx="3" />
+      <text class="num mint-fill" x="10" y="22">03</text>
+      <text class="label cream" x="10" y="44">Concurrence</text>
+      <text class="label muted" x="10" y="58">benchmark</text>
+    </g>
+    <g transform="translate(360,0)">
+      <rect class="hair" x="0" y="0" width="100" height="68" rx="3" />
+      <text class="num mint-fill" x="10" y="22">04</text>
+      <text class="label cream" x="10" y="44">Critique</text>
+      <text class="label muted" x="10" y="58">audit IA</text>
+    </g>
+    <g transform="translate(480,0)">
+      <rect class="hair" x="0" y="0" width="100" height="68" rx="3" />
+      <text class="num mint-fill" x="10" y="22">05</text>
+      <text class="label cream" x="10" y="44">Scoring</text>
+      <text class="label muted" x="10" y="58">/ 100</text>
+    </g>
+
+    <!-- arrows between boxes -->
+    <line class="mint" x1="100" y1="34" x2="116" y2="34" marker-end="url(#arrow)" />
+    <line class="mint" x1="220" y1="34" x2="236" y2="34" marker-end="url(#arrow)" />
+    <line class="mint" x1="340" y1="34" x2="356" y2="34" marker-end="url(#arrow)" />
+    <line class="mint" x1="460" y1="34" x2="476" y2="34" marker-end="url(#arrow)" />
+  </g>
+
+  <!-- feedback loop into Blog Redactor -->
+  <g transform="translate(32,200)">
+    <rect class="hair" x="0" y="0" width="576" height="110" rx="3" />
+    <text class="title-mono mint-fill" x="20" y="28">Blog Redactor v2</text>
+    <text class="body cream" x="20" y="56">Auto-révise jusqu'à score cible atteint</text>
+    <text class="body-i muted" x="20" y="78">SEO · GEO · E-E-A-T · pertinence</text>
+
+    <!-- circular arrow icon on right -->
+    <g transform="translate(490,55)">
+      <circle class="mint" cx="0" cy="0" r="22" />
+      <path class="mint" d="M -10,-14 A 18,18 0 1 1 -16,8" marker-end="url(#arrow)" stroke-linecap="round" />
+      <text class="label mint-fill" x="-8" y="40">loop</text>
+    </g>
+  </g>
+
+  <!-- arrow from scoring to redactor -->
+  <line class="mint" x1="582" y1="160" x2="582" y2="196" marker-end="url(#arrow)" />
+  <text class="label muted" x="490" y="184">vers redactor</text>
+</svg>

@@ -101,12 +101,14 @@ import {
   stackEn,
   profile,
   profileEn,
+  certifications,
+  certificationsEn,
 } from "./content";
 
 export function useContent() {
   const { lang } = useLang();
   return lang === "fr"
-    ? { projects, projectQualities, softSkillBlocks, hobbies, stack, profile }
+    ? { projects, projectQualities, softSkillBlocks, hobbies, stack, profile, certifications }
     : {
         projects: projectsEn,
         projectQualities: projectQualitiesEn,
@@ -114,6 +116,7 @@ export function useContent() {
         hobbies: hobbiesEn,
         stack: stackEn,
         profile: profileEn,
+        certifications: certificationsEn,
       };
 }
 
@@ -134,6 +137,7 @@ const UI_TEXT = {
     starLangues: "Langues",
     starOrbites: "Orbites",
     starContact: "Contact",
+    starCerts: "Certifications",
     // Chapter labels
     chapter1: "Chapitre I",
     chapter2: "Chapitre II",
@@ -163,6 +167,10 @@ const UI_TEXT = {
     infoLangues: "Langues",
     infoOrbites: "Orbites",
     infoContact: "Contact",
+    infoCerts: "Certifications & Diplômes",
+    certsIntro: "Quelques jalons posés et vérifiables. Les pièces sont téléchargeables quand elles existent.",
+    certsPending: "À venir",
+    certsDownload: "Voir l'attestation ↗",
     cvCurrent: "Poste actuel",
     cvPath: "Parcours",
     cvFormation: "Formation",
@@ -237,6 +245,7 @@ const UI_TEXT = {
     starLangues: "Languages",
     starOrbites: "Orbits",
     starContact: "Contact",
+    starCerts: "Certifications",
     chapter1: "Chapter I",
     chapter2: "Chapter II",
     chapter3: "Chapter III",
@@ -260,6 +269,10 @@ const UI_TEXT = {
     infoLangues: "Languages",
     infoOrbites: "Orbits",
     infoContact: "Contact",
+    infoCerts: "Certifications & Degrees",
+    certsIntro: "A few milestones, all verifiable. Documents are downloadable when available.",
+    certsPending: "Upcoming",
+    certsDownload: "View certificate ↗",
     cvCurrent: "Current role",
     cvPath: "Background",
     cvFormation: "Education",

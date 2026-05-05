@@ -97,6 +97,7 @@ function getInfoStars(ui: UiText) {
     { id: "qualites", label: ui.starQualites, icon: "✦" },
     { id: "languages", label: ui.starLangues, icon: "✧" },
     { id: "hobbies", label: ui.starOrbites, icon: "○" },
+    { id: "certs", label: ui.starCerts, icon: "⬡" },
     { id: "contact", label: ui.starContact, icon: "@" },
   ];
 }
@@ -128,7 +129,7 @@ const PLANET_INFO: Record<string, string[]> = {
   thelook: ["stack", "qualites", "languages"],
 };
 
-type StarShape = "cone" | "octa" | "spike" | "tetra" | "sphere" | "box";
+type StarShape = "cone" | "octa" | "spike" | "tetra" | "sphere" | "box" | "hex";
 
 interface StarDef {
   id: string;
@@ -144,6 +145,7 @@ const STAR_SHAPES: Record<string, StarShape> = {
   qualites: "spike",
   languages: "tetra",
   hobbies: "sphere",
+  certs: "hex",
   contact: "box",
 };
 
@@ -154,6 +156,7 @@ const STAR_COLORS: Record<string, string> = {
   qualites: "#B985E5", // violet — qualités
   languages: "#E5A1B9", // rose — langues
   hobbies: "#8BD4A4", // vert — orbites
+  certs: "#A4F5C8", // menthe — certifications
   contact: "#E8D26A", // jaune — contact
 };
 
@@ -164,6 +167,7 @@ function getCategoryLabels(ui: UiText): Record<string, string> {
     qualites: ui.infoQualites,
     languages: ui.infoLangues,
     hobbies: ui.infoOrbites,
+    certs: ui.infoCerts,
     contact: ui.infoContact,
   };
 }
@@ -654,7 +658,8 @@ function StackOverlayCard({
 
 function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => void }) {
   const ui = useUi();
-  const { projects, projectQualities, profile, hobbies, stack } = useContent();
+  const { projects, projectQualities, profile, hobbies, stack, certifications } = useContent();
+  const basePath = process.env.NEXT_PUBLIC_USE_BASE_PATH === "true" ? "/aurian-portfolio" : "";
   const titles: Record<string, string> = {
     cv: ui.infoCv,
     stack: ui.infoStack,
@@ -662,6 +667,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
     languages: ui.infoLangues,
     hobbies: ui.infoOrbites,
     contact: ui.infoContact,
+    certs: ui.infoCerts,
   };
 
   const categories = ["lang", "data", "cloud", "ai", "other"] as const;
@@ -783,6 +789,62 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
               <span className="text-thread text-xs">●</span>
               <span className="text-lg text-text">{h.label}</span>
               {h.detail && <span className="text-text-muted text-base">· {h.detail}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {infoId === "certs" && (
+        <div className="space-y-6">
+          <p className="serif-italic text-text-muted text-lg max-w-xl mb-4">
+            {ui.certsIntro}
+          </p>
+          {certifications.map((c) => (
+            <div
+              key={c.slug}
+              className="border-b border-hairline pb-5 last:border-0 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
+                  <span
+                    className="serif-display text-text"
+                    style={{ fontSize: "22px" }}
+                  >
+                    {c.title}
+                  </span>
+                  {c.level && (
+                    <span className="mono uppercase tracking-widest text-[10px] text-thread">
+                      {c.level}
+                    </span>
+                  )}
+                  {c.pending && (
+                    <span
+                      className="mono uppercase tracking-widest text-[9px] px-2 py-0.5 rounded-full"
+                      style={{
+                        color: "rgba(236,230,214,0.7)",
+                        border: "1px solid rgba(236,230,214,0.25)",
+                        background: "rgba(236,230,214,0.04)",
+                      }}
+                    >
+                      {ui.certsPending}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-text-muted leading-snug">
+                  {c.issuer} · {c.date}
+                  {c.score && <span className="text-text"> · {c.score}</span>}
+                </p>
+              </div>
+              {c.pdfUrl && (
+                <a
+                  href={`${basePath}${c.pdfUrl}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mono uppercase tracking-widest text-[11px] text-thread border-b border-thread hover:opacity-80 self-start sm:self-auto whitespace-nowrap"
+                >
+                  {ui.certsDownload}
+                </a>
+              )}
             </div>
           ))}
         </div>
@@ -968,6 +1030,9 @@ function SatStar({ position, starId, shape, color, onSelect }: SatStarProps) {
           r.x += dt * 0.03;
           r.y += dt * 0.05;
           break;
+        case "hex":
+          r.y += dt * 0.06;
+          break;
       }
 
       const targetScale = hovered ? 1.4 : 1.0;
@@ -993,6 +1058,8 @@ function SatStar({ position, starId, shape, color, onSelect }: SatStarProps) {
         return <sphereGeometry args={[0.085, 12, 12]} />; // tiny moon for hobbies
       case "box":
         return <boxGeometry args={[0.14, 0.14, 0.14]} />; // cube for contact
+      case "hex":
+        return <cylinderGeometry args={[0.10, 0.10, 0.08, 6]} />; // hex prism for certs
     }
   })();
 
@@ -1753,6 +1820,19 @@ function ShapeIcon({ shape, color }: { shape: StarShape; color: string }) {
           <rect x="3" y="3" width="12" height="12" fill={fill} stroke={stroke} strokeWidth="1.2" strokeLinejoin="round" />
         </svg>
       );
+    case "hex":
+      // hexagon — echoes PIX badge shape
+      return (
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <polygon
+            points="9,2 15,5.5 15,12.5 9,16 3,12.5 3,5.5"
+            fill={fill}
+            stroke={stroke}
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
   }
 }
 
@@ -1900,6 +1980,7 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
     { id: "qualites", shape: "spike" },
     { id: "languages", shape: "tetra" },
     { id: "hobbies", shape: "sphere" },
+    { id: "certs", shape: "hex" },
     { id: "contact", shape: "box" },
   ];
   return (

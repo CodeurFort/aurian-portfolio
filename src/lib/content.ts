@@ -58,6 +58,17 @@ export interface StackTool {
   category: "lang" | "data" | "cloud" | "ai" | "other";
 }
 
+export interface Certification {
+  slug: string;
+  title: string;
+  level?: string; // e.g. "Indépendant 1", "Mention Bien", "C1"
+  score?: string; // e.g. "369 / 895", "14.32 / 20"
+  date: string; // free-form: "04/07/2025", "2021", "à venir"
+  issuer: string; // institution that delivered it
+  pdfUrl?: string; // downloadable artefact
+  pending?: boolean; // true = diplôme à venir
+}
+
 export interface Profile {
   name: string;
   tagline: string;
@@ -106,6 +117,7 @@ export const projects: Project[] = [
     pitch:
       "Application web qui aide les entreprises à briller dans les moteurs traditionnels et génératifs. Energizer audite le site, définit un plan d'actions, et propose comme feature phare la création de blogs personnalisés : rédaction alimentée par les meilleurs mots-clés issus d'un scrapping dense et du scoring du diagnostic. Architecture multi-tenant, agent IA orchestré en cinq étapes (stratégie, veille, concurrence, critique, scoring), pipeline Blog Redactor v2 qui s'auto-révise tant que le score cible sur 100 (SEO, GEO, E-E-A-T, pertinence) n'est pas atteint.",
     role: "conception, architecture, dev solo",
+    visuals: ["/visuals/energizer-pipeline.svg"],
     achievements: [
       "Pipeline 5 étapes diagnostic + Blog Redactor avec auto-révision.",
       "Architecture multi-tenant (entreprise = contexte agent).",
@@ -120,6 +132,7 @@ export const projects: Project[] = [
     paperColor: "paper-ochre",
     role: "lead dev, scoring engine, design",
     status: "done",
+    visuals: ["/visuals/mirakl-scoring.svg"],
     pitch:
       "Application BDR conçue pour le hackathon Mirakl x Eugenia School 2026 (finaliste). Elle identifie des sellers adaptés à une marketplace : depuis la base Mirakl (Supabase, alimentée chaque semaine par un scrapping automatisé) ou en ciblant des sellers selon des critères pondérés (catégorie, géo, prix, customer, saisonnalité, signaux marketplace). On peut aussi entrer un nom de seller : le scrapping se fait alors en direct, puis le matching avec une marketplace présente. Ensuite, l'app rédige une séquence d'outreach BDR personnalisable selon la stratégie commerciale et les événements, regénérable au prompt, enrichie par Better Contact (Apify en fallback) et envoyée via SMTP.",
     achievements: [
@@ -203,6 +216,7 @@ export const projects: Project[] = [
     paperColor: "paper-stone",
     role: "audit SQL avancé",
     status: "done",
+    visuals: ["/visuals/thelook-pipeline.svg"],
     repoUrl: "https://github.com/CodeurFort/audit-_de_performance_e-commerce_-the_look-",
     pitch:
       "Audit Fashion Hoodies & Sweatshirts sur TheLook eCommerce (BigQuery public). 12 CTEs enchaînées, window functions LAG et ROW_NUMBER, KPIs business par mois : CA, marge, panier moyen, croissance, rotation stock, top canal, taux de rebond et de conversion, top région.",
@@ -361,6 +375,39 @@ export const profile: Profile = {
   ],
 };
 
+export const certifications: Certification[] = [
+  {
+    slug: "pix",
+    title: "PIX",
+    level: "Indépendant 1",
+    score: "369 / 895",
+    date: "04/07/2025",
+    issuer: "Université Paris 1 Panthéon-Sorbonne",
+    pdfUrl: "/visuals/certifications/pix-2025.pdf",
+  },
+  {
+    slug: "licence-aes",
+    title: "Licence AES",
+    date: "2025",
+    issuer: "Paris 1 Panthéon-Sorbonne",
+    pending: true,
+  },
+  {
+    slug: "bac",
+    title: "Baccalauréat général",
+    level: "Mention Bien",
+    date: "2021",
+    issuer: "Lycée français Blaise Pascal, Libreville",
+  },
+  {
+    slug: "toefl",
+    title: "TOEFL",
+    level: "C1",
+    date: "—",
+    issuer: "ETS",
+  },
+];
+
 export const outroQuote = placeholder("outro.quote");
 
 // ---------------------------------------------------------------------------
@@ -399,6 +446,7 @@ export const projectsEn: Project[] = [
     pitch:
       "Web app helping companies shine in both traditional and generative search engines. Energizer audits the site, builds an action plan, and offers as flagship feature personalized blog generation: copy fueled by the best keywords from a dense scrape and the diagnostic scoring. Multi-tenant architecture, AI agent orchestrated in five steps (strategy, watch, competition, critique, scoring), Blog Redactor v2 pipeline that self-revises until the target score (out of 100, on SEO, GEO, E-E-A-T and relevance) is reached.",
     role: "concept, architecture, dev (solo)",
+    visuals: ["/visuals/energizer-pipeline.svg"],
     achievements: [
       "5-step diagnostic pipeline + self-revising Blog Redactor.",
       "Multi-tenant architecture (company = agent context).",
@@ -413,6 +461,7 @@ export const projectsEn: Project[] = [
     paperColor: "paper-ochre",
     role: "lead dev, scoring engine, design",
     status: "done",
+    visuals: ["/visuals/mirakl-scoring.svg"],
     pitch:
       "BDR app built for the Mirakl x Eugenia School 2026 hackathon (finalist). It identifies sellers fit for a marketplace: from the Mirakl base (Supabase, fed weekly by an automated scrape) or by targeting sellers with weighted criteria (category, geo, price, customer, seasonality, marketplace signals). You can also enter a seller name: scraping is then done live, then matched with a relevant marketplace. Next, the app drafts a customizable BDR outreach sequence aligned with the commercial strategy and events, regeneratable by prompt, enriched via Better Contact (Apify fallback) and sent through SMTP.",
     achievements: [
@@ -496,6 +545,7 @@ export const projectsEn: Project[] = [
     paperColor: "paper-stone",
     role: "advanced SQL audit",
     status: "done",
+    visuals: ["/visuals/thelook-pipeline.svg"],
     repoUrl: "https://github.com/CodeurFort/audit-_de_performance_e-commerce_-the_look-",
     pitch:
       "Fashion Hoodies & Sweatshirts audit on TheLook eCommerce (BigQuery public). 12 chained CTEs, LAG and ROW_NUMBER window functions, monthly business KPIs: revenue, margin, average basket, growth, stock rotation, top channel, bounce and conversion rates, top region.",
@@ -613,4 +663,37 @@ export const profileEn: Profile = {
 // stack labels stay identical (technologies don't translate). Categories are
 // the same too — we translate the category labels in the UI layer.
 export const stackEn: StackTool[] = stack;
+
+export const certificationsEn: Certification[] = [
+  {
+    slug: "pix",
+    title: "PIX",
+    level: "Independent 1",
+    score: "369 / 895",
+    date: "04/07/2025",
+    issuer: "Université Paris 1 Panthéon-Sorbonne",
+    pdfUrl: "/visuals/certifications/pix-2025.pdf",
+  },
+  {
+    slug: "licence-aes",
+    title: "Bachelor in Economic & Social Administration",
+    date: "2025",
+    issuer: "Paris 1 Panthéon-Sorbonne",
+    pending: true,
+  },
+  {
+    slug: "bac",
+    title: "Baccalauréat général",
+    level: "Honours (Mention Bien)",
+    date: "2021",
+    issuer: "Lycée français Blaise Pascal, Libreville",
+  },
+  {
+    slug: "toefl",
+    title: "TOEFL",
+    level: "C1",
+    date: "—",
+    issuer: "ETS",
+  },
+];
 

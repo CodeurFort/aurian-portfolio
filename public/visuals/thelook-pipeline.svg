@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520" width="640" height="520" role="img" aria-labelledby="title">
+  <title id="title">TheLook Analytics — pipeline 12 CTEs avec window functions</title>
+  <defs>
+    <style><![CDATA[
+      .bg { fill: #0E0F12; }
+      .hair { stroke: #2A3530; stroke-width: 1; fill: none; }
+      .mint { stroke: #A4F5C8; stroke-width: 1.2; fill: none; }
+      .mint-fill { fill: #A4F5C8; }
+      .cream { fill: #ECE6D6; }
+      .muted { fill: #6B6660; }
+      .label { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; }
+      .small { font-family: ui-monospace, monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; }
+      .title-mono { font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; }
+      .num { font-family: Georgia, serif; font-style: italic; font-size: 16px; }
+      .body-i { font-family: Georgia, serif; font-style: italic; font-size: 12px; }
+      .dashed { stroke-dasharray: 3 4; }
+    ]]></style>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#A4F5C8" />
+    </marker>
+  </defs>
+  <rect class="bg" width="640" height="520" />
+
+  <!-- title -->
+  <text class="title-mono mint-fill" x="32" y="40">TheLook · audit SQL</text>
+  <line class="hair" x1="32" y1="52" x2="608" y2="52" />
+
+  <!-- DECLARE block top -->
+  <g transform="translate(220,80)">
+    <rect class="hair" width="200" height="44" rx="3" />
+    <text class="small mint-fill" x="14" y="20">DECLARE</text>
+    <text class="small cream" x="14" y="34">date_debut · date_fin</text>
+  </g>
+
+  <!-- arrow down -->
+  <line class="mint" x1="320" y1="124" x2="320" y2="146" marker-end="url(#arrow2)" />
+
+  <!-- 4 grouped CTE columns -->
+  <g transform="translate(32,160)">
+    <!-- col 1 -->
+    <g transform="translate(0,0)">
+      <rect class="hair" width="130" height="180" rx="3" />
+      <text class="label mint-fill" x="14" y="22">Sales</text>
+      <line class="hair" x1="14" y1="34" x2="116" y2="34" />
+      <text class="num cream" x="14" y="58">3 CTEs</text>
+      <text class="small muted" x="14" y="80">CA mensuel</text>
+      <text class="small muted" x="14" y="98">marge</text>
+      <text class="small muted" x="14" y="116">panier moyen</text>
+      <line class="hair dashed" x1="14" y1="138" x2="116" y2="138" />
+      <text class="small mint-fill" x="14" y="158">LAG → growth</text>
+    </g>
+
+    <!-- col 2 -->
+    <g transform="translate(146,0)">
+      <rect class="hair" width="130" height="180" rx="3" />
+      <text class="label mint-fill" x="14" y="22">Inventory</text>
+      <line class="hair" x1="14" y1="34" x2="116" y2="34" />
+      <text class="num cream" x="14" y="58">2 CTEs</text>
+      <text class="small muted" x="14" y="80">stock fin mois</text>
+      <text class="small muted" x="14" y="98">rotation ratio</text>
+      <line class="hair dashed" x1="14" y1="138" x2="116" y2="138" />
+      <text class="small mint-fill" x="14" y="158">rupture / surstock</text>
+    </g>
+
+    <!-- col 3 -->
+    <g transform="translate(292,0)">
+      <rect class="hair" width="130" height="180" rx="3" />
+      <text class="label mint-fill" x="14" y="22">Channels</text>
+      <line class="hair" x1="14" y1="34" x2="116" y2="34" />
+      <text class="num cream" x="14" y="58">3 CTEs</text>
+      <text class="small muted" x="14" y="80">canal · région</text>
+      <text class="small muted" x="14" y="98">classement</text>
+      <line class="hair dashed" x1="14" y1="138" x2="116" y2="138" />
+      <text class="small mint-fill" x="14" y="158">ROW_NUMBER</text>
+    </g>
+
+    <!-- col 4 -->
+    <g transform="translate(438,0)">
+      <rect class="hair" width="130" height="180" rx="3" />
+      <text class="label mint-fill" x="14" y="22">Sessions</text>
+      <line class="hair" x1="14" y1="34" x2="116" y2="34" />
+      <text class="num cream" x="14" y="58">4 CTEs</text>
+      <text class="small muted" x="14" y="80">sessions</text>
+      <text class="small muted" x="14" y="98">orders join</text>
+      <text class="small muted" x="14" y="116">rebond · conv.</text>
+      <line class="hair dashed" x1="14" y1="138" x2="116" y2="138" />
+      <text class="small mint-fill" x="14" y="158">LEFT JOIN</text>
+    </g>
+  </g>
+
+  <!-- arrows down to final -->
+  <g>
+    <line class="mint" x1="97" y1="345" x2="97" y2="395" marker-end="url(#arrow2)" />
+    <line class="mint" x1="243" y1="345" x2="243" y2="395" marker-end="url(#arrow2)" />
+    <line class="mint" x1="389" y1="345" x2="389" y2="395" marker-end="url(#arrow2)" />
+    <line class="mint" x1="535" y1="345" x2="535" y2="395" marker-end="url(#arrow2)" />
+  </g>
+
+  <!-- final SELECT -->
+  <g transform="translate(80,400)">
+    <rect class="mint" width="480" height="68" rx="3" fill="#A4F5C814" />
+    <text class="title-mono mint-fill" x="20" y="26">Final SELECT</text>
+    <text class="body-i cream" x="20" y="50">KPI dashboard mensuel · Hoodies &amp; Sweatshirts · BigQuery public</text>
+  </g>
+
+  <!-- footer count -->
+  <text class="small muted" x="320" y="498" text-anchor="middle">12 CTEs · window functions · période paramétrable</text>
+</svg>

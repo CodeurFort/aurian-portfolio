@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 460" width="640" height="460" role="img" aria-labelledby="title">
+  <title id="title">Mirakl Prospector — scoring engine 6 critères pondérés</title>
+  <defs>
+    <style><![CDATA[
+      .bg { fill: #0E0F12; }
+      .hair { stroke: #2A3530; stroke-width: 1; fill: none; }
+      .mint { stroke: #A4F5C8; stroke-width: 1; fill: none; }
+      .mint-fill { fill: #A4F5C8; }
+      .cream { fill: #ECE6D6; }
+      .muted { fill: #6B6660; }
+      .label { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; }
+      .title-mono { font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; }
+      .center-num { font-family: Georgia, serif; font-style: italic; font-size: 38px; }
+      .center-sub { font-family: ui-monospace, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; }
+      .body-i { font-family: Georgia, serif; font-style: italic; font-size: 12px; }
+    ]]></style>
+  </defs>
+  <rect class="bg" width="640" height="460" />
+
+  <!-- title -->
+  <text class="title-mono mint-fill" x="32" y="40">Mirakl · scoring engine</text>
+  <line class="hair" x1="32" y1="52" x2="608" y2="52" />
+
+  <!-- center hub -->
+  <g transform="translate(320,240)">
+    <!-- hexagon outer -->
+    <polygon class="hair" points="0,-160 138.5,-80 138.5,80 0,160 -138.5,80 -138.5,-80" />
+    <!-- inner ring -->
+    <circle class="mint" cx="0" cy="0" r="58" />
+    <text class="center-num cream" x="0" y="-2" text-anchor="middle">/100</text>
+    <text class="center-sub mint-fill" x="0" y="22" text-anchor="middle">weighted score</text>
+
+    <!-- 6 spokes -->
+    <line class="mint" x1="0" y1="-58" x2="0" y2="-150" />
+    <line class="mint" x1="50" y1="-29" x2="130" y2="-75" />
+    <line class="mint" x1="50" y1="29" x2="130" y2="75" />
+    <line class="mint" x1="0" y1="58" x2="0" y2="150" />
+    <line class="mint" x1="-50" y1="29" x2="-130" y2="75" />
+    <line class="mint" x1="-50" y1="-29" x2="-130" y2="-75" />
+
+    <!-- 6 vertices labels with small dot -->
+    <g>
+      <circle class="mint-fill" cx="0" cy="-160" r="3" />
+      <text class="label cream" x="0" y="-178" text-anchor="middle">Catégorie</text>
+    </g>
+    <g>
+      <circle class="mint-fill" cx="138.5" cy="-80" r="3" />
+      <text class="label cream" x="148" y="-86" text-anchor="start">Customer</text>
+    </g>
+    <g>
+      <circle class="mint-fill" cx="138.5" cy="80" r="3" />
+      <text class="label cream" x="148" y="88" text-anchor="start">Saisonnalité</text>
+    </g>
+    <g>
+      <circle class="mint-fill" cx="0" cy="160" r="3" />
+      <text class="label cream" x="0" y="180" text-anchor="middle">Signaux mkt</text>
+    </g>
+    <g>
+      <circle class="mint-fill" cx="-138.5" cy="80" r="3" />
+      <text class="label cream" x="-148" y="88" text-anchor="end">Prix</text>
+    </g>
+    <g>
+      <circle class="mint-fill" cx="-138.5" cy="-80" r="3" />
+      <text class="label cream" x="-148" y="-86" text-anchor="end">Géo</text>
+    </g>
+  </g>
+
+  <!-- footer -->
+  <line class="hair" x1="32" y1="420" x2="608" y2="420" />
+  <text class="body-i muted" x="320" y="442" text-anchor="middle">re-scoring temps réel · TypeScript pur · serveur + client</text>
+</svg>
