@@ -241,7 +241,7 @@ export const stack: StackTool[] = [
 ];
 
 export const profile: Profile = {
-  name: "BEYOND",
+  name: "Moi",
   tagline:
     "automatisation, agents IA, data, stratégie digitale. transformer une idée en workflow concret.",
   manifesto:

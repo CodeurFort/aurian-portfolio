@@ -111,6 +111,7 @@ interface StarDef {
   label: string;
   icon: string;
   shape: StarShape;
+  color: string;
 }
 
 const STAR_SHAPES: Record<string, StarShape> = {
@@ -120,6 +121,25 @@ const STAR_SHAPES: Record<string, StarShape> = {
   languages: "tetra",
   hobbies: "sphere",
   contact: "box",
+};
+
+// Distinct color per star category — pokemon-badge style
+const STAR_COLORS: Record<string, string> = {
+  cv: "#E89B5B", // orange — parcours
+  stack: "#5B9DE8", // bleu — stack
+  qualites: "#B985E5", // violet — qualités
+  languages: "#E5A1B9", // rose — langues
+  hobbies: "#8BD4A4", // vert — orbites
+  contact: "#E8D26A", // jaune — contact
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  cv: "parcours",
+  stack: "stack",
+  qualites: "qualité contextuelle",
+  languages: "langues",
+  hobbies: "orbites",
+  contact: "contact",
 };
 
 function getStarsForPlanet(slug: string): StarDef[] {
@@ -132,6 +152,7 @@ function getStarsForPlanet(slug: string): StarDef[] {
       label: def.label,
       icon: def.icon,
       shape: STAR_SHAPES[iid] ?? "octa",
+      color: STAR_COLORS[iid] ?? "#ECE6D6",
     };
   });
 }
@@ -387,7 +408,7 @@ function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
           className="serif-display text-text leading-none"
           style={{ fontSize: "clamp(72px, 11vw, 168px)" }}
         >
-          BEYOND<span className="text-thread">.</span>
+          {profile.name}<span className="text-thread">.</span>
         </h2>
         <p className="serif-italic text-text-muted text-xl mt-6 max-w-md mx-auto">
           {profile.tagline}
@@ -490,12 +511,12 @@ function CardOverlay({
 interface SatStarProps {
   position: [number, number, number];
   starId: string;
-  label: string;
   shape: StarShape;
+  color: string;
   onSelect: (id: string) => void;
 }
 
-function SatStar({ position, starId, label, shape, onSelect }: SatStarProps) {
+function SatStar({ position, starId, shape, color, onSelect }: SatStarProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -577,26 +598,14 @@ function SatStar({ position, starId, label, shape, onSelect }: SatStarProps) {
       >
         {geometry}
         <meshStandardMaterial
-          color="#ECE6D6"
-          emissive="#A4F5C8"
-          emissiveIntensity={hovered ? 1.4 : 0.55}
-          roughness={0.35}
-          metalness={0.15}
+          color={color}
+          emissive={color}
+          emissiveIntensity={hovered ? 1.6 : 0.85}
+          roughness={0.3}
+          metalness={0.2}
           flatShading
         />
       </mesh>
-
-      {/* Label below star */}
-      <Text
-        position={[0, -0.28, 0]}
-        fontSize={0.10}
-        color={hovered ? "#A4F5C8" : "#6B6660"}
-        anchorX="center"
-        anchorY="top"
-        outlineWidth={0}
-      >
-        {label}
-      </Text>
     </group>
   );
 }
@@ -757,8 +766,8 @@ function PlanetMesh({
                 key={star.id}
                 position={[sx, sy, sz]}
                 starId={star.id}
-                label={star.label}
                 shape={star.shape}
+                color={star.color}
                 onSelect={onSelectStar}
               />
             );
@@ -807,8 +816,8 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
 
   const spikeMat = (
     <meshStandardMaterial
-      color="#ECE6D6"
-      emissive="#A4F5C8"
+      color="#F5D6D0"
+      emissive="#E55B5B"
       emissiveIntensity={1.5}
       toneMapped={false}
     />
@@ -816,16 +825,16 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
 
   return (
     <group ref={groupRef} position={[cameraX, 5, -2]}>
-      <pointLight color="#A4F5C8" intensity={hovered ? 3.5 : 2} distance={10} decay={2} />
+      <pointLight color="#E55B5B" intensity={hovered ? 3.5 : 2} distance={10} decay={2} />
 
       {/* Outer atmosphere halo */}
       <mesh scale={1.4}>
         <sphereGeometry args={[0.9, 32, 32]} />
-        <meshBasicMaterial color="#A4F5C8" transparent opacity={0.18} side={THREE.BackSide} />
+        <meshBasicMaterial color="#E55B5B" transparent opacity={0.22} side={THREE.BackSide} />
       </mesh>
 
       {/* Sparkles */}
-      <Sparkles count={40} scale={3} size={6} speed={0.3} color="#A4F5C8" />
+      <Sparkles count={40} scale={3} size={6} speed={0.3} color="#E55B5B" />
 
       {/* Inner sphere */}
       <mesh
@@ -842,9 +851,9 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
       >
         <sphereGeometry args={[0.9, 32, 32]} />
         <meshStandardMaterial
-          color="#ECE6D6"
-          emissive="#A4F5C8"
-          emissiveIntensity={hovered ? 1.6 : 1.2}
+          color="#F5D6D0"
+          emissive="#E55B5B"
+          emissiveIntensity={hovered ? 1.8 : 1.3}
           toneMapped={false}
           roughness={0.3}
           metalness={0}
@@ -864,23 +873,13 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
       {/* Label */}
       <Text
         position={[0, -1.45, 0]}
-        fontSize={0.28}
-        color="#A4F5C8"
+        fontSize={0.32}
+        color="#E55B5B"
         anchorX="center"
         anchorY="top"
-        letterSpacing={0.18}
+        letterSpacing={0.05}
       >
-        BEYOND
-      </Text>
-      <Text
-        position={[0, -1.85, 0]}
-        fontSize={0.085}
-        color="#6B6660"
-        anchorX="center"
-        anchorY="top"
-        letterSpacing={0.18}
-      >
-        étoile polaire · clic pour explorer
+        Moi
       </Text>
     </group>
   );
@@ -964,14 +963,12 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
 // ---------------------------------------------------------------------------
 function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
   useEffect(() => {
-    const timeout = setTimeout(onDismiss, 3200);
     const onAny = () => onDismiss();
     window.addEventListener("keydown", onAny);
     window.addEventListener("click", onAny);
     window.addEventListener("wheel", onAny);
     window.addEventListener("touchstart", onAny);
     return () => {
-      clearTimeout(timeout);
       window.removeEventListener("keydown", onAny);
       window.removeEventListener("click", onAny);
       window.removeEventListener("wheel", onAny);
@@ -1056,6 +1053,121 @@ function ChapterCaption({ index, visible }: { index: number; visible: boolean })
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// StarLegend — pokemon-badge style legend top-right
+// ---------------------------------------------------------------------------
+function ShapeIcon({ shape, color }: { shape: StarShape; color: string }) {
+  const stroke = color;
+  const fill = `${color}33`;
+  switch (shape) {
+    case "cone":
+      // pyramid (triangle)
+      return (
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <polygon points="9,2 16,15 2,15" fill={fill} stroke={stroke} strokeWidth="1.2" strokeLinejoin="round" />
+        </svg>
+      );
+    case "octa":
+      // diamond
+      return (
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <polygon points="9,2 16,9 9,16 2,9" fill={fill} stroke={stroke} strokeWidth="1.2" strokeLinejoin="round" />
+        </svg>
+      );
+    case "spike":
+      // sparkle / 4-point star
+      return (
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <polygon
+            points="9,1 11,7 17,9 11,11 9,17 7,11 1,9 7,7"
+            fill={fill}
+            stroke={stroke}
+            strokeWidth="1.1"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "tetra":
+      // triangle pointing up (slimmer)
+      return (
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <polygon points="9,3 15,15 3,15" fill={fill} stroke={stroke} strokeWidth="1.2" strokeLinejoin="round" />
+        </svg>
+      );
+    case "sphere":
+      return (
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <circle cx="9" cy="9" r="6" fill={fill} stroke={stroke} strokeWidth="1.2" />
+        </svg>
+      );
+    case "box":
+      return (
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <rect x="3" y="3" width="12" height="12" fill={fill} stroke={stroke} strokeWidth="1.2" strokeLinejoin="round" />
+        </svg>
+      );
+  }
+}
+
+function StarLegend() {
+  const order: { id: string; shape: StarShape }[] = [
+    { id: "cv", shape: "cone" },
+    { id: "stack", shape: "octa" },
+    { id: "qualites", shape: "spike" },
+    { id: "languages", shape: "tetra" },
+    { id: "hobbies", shape: "sphere" },
+    { id: "contact", shape: "box" },
+  ];
+  return (
+    <motion.aside
+      initial={{ opacity: 0, x: 10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.4, duration: 0.7 }}
+      aria-label="légende des étoiles"
+      className="absolute top-6 right-6 z-10 select-none pointer-events-none"
+      style={{
+        backgroundColor: "rgba(7,8,10,0.72)",
+        borderColor: "#1F2521",
+        backdropFilter: "blur(6px)",
+      }}
+    >
+      <div className="border rounded-md px-4 py-3.5" style={{ borderColor: "#1F2521" }}>
+        <p className="mono uppercase tracking-[0.3em] text-[9px] text-text-subtle mb-3">
+          étoiles · badges
+        </p>
+        <ul className="space-y-2">
+          {order.map(({ id, shape }) => (
+            <li key={id} className="flex items-center gap-2.5">
+              <span className="shrink-0 grid place-items-center" style={{ width: 18, height: 18 }}>
+                <ShapeIcon shape={shape} color={STAR_COLORS[id]} />
+              </span>
+              <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted">
+                {CATEGORY_LABELS[id]}
+              </span>
+            </li>
+          ))}
+          <li className="flex items-center gap-2.5 pt-2 mt-1 border-t" style={{ borderColor: "#1F2521" }}>
+            <span className="shrink-0 grid place-items-center" style={{ width: 18, height: 18 }}>
+              <svg width="18" height="18" viewBox="0 0 18 18">
+                <polygon
+                  points="9,1 11,7 17,9 11,11 9,17 7,11 1,9 7,7"
+                  fill="#E55B5B33"
+                  stroke="#E55B5B"
+                  strokeWidth="1.1"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted">
+              étoile polaire
+            </span>
+          </li>
+        </ul>
+      </div>
+    </motion.aside>
   );
 }
 
@@ -1209,6 +1321,9 @@ export function PortfolioUniverse() {
         </p>
       </header>
 
+      {/* Star legend (top right, pokemon-badge style) */}
+      {introDismissed && <StarLegend />}
+
       {/* Minimap dots */}
       {introDismissed && (
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-3 z-10">
@@ -1303,12 +1418,6 @@ export function PortfolioUniverse() {
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 mono uppercase tracking-[0.4em] text-[11px] text-text-muted select-none pointer-events-none">
           {String(index + 1).padStart(2, "0")} <span className="text-text-subtle">/</span> 0{projects.length}
         </div>
-      )}
-
-      {introDismissed && (
-        <p className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 mono uppercase tracking-[0.3em] text-[9px] text-text-subtle select-none pointer-events-none">
-          flèches · molette · swipe
-        </p>
       )}
 
       {/* Chapter caption */}
