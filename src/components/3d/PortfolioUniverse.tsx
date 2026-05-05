@@ -566,8 +566,7 @@ function StackOverlayCard({
         </h2>
       </header>
       <p className="serif-italic text-text-muted text-lg mb-8 max-w-xl">
-        Les outils mobilisés sur cette planète. Réunissez les cinq, vous avez
-        l'inventaire complet.
+        Les outils mobilisés sur cette planète.
       </p>
       <div className="flex flex-wrap gap-2">
         {project.stack.map((s) => (
@@ -1819,10 +1818,10 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.4, duration: 0.7 }}
       aria-label="légende des étoiles"
-      className="absolute top-6 right-6 z-10 select-none"
+      className="absolute top-4 right-4 md:top-6 md:right-6 z-10 select-none"
     >
       <div
-        className="border rounded-md px-2 py-2.5"
+        className="border rounded-md px-1.5 py-2 md:px-2 md:py-2.5"
         style={{
           borderColor: "#1F2521",
           backgroundColor: "rgba(7,8,10,0.72)",
@@ -1830,7 +1829,7 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
         }}
       >
         <p
-          className="mono uppercase tracking-[0.3em] text-[9px] text-text-subtle mb-2 px-2"
+          className="mono uppercase tracking-[0.3em] text-[9px] text-text-subtle mb-2 px-2 hidden sm:block"
         >
           Étoiles
         </p>
@@ -1840,8 +1839,9 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
               <button
                 type="button"
                 onClick={() => onSelect(`info:${id}`)}
-                className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded transition group hover:bg-white/[0.04]"
+                className="w-full flex items-center justify-center sm:justify-start gap-2.5 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded transition group hover:bg-white/[0.04]"
                 style={{ outline: "none" }}
+                aria-label={CATEGORY_LABELS[id]}
               >
                 <span
                   className="shrink-0 grid place-items-center"
@@ -1849,7 +1849,7 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
                 >
                   <ShapeIcon shape={shape} color={STAR_COLORS[id]} />
                 </span>
-                <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors">
+                <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors hidden sm:inline">
                   {CATEGORY_LABELS[id]}
                 </span>
               </button>
@@ -1862,8 +1862,9 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
             <button
               type="button"
               onClick={() => onSelect("identity")}
-              className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded transition group hover:bg-white/[0.04]"
+              className="w-full flex items-center justify-center sm:justify-start gap-2.5 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded transition group hover:bg-white/[0.04]"
               style={{ outline: "none" }}
+              aria-label="Volcanique"
             >
               <span
                 className="shrink-0 grid place-items-center"
@@ -1879,7 +1880,7 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
                   />
                 </svg>
               </span>
-              <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors">
+              <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors hidden sm:inline">
                 Volcanique
               </span>
             </button>
@@ -2069,11 +2070,11 @@ export function PortfolioUniverse() {
       </Canvas>
 
       {/* Header overlay */}
-      <header className="absolute top-6 left-6 z-10 pointer-events-none select-none">
-        <p className="serif-italic text-text text-3xl">
+      <header className="absolute top-4 left-4 md:top-6 md:left-6 z-10 pointer-events-none select-none">
+        <p className="serif-italic text-text text-xl md:text-3xl">
           Aurian<span className="text-thread">.</span>
         </p>
-        <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mt-1">
+        <p className="mono uppercase tracking-[0.3em] text-[9px] md:text-[10px] text-text-muted mt-1 hidden sm:block">
           Portfolio · Univers
         </p>
       </header>

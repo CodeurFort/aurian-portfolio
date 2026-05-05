@@ -249,17 +249,13 @@ export function Chatbot() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Fermer le guide" : "Ouvrir le guide"}
-        className="fixed z-[41] grid place-items-center select-none"
+        className="fixed z-[41] grid place-items-center select-none top-3 left-[96px] w-9 h-9 md:top-9 md:left-[250px] md:w-11 md:h-11"
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.0, duration: 0.6, ease: "easeOut" }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
         style={{
-          top: 36,
-          left: 250,
-          width: 44,
-          height: 44,
           borderRadius: 12,
           background:
             "linear-gradient(160deg, rgba(20,22,27,0.9) 0%, rgba(7,8,10,0.95) 100%)",
@@ -354,12 +350,10 @@ export function Chatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.97 }}
             transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
-            className="fixed z-[40] flex flex-col"
+            className="fixed z-[40] flex flex-col top-[60px] left-3 md:top-[88px] md:left-6"
             style={{
-              top: 88,
-              left: 24,
-              width: "min(360px, calc(100vw - 48px))",
-              height: "min(440px, calc(100vh - 120px))",
+              width: "min(360px, calc(100vw - 24px))",
+              height: "min(440px, calc(100vh - 80px))",
               borderRadius: 16,
               background:
                 "linear-gradient(180deg, rgba(14,15,18,0.92) 0%, rgba(7,8,10,0.95) 100%)",
