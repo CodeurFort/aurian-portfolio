@@ -109,7 +109,7 @@ const CHAPTER_LABELS: Record<string, string> = {
 
 const PLANET_NUMERAL: Record<string, string> = {
   levels: "I",
-  energizer: "II",
+  energizer: "Ψ",
   mirakl: "III",
   "music-agency": "?",
   thelook: "V",
@@ -241,6 +241,36 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
           </ul>
         </div>
       </div>
+      {project.moons && project.moons.length > 0 && (
+        <div className="mb-10 pt-6 border-t border-hairline">
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-5">
+            Agents en orbite
+          </p>
+          <div className="grid md:grid-cols-2 gap-5">
+            {project.moons.map((m) => (
+              <div
+                key={m.name}
+                className="border border-hairline rounded-md p-4 hover:border-thread/40 transition-colors"
+              >
+                <p className="serif-display text-text mb-1" style={{ fontSize: "20px" }}>
+                  {m.name}
+                </p>
+                <p className="serif-italic text-text-muted text-sm mb-3 leading-snug">
+                  {m.pitch}
+                </p>
+                <ul className="space-y-1.5">
+                  {m.bullets.map((b, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-text leading-snug">
+                      <span className="text-thread mt-1.5 text-[8px] shrink-0">●</span>
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {(project.liveUrl || project.repoUrl) && (
         <div className="flex gap-6 pt-6 border-t border-hairline">
           {project.liveUrl && (
@@ -279,21 +309,27 @@ function QualityOverlayCard({
   const project = projects.find((p) => p.slug === planetSlug);
   const quality = projectQualities[planetSlug];
   if (!project || !quality) return null;
+  const [a, b] = quality.qualities;
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
       <header className="mb-10 text-center">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">
-          Qualité tendue avec « {project.title} »
+          Qualités tendues avec « {project.title} »
         </p>
         <h2
-          className="serif-display text-text leading-none"
-          style={{ fontSize: "clamp(64px, 10vw, 144px)" }}
+          className="serif-display text-text leading-none flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2"
+          style={{ fontSize: "clamp(40px, 7vw, 96px)" }}
         >
-          {quality.label}<span className="text-thread">.</span>
+          <span>{a}</span>
+          <span className="text-thread serif-italic" style={{ fontSize: "0.7em" }}>×</span>
+          <span>{b}<span className="text-thread">.</span></span>
         </h2>
       </header>
-      <p className="serif-italic text-2xl md:text-3xl leading-snug text-text-muted text-center max-w-2xl mx-auto">
+      <p className="serif-italic text-xl md:text-2xl leading-snug text-text text-center max-w-2xl mx-auto mb-6">
+        {quality.phrase}
+      </p>
+      <p className="text-base md:text-lg leading-relaxed text-text-muted text-center max-w-2xl mx-auto">
         {quality.context}
       </p>
     </>
@@ -414,28 +450,32 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
       {infoId === "qualites" && (
         <div className="space-y-8">
           <p className="serif-italic text-text-muted text-lg max-w-xl">
-            Cinq qualités, une par planète. Chacune se révèle dans le contexte
-            d'un projet — pas dans l'abstrait.
+            Cinq paires de qualités, une par planète. Deux qualités tenues
+            ensemble, chacune corrigeant l&rsquo;excès de l&rsquo;autre.
           </p>
-          <div className="space-y-6">
+          <div className="space-y-8">
             {projects.map((p) => {
               const q = projectQualities[p.slug];
               if (!q) return null;
+              const [qa, qb] = q.qualities;
               return (
                 <div
                   key={p.slug}
-                  className="flex flex-col md:flex-row md:items-baseline md:gap-8 pb-6 border-b border-hairline last:border-0"
+                  className="pb-7 border-b border-hairline last:border-0"
                 >
-                  <div className="md:w-1/3 mb-2 md:mb-0">
-                    <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-1">
-                      {CHAPTER_LABELS[p.slug] ?? p.title}
-                    </p>
-                    <p className="serif-display text-text" style={{ fontSize: "28px" }}>
-                      {q.label}<span className="text-thread">.</span>
-                    </p>
-                  </div>
-                  <p className="md:w-2/3 text-base text-text-muted leading-relaxed">
-                    {q.context}
+                  <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-2">
+                    {CHAPTER_LABELS[p.slug] ?? p.title} · {p.title}
+                  </p>
+                  <p
+                    className="serif-display text-text mb-3 flex flex-wrap items-baseline gap-x-3"
+                    style={{ fontSize: "26px" }}
+                  >
+                    <span>{qa}</span>
+                    <span className="text-thread serif-italic" style={{ fontSize: "0.75em" }}>×</span>
+                    <span>{qb}<span className="text-thread">.</span></span>
+                  </p>
+                  <p className="serif-italic text-text text-base leading-snug">
+                    {q.phrase}
                   </p>
                 </div>
               );
@@ -1138,13 +1178,16 @@ function useTypewriter(
 // Intro overlay
 // ---------------------------------------------------------------------------
 function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
-  const intro = useTypewriter("Aurian", { min: 150, max: 280, startDelay: 800 });
-  const title = useTypewriter("Univers", { min: 180, max: 340, startDelay: 2800 });
-  const titleDone = title.length >= "Univers".length;
+  const INTRO = "Aurian";
+  const TITLE = "Univers";
+  const intro = useTypewriter(INTRO, { min: 150, max: 280, startDelay: 800 });
+  const title = useTypewriter(TITLE, { min: 180, max: 340, startDelay: 2800 });
+  const introDone = intro.length >= INTRO.length;
+  const titleDone = title.length >= TITLE.length;
 
   // Auto-dismiss after a long beat; user can skip with any input after a short delay.
   useEffect(() => {
-    const auto = setTimeout(onDismiss, 9000);
+    const auto = setTimeout(onDismiss, 13000);
     const onAny = () => onDismiss();
     const t = setTimeout(() => {
       window.addEventListener("keydown", onAny);
@@ -1192,22 +1235,26 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
         }}
       />
 
-      {/* "Aurian" — small, italic, muted */}
+      {/* "Aurian." — letter opacity reveals (no width shift) */}
       <p
-        className="serif-italic mb-8 min-h-[1.5em]"
+        className="serif-italic mb-8"
         style={{
           fontSize: "clamp(15px, 1.5vw, 18px)",
           color: "rgba(236,230,214,0.55)",
           letterSpacing: "0.04em",
         }}
       >
-        {intro}
-        <span style={{ color: "rgba(236,230,214,0.55)" }}>.</span>
+        {INTRO.split("").map((c, i) => (
+          <span key={i} style={{ opacity: i < intro.length ? 1 : 0, transition: "opacity 0.18s linear" }}>
+            {c}
+          </span>
+        ))}
+        <span style={{ opacity: introDone ? 1 : 0, transition: "opacity 0.18s linear" }}>.</span>
       </p>
 
-      {/* "Univers" — quiet, no green cursor, no blink */}
+      {/* "Univers." — letters always present (invisible until typed), space reserved, no layout shift */}
       <h1
-        className="serif-display text-center min-h-[1em]"
+        className="serif-display text-center"
         style={{
           fontSize: "clamp(64px, 12vw, 160px)",
           color: "rgba(236,230,214,0.95)",
@@ -1215,28 +1262,33 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
           textShadow: "0 0 60px rgba(236,230,214,0.06)",
         }}
       >
-        {title}
-        <span style={{ color: "rgba(236,230,214,0.95)" }}>.</span>
+        {TITLE.split("").map((c, i) => (
+          <span key={i} style={{ opacity: i < title.length ? 1 : 0, transition: "opacity 0.18s linear" }}>
+            {c}
+          </span>
+        ))}
+        <span style={{ opacity: titleDone ? 1 : 0, transition: "opacity 0.18s linear" }}>.</span>
       </h1>
 
-      {/* Discreet hint — appears late, slow fade, no green */}
-      <AnimatePresence>
-        {titleDone && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.4 }}
-            transition={{ duration: 2.2, ease: "easeOut" }}
-            className="mono uppercase mt-16"
-            style={{
-              letterSpacing: "0.45em",
-              fontSize: "9px",
-              color: "rgba(236,230,214,0.35)",
-            }}
-          >
-            entrer
-          </motion.p>
-        )}
-      </AnimatePresence>
+      {/* Hint slot — height reserved always to prevent layout shift when titleDone flips */}
+      <div className="mt-16" style={{ height: 14, display: "flex", alignItems: "center" }}>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: titleDone ? [0, 1, 0.45, 1] : 0 }}
+          transition={
+            titleDone
+              ? { duration: 1.6, repeat: Infinity, ease: "easeInOut", delay: 0.3 }
+              : { duration: 0 }
+          }
+          className="mono uppercase text-thread"
+          style={{
+            letterSpacing: "0.45em",
+            fontSize: "9px",
+          }}
+        >
+          entrer
+        </motion.p>
+      </div>
     </motion.div>
   );
 }
@@ -1324,6 +1376,141 @@ function ShapeIcon({ shape, color }: { shape: StarShape; color: string }) {
         </svg>
       );
   }
+}
+
+// ---------------------------------------------------------------------------
+// LegendFX — overlay animation when legend is clicked
+//   • "converge"  : 5 icons fly from spread positions to center (parcours / stack)
+//   • "expand"    : 1 icon at center bursts outward into 6 rays (others)
+// ---------------------------------------------------------------------------
+type FxKind = "converge" | "expand";
+
+interface LegendFXProps {
+  kind: FxKind;
+  shape: StarShape;
+  color: string;
+  onComplete: () => void;
+}
+
+function LegendFX({ kind, shape, color, onComplete }: LegendFXProps) {
+  useEffect(() => {
+    const t = setTimeout(onComplete, 780);
+    return () => clearTimeout(t);
+  }, [onComplete]);
+
+  // Origin offsets in viewport units (vw / vh) for converge: 5 corners-ish
+  const convergeOrigins: { x: string; y: string }[] = [
+    { x: "-38vw", y: "-30vh" },
+    { x: "36vw", y: "-32vh" },
+    { x: "-40vw", y: "26vh" },
+    { x: "38vw", y: "28vh" },
+    { x: "0vw", y: "-38vh" },
+  ];
+
+  // Expand directions for 6 rays
+  const expandDirs: { x: string; y: string }[] = Array.from({ length: 6 }).map(
+    (_, i) => {
+      const angle = (i / 6) * Math.PI * 2;
+      const r = 38; // vw/vh radius
+      return {
+        x: `${Math.cos(angle) * r}vw`,
+        y: `${Math.sin(angle) * r}vh`,
+      };
+    }
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-[55] pointer-events-none grid place-items-center"
+    >
+      {kind === "converge" &&
+        convergeOrigins.map((o, i) => (
+          <motion.div
+            key={i}
+            initial={{ x: o.x, y: o.y, scale: 0.75, opacity: 0 }}
+            animate={{
+              x: "0vw",
+              y: "0vh",
+              scale: [0.75, 1.2, 0.4],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 0.75,
+              ease: [0.7, 0, 0.3, 1],
+              times: [0, 0.78, 1],
+              delay: i * 0.04,
+            }}
+            className="absolute"
+            style={{ filter: `drop-shadow(0 0 12px ${color})` }}
+          >
+            <span style={{ display: "inline-block", transform: "scale(2.6)" }}>
+              <ShapeIcon shape={shape} color={color} />
+            </span>
+          </motion.div>
+        ))}
+
+      {kind === "converge" && (
+        // Final flash at the convergence point
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: [0, 1.4, 0], opacity: [0, 1, 0] }}
+          transition={{ duration: 0.45, delay: 0.45, ease: "easeOut" }}
+          className="absolute"
+          style={{
+            width: 90,
+            height: 90,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${color}55 0%, ${color}00 70%)`,
+          }}
+        />
+      )}
+
+      {kind === "expand" &&
+        expandDirs.map((o, i) => (
+          <motion.div
+            key={i}
+            initial={{ x: 0, y: 0, scale: 0.4, opacity: 0 }}
+            animate={{
+              x: o.x,
+              y: o.y,
+              scale: [0.4, 1.1, 0.9],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 0.7,
+              ease: [0.2, 0.8, 0.3, 1],
+              times: [0, 0.55, 1],
+              delay: 0.05,
+            }}
+            className="absolute"
+            style={{ filter: `drop-shadow(0 0 10px ${color})` }}
+          >
+            <span style={{ display: "inline-block", transform: "scale(2.2)" }}>
+              <ShapeIcon shape={shape} color={color} />
+            </span>
+          </motion.div>
+        ))}
+
+      {kind === "expand" && (
+        // Initial pulse at origin
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: [0, 1.2, 0], opacity: [0, 0.9, 0] }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="absolute"
+          style={{
+            width: 70,
+            height: 70,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${color}66 0%, ${color}00 70%)`,
+          }}
+        />
+      )}
+    </motion.div>
+  );
 }
 
 function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
@@ -1420,6 +1607,12 @@ export function PortfolioUniverse() {
   const [openCard, setOpenCard] = useState<OpenCard | null>(null);
   const [introDismissed, setIntroDismissed] = useState(false);
   const [captionVisible, setCaptionVisible] = useState(false);
+  const [legendFx, setLegendFx] = useState<{
+    kind: FxKind;
+    shape: StarShape;
+    color: string;
+    next: OpenCard;
+  } | null>(null);
 
   const closeCard = useCallback(() => setOpenCard(null), []);
 
@@ -1436,6 +1629,28 @@ export function PortfolioUniverse() {
     },
     []
   );
+
+  // Legend click → run FX, then open overlay
+  const handleLegendSelect = useCallback((id: string) => {
+    if (id === "identity") {
+      setLegendFx({
+        kind: "expand",
+        shape: "spike",
+        color: "#E55B5B",
+        next: { type: "identity" },
+      });
+      return;
+    }
+    const [type, value] = id.split(":");
+    if (type !== "info") return;
+    const isConverge = value === "cv" || value === "stack";
+    setLegendFx({
+      kind: isConverge ? "converge" : "expand",
+      shape: STAR_SHAPES[value] ?? "octa",
+      color: STAR_COLORS[value] ?? "#ECE6D6",
+      next: { type: "info", infoId: value },
+    });
+  }, []);
 
   const handleSelectPlanet = useCallback((project: Project) => {
     setOpenCard({ type: "planet", project });
@@ -1563,12 +1778,28 @@ export function PortfolioUniverse() {
           Aurian<span className="text-thread">.</span>
         </p>
         <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mt-1">
-          Portfolio · Observatoire
+          Portfolio · Univers
         </p>
       </header>
 
       {/* Star legend (top right, pokemon-badge style) — clickable for global details */}
-      {introDismissed && <StarLegend onSelect={handleSelectStar} />}
+      {introDismissed && <StarLegend onSelect={handleLegendSelect} />}
+
+      {/* Legend FX overlay (convergence / expansion) */}
+      <AnimatePresence>
+        {legendFx && (
+          <LegendFX
+            key="legend-fx"
+            kind={legendFx.kind}
+            shape={legendFx.shape}
+            color={legendFx.color}
+            onComplete={() => {
+              setOpenCard(legendFx.next);
+              setLegendFx(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Big animated arrows */}
       {introDismissed && (

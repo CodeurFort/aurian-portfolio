@@ -33,8 +33,10 @@ export interface SoftSkillBlock {
 }
 
 export interface ProjectQuality {
-  label: string;
-  context: string;
+  label: string; // legacy fallback (e.g. dominant theme)
+  qualities: [string, string]; // 2 qualités associées par planète
+  phrase: string; // phrase courte qui associe les deux
+  context: string; // contexte plus long
 }
 
 export interface Hobby {
@@ -117,15 +119,64 @@ export const projects: Project[] = [
   {
     slug: "music-agency",
     chapter: "iv",
-    title: "Music Agency 5 Dust",
+    title: "BEYOND",
     paperColor: "paper-blush",
-    pitch: placeholder("music.pitch"),
+    role: "conception du système, design des agents",
+    pitch:
+      "système multi-agent pour accompagner des artistes émergents. cinq agents coordonnés — un chef d'orchestre, un cerveau (A&R), des yeux (data), une voix (community), du terrain (networking) — qui transforment l'instinct artistique en stratégie exécutable, sans tuer la magie.",
     achievements: [
-      placeholder("music.achievement.1"),
-      placeholder("music.achievement.2"),
-      placeholder("music.achievement.3"),
+      "architecture 5 rôles distincts orchestrés : Orchestrator pilote, A&R Strategist écrit le brief, Growth Analyst nourrit en data, Content & Community amplifie, Networker active le terrain",
+      "système de phase (LANCEMENT / CROISSANCE / CONSOLIDATION) qui cadre les benchmarks et le ton à chaque étape — le bon message au bon stade de carrière",
+      "logique anti-vanity-metrics : on lit les signaux faibles (« 423 auditeurs, 12% save rate = top 10% émergents ») plutôt que les volumes bruts. Quick Wins puis Long Game.",
     ],
     stack: ["Dust", "Zapier", "n8n", "Notion"],
+    moons: [
+      {
+        name: "Orchestrator",
+        pitch: "le chef d'orchestre — coordonne les 4 autres",
+        bullets: [
+          "définit les priorités et la séquence d'actions",
+          "ne produit rien seul, fait produire les autres",
+        ],
+        stack: ["Dust"],
+      },
+      {
+        name: "A&R Strategist",
+        pitch: "le cerveau — positionnement et brief stratégique",
+        bullets: [
+          "identifie l'angle différenciant, fixe la phase (lancement / croissance / consolidation)",
+          "produit le brief qui déclenche tout le reste",
+        ],
+        stack: ["Dust", "Notion"],
+      },
+      {
+        name: "Growth Analyst",
+        pitch: "les yeux — data, benchmarks, signaux faibles",
+        bullets: [
+          "transforme la data en décisions concrètes",
+          "distingue le vrai impact des vanity metrics",
+        ],
+        stack: ["Dust", "n8n"],
+      },
+      {
+        name: "Content & Community",
+        pitch: "la voix — contenu, communauté, superfans",
+        bullets: [
+          "transforme le brief A&R en posts, Reels, captions, calendrier",
+          "amplificateur final des victoires de l'équipe",
+        ],
+        stack: ["Dust", "Zapier"],
+      },
+      {
+        name: "Networker",
+        pitch: "le terrain — playlists, presse, bookers, syncs",
+        bullets: [
+          "messages humains personnalisés, jamais de templates",
+          "Quick Wins d'abord, Long Game ensuite",
+        ],
+        stack: ["Dust", "Notion"],
+      },
+    ],
   },
   {
     slug: "thelook",
@@ -147,29 +198,44 @@ export const projects: Project[] = [
 
 export const projectQualities: Record<string, ProjectQuality> = {
   levels: {
-    label: "Autonomie",
+    label: "Autonomie × Pragmatisme",
+    qualities: ["Autonomie", "Pragmatisme"],
+    phrase:
+      "Trancher seul, livrer simple. L'autonomie sans pragmatisme tourne en rond ; le pragmatisme sans autonomie attend les ordres.",
     context:
-      "Construit seul, du concept à la mise en ligne. Design, dev, déploiement, itérations. Personne pour valider à ma place : il fallait trancher.",
+      "Levels est un single-file HTML : zéro build, déploiement instantané, parce qu'il fallait avancer vite et seul. Décider quoi couper avant que ça ralentisse.",
   },
   energizer: {
-    label: "Esprit analytique",
+    label: "Esprit analytique × Force de proposition",
+    qualities: ["Esprit analytique", "Force de proposition"],
+    phrase:
+      "Décomposer le flou, défendre un angle. Analyser sans proposer reste académique ; proposer sans analyser reste opinion.",
     context:
-      "Découper un problème flou (visibilité d'une marque sur tous les moteurs) en pipeline mesurable, scoré, auto-correcteur. Raisonner par couches.",
+      "Diagnostiquer la visibilité d'une marque sur des moteurs génératifs n'existait pas comme produit. J'ai dû découper le problème en pipeline scoré, puis pitcher l'angle.",
   },
   mirakl: {
-    label: "Sens stratégique",
+    label: "Sens stratégique × Travail en équipe",
+    qualities: ["Sens stratégique", "Travail en équipe"],
+    phrase:
+      "Lire le terrain, construire à plusieurs. La stratégie seule reste un PDF ; l'équipe sans cap construit beaucoup, livre peu.",
     context:
-      "Identifier le bon angle d'attaque, prioriser les leads, restituer une recommandation que le sponsor peut activer la semaine d'après.",
+      "Hackathon Mirakl x Eugenia, 48h, équipe pluridisciplinaire. Identifier le bon angle BDR puis répartir les pièces du moteur de scoring entre dev, sales, design.",
   },
   "music-agency": {
-    label: "Adaptabilité",
+    label: "Adaptabilité × Curiosité métier",
+    qualities: ["Adaptabilité", "Curiosité métier"],
+    phrase:
+      "Apprendre la langue avant de proposer l'outil. L'adaptabilité sans curiosité reste polie ; la curiosité sans adaptabilité reste touriste.",
     context:
-      "Industrie musicale, codes culturels spécifiques. Traduire l'instinct artistique d'un label en process et en outils sans tuer la magie.",
+      "Industrie musicale, codes culturels spécifiques. Avant d'automatiser quoi que ce soit, écouter comment un label parle de ses artistes.",
   },
   thelook: {
-    label: "Rigueur",
+    label: "Rigueur × Communication",
+    qualities: ["Rigueur", "Communication"],
+    phrase:
+      "Vérifier deux fois, restituer clair. Un chiffre faux et toute la reco s'effondre ; une reco illisible et personne ne l'active.",
     context:
-      "11 CTEs imbriquées, window functions, vérification croisée des KPIs avant restitution. Un chiffre faux et toute la reco s'effondre.",
+      "11 CTEs imbriquées, window functions, vérification croisée des KPIs. Puis transformer l'analyse en récit que le sponsor peut décider la semaine d'après.",
   },
 };
 
@@ -207,7 +273,7 @@ export const softSkillBlocks: SoftSkillBlock[] = [
 ];
 
 export const hobbies: Hobby[] = [
-  { label: "Musique", detail: "guitare, composition" },
+  { label: "Musique", detail: "composition, FL Studio" },
   { label: "Théâtre" },
   { label: "Échecs", detail: "élo 1600" },
   { label: "Jujitsu brésilien" },
