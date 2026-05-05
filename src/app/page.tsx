@@ -2,10 +2,11 @@ import { PageShell } from "@/components/layout/PageShell";
 import { Landing } from "@/components/sections/Landing";
 import { Prelude } from "@/components/sections/Prelude";
 import { ProjectPlanet } from "@/components/sections/ProjectPlanet";
+import { OpenclawPlanet } from "@/components/sections/OpenclawPlanet";
 import { projects } from "@/lib/content";
 
 export default function Home() {
-  const [levels, energizer, mirakl, music] = projects;
+  const [levels, energizer, mirakl, music, openclaw] = projects;
   return (
     <PageShell>
       <Landing />
@@ -14,7 +15,7 @@ export default function Home() {
       <ProjectPlanet project={energizer} index={1} />
       <ProjectPlanet project={mirakl} index={2} />
       <ProjectPlanet project={music} index={3} />
-      {/* openclaw + moons in next task */}
+      <OpenclawPlanet project={openclaw} index={4} />
     </PageShell>
   );
 }
