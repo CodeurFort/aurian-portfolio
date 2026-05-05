@@ -408,21 +408,49 @@ function SqlViewer({ code }: { code: string }) {
 
 function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: () => void }) {
   const ui = useUi();
+  const basePath = process.env.NEXT_PUBLIC_USE_BASE_PATH === "true" ? "/aurian-portfolio" : "";
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
       <header className="mb-8 sm:mb-10">
-        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">
-          {getChapterLabel(project.slug, ui)}.
-        </p>
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread">
+            {getChapterLabel(project.slug, ui)}.
+          </p>
+          {project.status && (
+            <span
+              className="mono uppercase tracking-widest text-[9px] px-2 py-1 rounded-full"
+              style={{
+                color: project.status === "ongoing" ? "#A4F5C8" : "rgba(236,230,214,0.7)",
+                border: project.status === "ongoing"
+                  ? "1px solid rgba(164,245,200,0.4)"
+                  : "1px solid rgba(236,230,214,0.25)",
+                background: project.status === "ongoing"
+                  ? "rgba(164,245,200,0.08)"
+                  : "rgba(236,230,214,0.04)",
+              }}
+            >
+              {project.status === "ongoing" ? ui.statusOngoing : ui.statusDone}
+            </span>
+          )}
+        </div>
         <h2
-          className="serif-display text-text leading-none mb-4"
+          className="serif-display text-text leading-none mb-2"
           style={{ fontSize: "clamp(34px, 7vw, 96px)" }}
         >
-          {project.title}.
+          {project.title}
+          {project.subtitle && (
+            <span
+              className="serif-italic text-text-muted ml-3"
+              style={{ fontSize: "0.42em", letterSpacing: "0.01em" }}
+            >
+              {project.subtitle}
+            </span>
+          )}
+          <span className="text-thread">.</span>
         </h2>
         {project.role && (
-          <p className="mono uppercase tracking-widest text-[11px] text-text-muted">
+          <p className="mono uppercase tracking-widest text-[11px] text-text-muted mt-3">
             {project.role}
           </p>
         )}
@@ -483,9 +511,35 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
           </div>
         </div>
       )}
+      {project.visuals && project.visuals.length > 0 && (
+        <div className="mb-10 pt-6 border-t border-hairline">
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-5">
+            {ui.visualsLabel}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {project.visuals.map((src, i) => (
+              <a
+                key={i}
+                href={`${basePath}${src}`}
+                target="_blank"
+                rel="noreferrer"
+                className="block border border-hairline rounded-md overflow-hidden hover:border-thread/40 transition-colors bg-black/20"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`${basePath}${src}`}
+                  alt={`${project.title} ${ui.visualsLabel} ${i + 1}`}
+                  className="w-full h-auto block"
+                  loading="lazy"
+                />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
       {project.sqlQuery && <SqlViewer code={project.sqlQuery} />}
-      {(project.liveUrl || project.repoUrl) && (
-        <div className="flex gap-6 pt-6 border-t border-hairline">
+      {(project.liveUrl || project.repoUrl || project.pdfUrl) && (
+        <div className="flex flex-wrap gap-6 pt-6 border-t border-hairline">
           {project.liveUrl && (
             <a
               href={project.liveUrl}
@@ -504,6 +558,16 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
               className="mono uppercase tracking-widest text-[11px] text-text-muted hover:text-thread border-b border-hairline hover:border-thread transition"
             >
               {ui.seeGithub}
+            </a>
+          )}
+          {project.pdfUrl && (
+            <a
+              href={`${basePath}${project.pdfUrl}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mono uppercase tracking-widest text-[11px] text-text-muted hover:text-thread border-b border-hairline hover:border-thread transition"
+            >
+              PDF ↗
             </a>
           )}
         </div>

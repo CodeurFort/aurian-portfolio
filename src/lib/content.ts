@@ -14,10 +14,13 @@ export interface Moon {
   stack: string[];
 }
 
+export type ProjectStatus = "ongoing" | "done";
+
 export interface Project {
   slug: string;
   chapter: string;
   title: string;
+  subtitle?: string; // e.g. "(Productivity App)"
   paperColor: PaperColor;
   pitch: string;
   role?: string;
@@ -25,6 +28,9 @@ export interface Project {
   stack: string[];
   liveUrl?: string;
   repoUrl?: string;
+  pdfUrl?: string; // downloadable artefact (architecture doc, schema, etc.)
+  visuals?: string[]; // image paths (relative to /public)
+  status?: ProjectStatus;
   moons?: Moon[];
   sqlQuery?: string; // optional code snippet (used for thelook)
 }
@@ -74,8 +80,11 @@ export const projects: Project[] = [
     slug: "levels",
     chapter: "i",
     title: "Levels",
+    subtitle: "(Productivity App)",
     paperColor: "paper-cream",
     role: "conception, dev, design solo",
+    status: "ongoing",
+    visuals: ["/screenshots/levels-app.png"],
     pitch:
       "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs avec historique journalier complet et planification multi-horizons : la semaine, le mois, l'année, la vie. L'utilisateur définit ses objectifs, valide au fil de la journée, consulte son historique passé et projette ses cibles sur tous les horizons. PWA single-file, synchronisation temps réel multi-appareils.",
     achievements: [
@@ -93,6 +102,7 @@ export const projects: Project[] = [
     chapter: "ii",
     title: "Energizer SEO GEO AEO",
     paperColor: "paper-mint",
+    status: "ongoing",
     pitch:
       "Application web qui aide les entreprises à briller dans les moteurs traditionnels et génératifs. Energizer audite le site, définit un plan d'actions, et propose comme feature phare la création de blogs personnalisés : rédaction alimentée par les meilleurs mots-clés issus d'un scrapping dense et du scoring du diagnostic. Architecture multi-tenant, agent IA orchestré en cinq étapes (stratégie, veille, concurrence, critique, scoring), pipeline Blog Redactor v2 qui s'auto-révise tant que le score cible sur 100 (SEO, GEO, E-E-A-T, pertinence) n'est pas atteint.",
     role: "conception, architecture, dev solo",
@@ -109,6 +119,7 @@ export const projects: Project[] = [
     title: "Mirakl Prospector",
     paperColor: "paper-ochre",
     role: "lead dev, scoring engine, design",
+    status: "done",
     pitch:
       "Application BDR conçue pour le hackathon Mirakl x Eugenia School 2026 (finaliste). Elle identifie des sellers adaptés à une marketplace : depuis la base Mirakl (Supabase, alimentée chaque semaine par un scrapping automatisé) ou en ciblant des sellers selon des critères pondérés (catégorie, géo, prix, customer, saisonnalité, signaux marketplace). On peut aussi entrer un nom de seller : le scrapping se fait alors en direct, puis le matching avec une marketplace présente. Ensuite, l'app rédige une séquence d'outreach BDR personnalisable selon la stratégie commerciale et les événements, regénérable au prompt, enrichie par Better Contact (Apify en fallback) et envoyée via SMTP.",
     achievements: [
@@ -124,8 +135,11 @@ export const projects: Project[] = [
     slug: "music-agency",
     chapter: "iv",
     title: "Beyond",
+    subtitle: "(Multi-Agent Music System)",
     paperColor: "paper-blush",
     role: "conception du système, design des agents",
+    status: "done",
+    pdfUrl: "/visuals/beyond-architecture.pdf",
     pitch:
       "Système multi-agent pour accompagner des artistes émergents. Cinq agents coordonnés (un chef d'orchestre, un cerveau A&R, des yeux data, une voix community, du terrain networking) qui transforment l'instinct artistique en stratégie exécutable, sans tuer la magie.",
     achievements: [
@@ -188,6 +202,8 @@ export const projects: Project[] = [
     title: "TheLook Analytics",
     paperColor: "paper-stone",
     role: "audit SQL avancé",
+    status: "done",
+    repoUrl: "https://github.com/CodeurFort/audit-_de_performance_e-commerce_-the_look-",
     pitch:
       "Audit Fashion Hoodies & Sweatshirts sur TheLook eCommerce (BigQuery public). 12 CTEs enchaînées, window functions LAG et ROW_NUMBER, KPIs business par mois : CA, marge, panier moyen, croissance, rotation stock, top canal, taux de rebond et de conversion, top région.",
     achievements: [
@@ -357,8 +373,11 @@ export const projectsEn: Project[] = [
     slug: "levels",
     chapter: "i",
     title: "Levels",
+    subtitle: "(Productivity App)",
     paperColor: "paper-cream",
     role: "concept, dev, design (solo)",
+    status: "ongoing",
+    visuals: ["/screenshots/levels-app.png"],
     pitch:
       "Discipline plays out in LEVELS: become the hero of your own story. A web app for goal tracking with full daily history and multi-horizon planning across the week, month, year and life. The user defines goals, validates them throughout the day, browses past history and projects targets onto every horizon. Single-file PWA, real-time sync across devices.",
     achievements: [
@@ -376,6 +395,7 @@ export const projectsEn: Project[] = [
     chapter: "ii",
     title: "Energizer SEO GEO AEO",
     paperColor: "paper-mint",
+    status: "ongoing",
     pitch:
       "Web app helping companies shine in both traditional and generative search engines. Energizer audits the site, builds an action plan, and offers as flagship feature personalized blog generation: copy fueled by the best keywords from a dense scrape and the diagnostic scoring. Multi-tenant architecture, AI agent orchestrated in five steps (strategy, watch, competition, critique, scoring), Blog Redactor v2 pipeline that self-revises until the target score (out of 100, on SEO, GEO, E-E-A-T and relevance) is reached.",
     role: "concept, architecture, dev (solo)",
@@ -392,6 +412,7 @@ export const projectsEn: Project[] = [
     title: "Mirakl Prospector",
     paperColor: "paper-ochre",
     role: "lead dev, scoring engine, design",
+    status: "done",
     pitch:
       "BDR app built for the Mirakl x Eugenia School 2026 hackathon (finalist). It identifies sellers fit for a marketplace: from the Mirakl base (Supabase, fed weekly by an automated scrape) or by targeting sellers with weighted criteria (category, geo, price, customer, seasonality, marketplace signals). You can also enter a seller name: scraping is then done live, then matched with a relevant marketplace. Next, the app drafts a customizable BDR outreach sequence aligned with the commercial strategy and events, regeneratable by prompt, enriched via Better Contact (Apify fallback) and sent through SMTP.",
     achievements: [
@@ -407,8 +428,11 @@ export const projectsEn: Project[] = [
     slug: "music-agency",
     chapter: "iv",
     title: "Beyond",
+    subtitle: "(Multi-Agent Music System)",
     paperColor: "paper-blush",
     role: "system design, agent design",
+    status: "done",
+    pdfUrl: "/visuals/beyond-architecture.pdf",
     pitch:
       "Multi-agent system supporting emerging artists. Five coordinated agents (a conductor, an A&R brain, data eyes, a community voice, networking on the ground) that turn artistic instinct into executable strategy without killing the magic.",
     achievements: [
@@ -471,6 +495,8 @@ export const projectsEn: Project[] = [
     title: "TheLook Analytics",
     paperColor: "paper-stone",
     role: "advanced SQL audit",
+    status: "done",
+    repoUrl: "https://github.com/CodeurFort/audit-_de_performance_e-commerce_-the_look-",
     pitch:
       "Fashion Hoodies & Sweatshirts audit on TheLook eCommerce (BigQuery public). 12 chained CTEs, LAG and ROW_NUMBER window functions, monthly business KPIs: revenue, margin, average basket, growth, stock rotation, top channel, bounce and conversion rates, top region.",
     achievements: [
