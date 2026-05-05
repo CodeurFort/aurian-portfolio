@@ -102,14 +102,17 @@ export const projects: Project[] = [
     chapter: "iii",
     title: "Mirakl Prospector",
     paperColor: "paper-ochre",
-    pitch: placeholder("mirakl.pitch"),
-    role: placeholder("mirakl.role"),
+    role: "lead dev, scoring engine, design",
+    pitch:
+      "outil BDR conçu pour le hackathon Mirakl x Eugenia School 2026. il qualifie les marques e-commerce contre 7 profils de marketplaces, enrichit les contacts décisionnaires (LinkedIn + email) et génère des séquences d'outreach personnalisées par GPT-4o. de la prospection brute au mail envoyé en un seul flux.",
     achievements: [
-      placeholder("mirakl.achievement.1"),
-      placeholder("mirakl.achievement.2"),
-      placeholder("mirakl.achievement.3"),
+      "scoring engine 6 critères (catégorie, géo, prix, customer, saisonnalité, signaux marketplace) en TypeScript pur, scoring continu pondéré sur 100, exécuté côté serveur ET côté client (re-scoring temps réel sur filtre)",
+      "pipeline d'enrichissement hybride : Better Contact API en priorité, fallback Apify Google Search + DNS/SMTP probe pour les sellers hors radar (354/409 hits sur le crawl Python)",
+      "génération d'emails GPT-4o avec 5 prompts distincts, envoi via nodemailer/Google Workspace SMTP, persistance Supabase (Postgres). déployé sur Vercel.",
     ],
-    stack: ["Hubspot", "Make", "Power Automate", "Power BI"],
+    stack: ["Next.js 16", "React 19", "TypeScript", "Zustand", "Tailwind v4", "Recharts", "OpenAI GPT-4o", "Supabase", "Vercel", "Apify", "Better Contact"],
+    liveUrl: "https://mirakl-prospector.vercel.app",
+    repoUrl: "https://github.com/CodeurFort/mirakl-prospector",
   },
   {
     slug: "music-agency",

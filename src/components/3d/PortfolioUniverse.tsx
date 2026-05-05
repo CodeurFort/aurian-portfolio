@@ -107,8 +107,12 @@ const CHAPTER_LABELS: Record<string, string> = {
   thelook: "Chapitre V",
 };
 
-const ROMAN: Record<string, string> = {
-  i: "I", ii: "II", iii: "III", iv: "IV", v: "V",
+const PLANET_NUMERAL: Record<string, string> = {
+  levels: "I",
+  energizer: "II",
+  mirakl: "III",
+  "music-agency": "?",
+  thelook: "V",
 };
 
 const PLANET_INFO: Record<string, string[]> = {
@@ -404,6 +408,39 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
               </div>
             );
           })}
+        </div>
+      )}
+
+      {infoId === "qualites" && (
+        <div className="space-y-8">
+          <p className="serif-italic text-text-muted text-lg max-w-xl">
+            Cinq qualités, une par planète. Chacune se révèle dans le contexte
+            d'un projet — pas dans l'abstrait.
+          </p>
+          <div className="space-y-6">
+            {projects.map((p) => {
+              const q = projectQualities[p.slug];
+              if (!q) return null;
+              return (
+                <div
+                  key={p.slug}
+                  className="flex flex-col md:flex-row md:items-baseline md:gap-8 pb-6 border-b border-hairline last:border-0"
+                >
+                  <div className="md:w-1/3 mb-2 md:mb-0">
+                    <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-1">
+                      {CHAPTER_LABELS[p.slug] ?? p.title}
+                    </p>
+                    <p className="serif-display text-text" style={{ fontSize: "28px" }}>
+                      {q.label}<span className="text-thread">.</span>
+                    </p>
+                  </div>
+                  <p className="md:w-2/3 text-base text-text-muted leading-relaxed">
+                    {q.context}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -736,6 +773,7 @@ function PlanetMesh({
   const meshRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
   const orbitRef = useRef<THREE.Group>(null);
+  const initializedRef = useRef(false);
   const [hovered, setHovered] = useState(false);
 
   const variant = PLANET_VARIANTS[project.slug] ?? PLANET_VARIANTS.levels;
@@ -754,11 +792,16 @@ function PlanetMesh({
   useFrame((state, dt) => {
     if (!groupRef.current || !meshRef.current) return;
 
-    // Scale lerp (focus)
+    // Scale lerp (focus) — snap to target on first frame to avoid intro zoom
     const targetScale = isFocused ? 1.35 : 1.0;
-    const cs = groupRef.current.scale.x;
-    const ns = cs + (targetScale - cs) * 0.06;
-    groupRef.current.scale.set(ns, ns, ns);
+    if (!initializedRef.current) {
+      groupRef.current.scale.setScalar(targetScale);
+      initializedRef.current = true;
+    } else {
+      const cs = groupRef.current.scale.x;
+      const ns = cs + (targetScale - cs) * 0.06;
+      groupRef.current.scale.set(ns, ns, ns);
+    }
 
     // Planet self-rotation
     meshRef.current.rotation.y += dt * 0.15;
@@ -850,7 +893,7 @@ function PlanetMesh({
             textShadow: isFocused ? "0 0 24px rgba(164,245,200,0.15)" : "none",
           }}
         >
-          {ROMAN[project.chapter] ?? project.chapter.toUpperCase()}
+          {PLANET_NUMERAL[project.slug] ?? project.chapter.toUpperCase()}
         </span>
       </Html>
 
@@ -1095,21 +1138,24 @@ function useTypewriter(
 // Intro overlay
 // ---------------------------------------------------------------------------
 function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
-  const intro = useTypewriter("Aurian", { min: 150, max: 280, startDelay: 500 });
-  const title = useTypewriter("Univers", { min: 180, max: 340, startDelay: 2400 });
-  const introDone = intro.length >= "Aurian".length;
+  const intro = useTypewriter("Aurian", { min: 150, max: 280, startDelay: 800 });
+  const title = useTypewriter("Univers", { min: 180, max: 340, startDelay: 2800 });
   const titleDone = title.length >= "Univers".length;
 
+  // Auto-dismiss after a long beat; user can skip with any input after a short delay.
   useEffect(() => {
+    const auto = setTimeout(onDismiss, 9000);
     const onAny = () => onDismiss();
-    window.addEventListener("keydown", onAny);
-    window.addEventListener("click", onAny);
-    window.addEventListener("wheel", onAny);
-    window.addEventListener("touchstart", onAny);
+    const t = setTimeout(() => {
+      window.addEventListener("keydown", onAny);
+      window.addEventListener("click", onAny);
+      window.addEventListener("touchstart", onAny);
+    }, 1800);
     return () => {
+      clearTimeout(auto);
+      clearTimeout(t);
       window.removeEventListener("keydown", onAny);
       window.removeEventListener("click", onAny);
-      window.removeEventListener("wheel", onAny);
       window.removeEventListener("touchstart", onAny);
     };
   }, [onDismiss]);
@@ -1120,52 +1166,74 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.8 }}
+      transition={{ duration: 1.2, ease: "easeOut" }}
       className="fixed inset-0 z-[60] flex flex-col items-center justify-center pointer-events-auto select-none"
-      style={{ backgroundColor: "rgba(7,8,10,0.92)", backdropFilter: "blur(4px)" }}
+      style={{
+        background:
+          "radial-gradient(ellipse at center, #0B0D11 0%, #07080A 55%, #050609 100%)",
+      }}
     >
-      <p className="serif-italic text-text-muted text-xl mb-10 min-h-[1.5em]">
+      {/* Subtle drifting starfield — pure CSS */}
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.5 }}
+        transition={{ duration: 2.4, ease: "easeOut" }}
+        style={{
+          backgroundImage:
+            "radial-gradient(1px 1px at 14% 22%, rgba(236,230,214,0.55), transparent 50%), \
+             radial-gradient(1px 1px at 78% 18%, rgba(236,230,214,0.4), transparent 50%), \
+             radial-gradient(1px 1px at 32% 71%, rgba(236,230,214,0.5), transparent 50%), \
+             radial-gradient(1px 1px at 64% 84%, rgba(236,230,214,0.35), transparent 50%), \
+             radial-gradient(1px 1px at 88% 62%, rgba(236,230,214,0.45), transparent 50%), \
+             radial-gradient(1px 1px at 46% 38%, rgba(236,230,214,0.3), transparent 50%), \
+             radial-gradient(1px 1px at 8% 58%, rgba(236,230,214,0.4), transparent 50%)",
+        }}
+      />
+
+      {/* "Aurian" — small, italic, muted */}
+      <p
+        className="serif-italic mb-8 min-h-[1.5em]"
+        style={{
+          fontSize: "clamp(15px, 1.5vw, 18px)",
+          color: "rgba(236,230,214,0.55)",
+          letterSpacing: "0.04em",
+        }}
+      >
         {intro}
-        {introDone ? (
-          <span className="text-thread">.</span>
-        ) : (
-          <motion.span
-            className="inline-block ml-0.5 text-thread"
-            animate={{ opacity: [1, 0] }}
-            transition={{ duration: 0.55, repeat: Infinity, ease: "linear" }}
-          >
-            ▍
-          </motion.span>
-        )}
+        <span style={{ color: "rgba(236,230,214,0.55)" }}>.</span>
       </p>
 
+      {/* "Univers" — quiet, no green cursor, no blink */}
       <h1
-        className="serif-display text-text text-center min-h-[1em]"
-        style={{ fontSize: "clamp(64px, 12vw, 160px)" }}
+        className="serif-display text-center min-h-[1em]"
+        style={{
+          fontSize: "clamp(64px, 12vw, 160px)",
+          color: "rgba(236,230,214,0.95)",
+          letterSpacing: "-0.025em",
+          textShadow: "0 0 60px rgba(236,230,214,0.06)",
+        }}
       >
         {title}
-        {titleDone ? (
-          <span className="text-thread">.</span>
-        ) : (
-          <motion.span
-            className="inline-block ml-2 text-thread"
-            animate={{ opacity: [1, 0] }}
-            transition={{ duration: 0.55, repeat: Infinity, ease: "linear" }}
-          >
-            ▍
-          </motion.span>
-        )}
+        <span style={{ color: "rgba(236,230,214,0.95)" }}>.</span>
       </h1>
 
+      {/* Discreet hint — appears late, slow fade, no green */}
       <AnimatePresence>
         {titleDone && (
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0.45, 1] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-            className="mono uppercase tracking-[0.4em] text-[10px] text-thread mt-12"
+            animate={{ opacity: 0.4 }}
+            transition={{ duration: 2.2, ease: "easeOut" }}
+            className="mono uppercase mt-16"
+            style={{
+              letterSpacing: "0.45em",
+              fontSize: "9px",
+              color: "rgba(236,230,214,0.35)",
+            }}
           >
-            Appuyez sur une touche pour entrer
+            entrer
           </motion.p>
         )}
       </AnimatePresence>
@@ -1258,7 +1326,7 @@ function ShapeIcon({ shape, color }: { shape: StarShape; color: string }) {
   }
 }
 
-function StarLegend() {
+function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
   const order: { id: string; shape: StarShape }[] = [
     { id: "cv", shape: "cone" },
     { id: "stack", shape: "octa" },
@@ -1273,43 +1341,70 @@ function StarLegend() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.4, duration: 0.7 }}
       aria-label="légende des étoiles"
-      className="absolute top-6 right-6 z-10 select-none pointer-events-none"
-      style={{
-        backgroundColor: "rgba(7,8,10,0.72)",
-        borderColor: "#1F2521",
-        backdropFilter: "blur(6px)",
-      }}
+      className="absolute top-6 right-6 z-10 select-none"
     >
-      <div className="border rounded-md px-4 py-3.5" style={{ borderColor: "#1F2521" }}>
-        <p className="mono uppercase tracking-[0.3em] text-[9px] text-text-subtle mb-3">
+      <div
+        className="border rounded-md px-2 py-2.5"
+        style={{
+          borderColor: "#1F2521",
+          backgroundColor: "rgba(7,8,10,0.72)",
+          backdropFilter: "blur(6px)",
+        }}
+      >
+        <p
+          className="mono uppercase tracking-[0.3em] text-[9px] text-text-subtle mb-2 px-2"
+        >
           Étoiles
         </p>
-        <ul className="space-y-2">
+        <ul className="flex flex-col">
           {order.map(({ id, shape }) => (
-            <li key={id} className="flex items-center gap-2.5">
-              <span className="shrink-0 grid place-items-center" style={{ width: 18, height: 18 }}>
-                <ShapeIcon shape={shape} color={STAR_COLORS[id]} />
-              </span>
-              <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted">
-                {CATEGORY_LABELS[id]}
-              </span>
+            <li key={id}>
+              <button
+                type="button"
+                onClick={() => onSelect(`info:${id}`)}
+                className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded transition group hover:bg-white/[0.04]"
+                style={{ outline: "none" }}
+              >
+                <span
+                  className="shrink-0 grid place-items-center"
+                  style={{ width: 18, height: 18 }}
+                >
+                  <ShapeIcon shape={shape} color={STAR_COLORS[id]} />
+                </span>
+                <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors">
+                  {CATEGORY_LABELS[id]}
+                </span>
+              </button>
             </li>
           ))}
-          <li className="flex items-center gap-2.5 pt-2 mt-1 border-t" style={{ borderColor: "#1F2521" }}>
-            <span className="shrink-0 grid place-items-center" style={{ width: 18, height: 18 }}>
-              <svg width="18" height="18" viewBox="0 0 18 18">
-                <polygon
-                  points="9,1 11,7 17,9 11,11 9,17 7,11 1,9 7,7"
-                  fill="#E55B5B33"
-                  stroke="#E55B5B"
-                  strokeWidth="1.1"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted">
-              Volcanique
-            </span>
+          <li
+            className="mt-1 pt-1 border-t"
+            style={{ borderColor: "#1F2521" }}
+          >
+            <button
+              type="button"
+              onClick={() => onSelect("identity")}
+              className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded transition group hover:bg-white/[0.04]"
+              style={{ outline: "none" }}
+            >
+              <span
+                className="shrink-0 grid place-items-center"
+                style={{ width: 18, height: 18 }}
+              >
+                <svg width="18" height="18" viewBox="0 0 18 18">
+                  <polygon
+                    points="9,1 11,7 17,9 11,11 9,17 7,11 1,9 7,7"
+                    fill="#E55B5B33"
+                    stroke="#E55B5B"
+                    strokeWidth="1.1"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors">
+                Volcanique
+              </span>
+            </button>
           </li>
         </ul>
       </div>
@@ -1365,12 +1460,16 @@ export function PortfolioUniverse() {
     goTo((index - 1 + projects.length) % projects.length);
   }, [goTo, index]);
 
-  // Show initial caption on first load (after intro dismissed)
+  // Show initial caption on first load (after intro dismissed) —
+  // longer hold + small startup delay so the canvas is mounted and visible.
   useEffect(() => {
     if (introDismissed) {
-      setCaptionVisible(true);
-      const t = setTimeout(() => setCaptionVisible(false), 1500);
-      return () => clearTimeout(t);
+      const start = setTimeout(() => setCaptionVisible(true), 350);
+      const end = setTimeout(() => setCaptionVisible(false), 3000);
+      return () => {
+        clearTimeout(start);
+        clearTimeout(end);
+      };
     }
   }, [introDismissed]);
 
@@ -1468,8 +1567,8 @@ export function PortfolioUniverse() {
         </p>
       </header>
 
-      {/* Star legend (top right, pokemon-badge style) */}
-      {introDismissed && <StarLegend />}
+      {/* Star legend (top right, pokemon-badge style) — clickable for global details */}
+      {introDismissed && <StarLegend onSelect={handleSelectStar} />}
 
       {/* Big animated arrows */}
       {introDismissed && (
