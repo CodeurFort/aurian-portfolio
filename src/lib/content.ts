@@ -77,12 +77,12 @@ export const projects: Project[] = [
     paperColor: "paper-cream",
     role: "conception, dev, design solo",
     pitch:
-      "application web de suivi d'objectifs quotidiens. l'utilisateur définit ses objectifs du jour, valide au fil de la journée, suit sa régularité dans le temps et consulte ses tendances dans des récaps hebdomadaires. PWA single-file, synchronisation temps réel multi-appareils.",
+      "Application web de suivi d'objectifs quotidiens. L'utilisateur définit ses objectifs du jour, valide au fil de la journée, suit sa régularité dans le temps et consulte ses tendances dans des récaps hebdomadaires. PWA single-file, synchronisation temps réel multi-appareils.",
     achievements: [
-      "architecture single-file (HTML, CSS, JS dans un index.html) : zéro build, déploiement instantané",
-      "synchronisation Firestore temps réel multi-appareils avec session unique anti-conflit",
-      "système de dates custom : grace period 0h, 2h pour préserver la régularité de l'utilisateur",
-      "PWA installable sur mobile, fonctionne offline grâce au service worker",
+      "Architecture single-file (HTML, CSS, JS dans un index.html) : zéro build, déploiement instantané.",
+      "Synchronisation Firestore temps réel multi-appareils avec session unique anti-conflit.",
+      "Système de dates custom : grace period 0h, 2h pour préserver la régularité de l'utilisateur.",
+      "PWA installable sur mobile, fonctionne offline grâce au service worker.",
     ],
     stack: ["HTML", "CSS", "JavaScript", "TypeScript", "Firebase", "Firestore", "Firebase Auth", "PWA"],
     liveUrl: "https://levels-app-f50a9.web.app",
@@ -93,12 +93,12 @@ export const projects: Project[] = [
     title: "Energizer SEO GEO AEO",
     paperColor: "paper-mint",
     pitch:
-      "agent IA en cinq étapes : stratégie, veille, concurrence, critique, scoring. il diagnostique la présence d'une marque sur les moteurs traditionnels et génératifs. multi-tenant : chaque entreprise est un contexte injecté dans l'agent, avec son propre crawler maison et sa pipeline Blog Redactor v2 qui s'auto-révise tant que le score cible sur 100 (SEO, GEO, E-E-A-T, pertinence) n'est pas atteint.",
+      "Application web qui aide les entreprises à briller dans les moteurs traditionnels et génératifs. Energizer audite le site, définit un plan d'actions, et propose comme feature phare la création de blogs personnalisés : rédaction alimentée par les meilleurs mots-clés issus d'un scrapping dense et du scoring du diagnostic. Architecture multi-tenant, agent IA orchestré en cinq étapes (stratégie, veille, concurrence, critique, scoring), pipeline Blog Redactor v2 qui s'auto-révise tant que le score cible sur 100 (SEO, GEO, E-E-A-T, pertinence) n'est pas atteint.",
     role: "conception, architecture, dev solo",
     achievements: [
-      "pipeline 5 étapes diagnostic + Blog Redactor avec auto-révision",
-      "architecture multi-tenant (entreprise = contexte agent)",
-      "crawler maison BeautifulSoup, diagnostic 3 piliers SEO, GEO, E-E-A-T",
+      "Pipeline 5 étapes diagnostic + Blog Redactor avec auto-révision.",
+      "Architecture multi-tenant (entreprise = contexte agent).",
+      "Crawler maison BeautifulSoup, diagnostic 3 piliers SEO, GEO, E-E-A-T.",
     ],
     stack: ["Python", "FastAPI", "Next.js 16", "Tailwind v4", "Supabase", "OpenAI", "Claude", "Anthropic SDK", "OpenClaw", "DALL-E 3", "Vercel", "Railway"],
   },
@@ -109,12 +109,11 @@ export const projects: Project[] = [
     paperColor: "paper-ochre",
     role: "lead dev, scoring engine, design",
     pitch:
-      "outil BDR conçu pour le hackathon Mirakl x Eugenia School 2026 (finaliste). il qualifie les marques e-commerce contre 7 profils de marketplaces, enrichit les contacts décisionnaires (LinkedIn + email) et génère des séquences d'outreach personnalisées par GPT-4o. de la prospection brute au mail envoyé en un seul flux.",
+      "Application BDR conçue pour le hackathon Mirakl x Eugenia School 2026 (finaliste). Elle identifie des sellers adaptés à une marketplace : depuis la base Mirakl (Supabase) ou en ciblant des sellers selon des critères pondérés (catégorie, géo, prix, customer, saisonnalité, signaux marketplace). On peut aussi entrer un nom de seller : le scrapping se fait alors en direct, puis le matching avec une marketplace présente. Ensuite, l'app rédige une séquence d'outreach BDR personnalisable selon la stratégie commerciale et les événements, regénérable au prompt, enrichie par Better Contact (Apify en fallback) et envoyée via SMTP.",
     achievements: [
-      "finaliste du hackathon Mirakl x Eugenia School 2026",
-      "scoring engine 6 critères (catégorie, géo, prix, customer, saisonnalité, signaux marketplace) en TypeScript pur, scoring continu pondéré sur 100, exécuté côté serveur ET côté client (re-scoring temps réel sur filtre)",
-      "pipeline d'enrichissement hybride : Better Contact API en priorité, fallback Apify Google Search + DNS/SMTP probe pour les sellers hors radar (354/409 hits sur le crawl Python)",
-      "génération d'emails GPT-4o avec 5 prompts distincts, envoi via nodemailer/Google Workspace SMTP, persistance Supabase (Postgres). déployé sur Vercel.",
+      "Scoring engine 6 critères (catégorie, géo, prix, customer, saisonnalité, signaux marketplace) en TypeScript pur, scoring continu pondéré sur 100, exécuté côté serveur ET côté client (re-scoring temps réel sur filtre).",
+      "Pipeline d'enrichissement hybride : Better Contact API en priorité, fallback Apify Google Search + DNS/SMTP probe pour les sellers hors radar (354/409 hits sur le crawl Python).",
+      "Génération d'emails GPT-4o avec 5 prompts distincts, envoi via nodemailer / Google Workspace SMTP, persistance Supabase (Postgres). Déployé sur Vercel.",
     ],
     stack: ["Next.js 16", "React 19", "TypeScript", "Zustand", "Tailwind v4", "Recharts", "OpenAI GPT-4o", "Supabase", "Vercel", "Apify", "Better Contact"],
     liveUrl: "https://mirakl-prospector.vercel.app",
@@ -127,56 +126,56 @@ export const projects: Project[] = [
     paperColor: "paper-blush",
     role: "conception du système, design des agents",
     pitch:
-      "système multi-agent pour accompagner des artistes émergents. cinq agents coordonnés (un chef d'orchestre, un cerveau A&R, des yeux data, une voix community, du terrain networking) qui transforment l'instinct artistique en stratégie exécutable, sans tuer la magie.",
+      "Système multi-agent pour accompagner des artistes émergents. Cinq agents coordonnés (un chef d'orchestre, un cerveau A&R, des yeux data, une voix community, du terrain networking) qui transforment l'instinct artistique en stratégie exécutable, sans tuer la magie.",
     achievements: [
-      "architecture 5 rôles distincts orchestrés : Orchestrator pilote, A&R Strategist écrit le brief, Growth Analyst nourrit en data, Content & Community amplifie, Networker active le terrain",
-      "système de phase (LANCEMENT / CROISSANCE / CONSOLIDATION) qui cadre les benchmarks et le ton à chaque étape : le bon message au bon stade de carrière",
-      "logique anti-vanity-metrics : on lit les signaux faibles (« 423 auditeurs, 12% save rate = top 10% émergents ») plutôt que les volumes bruts. Quick Wins puis Long Game.",
+      "Architecture 5 rôles distincts orchestrés : Orchestrator pilote, A&R Strategist écrit le brief, Growth Analyst nourrit en data, Content & Community amplifie, Networker active le terrain.",
+      "Système de phase (LANCEMENT / CROISSANCE / CONSOLIDATION) qui cadre les benchmarks et le ton à chaque étape : le bon message au bon stade de carrière.",
+      "Logique anti-vanity-metrics : on lit les signaux faibles (« 423 auditeurs, 12% save rate = top 10% émergents ») plutôt que les volumes bruts. Quick Wins puis Long Game.",
     ],
     stack: ["Dust"],
     moons: [
       {
         name: "Orchestrator",
-        pitch: "le chef d'orchestre. coordonne les 4 autres.",
+        pitch: "Le chef d'orchestre. Coordonne les 4 autres.",
         bullets: [
-          "définit les priorités et la séquence d'actions",
-          "ne produit rien seul, fait produire les autres",
+          "Définit les priorités et la séquence d'actions.",
+          "Ne produit rien seul, fait produire les autres.",
         ],
         stack: ["Dust"],
       },
       {
         name: "A&R Strategist",
-        pitch: "le cerveau. positionnement et brief stratégique.",
+        pitch: "Le cerveau. Positionnement et brief stratégique.",
         bullets: [
-          "identifie l'angle différenciant, fixe la phase (lancement / croissance / consolidation)",
-          "produit le brief qui déclenche tout le reste",
+          "Identifie l'angle différenciant, fixe la phase (lancement / croissance / consolidation).",
+          "Produit le brief qui déclenche tout le reste.",
         ],
         stack: ["Dust"],
       },
       {
         name: "Growth Analyst",
-        pitch: "les yeux. data, benchmarks, signaux faibles.",
+        pitch: "Les yeux. Data, benchmarks, signaux faibles.",
         bullets: [
-          "transforme la data en décisions concrètes",
-          "distingue le vrai impact des vanity metrics",
+          "Transforme la data en décisions concrètes.",
+          "Distingue le vrai impact des vanity metrics.",
         ],
         stack: ["Dust"],
       },
       {
         name: "Content & Community",
-        pitch: "la voix. contenu, communauté, superfans.",
+        pitch: "La voix. Contenu, communauté, superfans.",
         bullets: [
-          "transforme le brief A&R en posts, Reels, captions, calendrier",
-          "amplificateur final des victoires de l'équipe",
+          "Transforme le brief A&R en posts, Reels, captions, calendrier.",
+          "Amplificateur final des victoires de l'équipe.",
         ],
         stack: ["Dust"],
       },
       {
         name: "Networker",
-        pitch: "le terrain. playlists, presse, bookers, syncs.",
+        pitch: "Le terrain. Playlists, presse, bookers, syncs.",
         bullets: [
-          "messages humains personnalisés, jamais de templates",
-          "Quick Wins d'abord, Long Game ensuite",
+          "Messages humains personnalisés, jamais de templates.",
+          "Quick Wins d'abord, Long Game ensuite.",
         ],
         stack: ["Dust"],
       },
@@ -189,13 +188,13 @@ export const projects: Project[] = [
     paperColor: "paper-stone",
     role: "audit SQL avancé",
     pitch:
-      "audit Fashion Hoodies & Sweatshirts sur TheLook eCommerce (BigQuery public). 12 CTEs enchaînées, window functions LAG et ROW_NUMBER, KPIs business par mois : CA, marge, panier moyen, croissance, rotation stock, top canal, taux de rebond et de conversion, top région.",
+      "Audit Fashion Hoodies & Sweatshirts sur TheLook eCommerce (BigQuery public). 12 CTEs enchaînées, window functions LAG et ROW_NUMBER, KPIs business par mois : CA, marge, panier moyen, croissance, rotation stock, top canal, taux de rebond et de conversion, top région.",
     achievements: [
-      "12 CTEs orchestrées en pipeline d'analyse mensuelle",
-      "window functions : LAG pour la croissance mois sur mois, ROW_NUMBER pour isoler le canal et la région dominants",
-      "ratio rotation stock (vendus / stock fin de mois) pour détecter rupture vs surstock",
-      "taux de rebond et taux de conversion calculés en LEFT JOIN sessions / orders",
-      "période paramétrable via DECLARE date_debut / date_fin",
+      "12 CTEs orchestrées en pipeline d'analyse mensuelle.",
+      "Window functions : LAG pour la croissance mois sur mois, ROW_NUMBER pour isoler le canal et la région dominants.",
+      "Ratio rotation stock (vendus / stock fin de mois) pour détecter rupture vs surstock.",
+      "Taux de rebond et taux de conversion calculés en LEFT JOIN sessions / orders.",
+      "Période paramétrable via DECLARE date_debut / date_fin.",
     ],
     stack: ["SQL", "BigQuery", "Looker Studio", "Tableau Desktop", "Pandas"],
     sqlQuery: thelookQuery,
@@ -236,7 +235,7 @@ export const projectQualities: Record<string, ProjectQuality> = {
     qualities: ["Rigueur", "Communication"],
     phrase: "Calcul juste, récit lisible.",
     context:
-      "11 CTEs, window functions, vérification croisée. Puis transformer l'analyse en histoire que le sponsor peut activer.",
+      "12 CTEs, window functions, vérification croisée. Puis transformer l'analyse en histoire que le sponsor peut activer.",
   },
 };
 
@@ -324,16 +323,16 @@ export const stack: StackTool[] = [
 export const profile: Profile = {
   name: "Moi",
   tagline:
-    "automatisation, agents IA, data, stratégie digitale. transformer une idée en workflow concret.",
+    "Automatisation, agents IA, data, stratégie digitale. Transformer une idée en workflow concret.",
   manifesto:
-    "étudiant en MSc AI Applied to Business. j'aime construire des outils qui mêlent IA, data et exécution opérationnelle : prototyper vite, mesurer, itérer. ce portfolio est un univers, pas une grille. naviguez à votre rythme.",
+    "Étudiant en MSc AI Applied to Business. J'aime construire des outils qui mêlent IA, data et exécution opérationnelle : prototyper vite, mesurer, itérer. Ce portfolio est un univers, pas une grille. Navigue à ton rythme.",
   email: "aurianreal@gmail.com",
   linkedin: "https://www.linkedin.com/in/aurian-bingangoye",
   github: "https://github.com/CodeurFort",
   twitter: undefined,
   cvPdf: "/cv-aurian.pdf",
   cvCurrent:
-    "VSOLUTION : alternant Automatisation, Agents IA & Performance Digitale (2026, en cours). création d'Energizer, approfondissement d'OpenClaw, prototypage d'automatisations.",
+    "VSOLUTION : alternant Automatisation, Agents IA & Performance Digitale (2026, en cours). Création d'Energizer, approfondissement d'OpenClaw, prototypage d'automatisations.",
   cvPrevious:
     "Le Chalet Studio : bras droit Marketing & Data Analyst, été 2024 (+22% de clics, +10% d'abonnés en 2 mois). Odillon SARL : consultant depuis 2021, RH d'une équipe de 5, création de Chronodil.",
   formation:

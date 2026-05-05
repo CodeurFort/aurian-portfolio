@@ -2,18 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  projects,
-  profile,
-  hobbies,
-  stack,
-  projectQualities,
-} from "@/lib/content";
 
 // The bot IS Aurian (a bot version of him). Visitors address questions TO him.
-// Bot answers in first person ("je", "mes", "moi"), sobre & poétique.
-// Strict rule: no em dashes ("—"). Use periods, commas, parentheses.
-// No free chat: every step shows a fresh menu of predefined questions.
+// Philosophy: the bot REDIRECTS, never data-dumps. It points to the UI element
+// where the answer lives (a star in the legend, a planet, a button) so the
+// user has to explore. Tone: 1ère personne, sobre, encourageant.
+// Strict rule: no em dashes ("—"). No free chat (predefined menu only).
 
 interface Msg {
   id: string;
@@ -74,95 +68,66 @@ const MENUS: Record<Topic, Topic[]> = {
   bot: ["projects", "qualities", "joke", "contact", "identity"],
 };
 
-function capitalize(s: string): string {
-  if (!s) return s;
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function reply(topic: Topic, planetSlug?: string): Reply {
+function reply(topic: Topic): Reply {
   switch (topic) {
     case "identity":
       return {
-        text: `Je suis Aurian, version bot. ${capitalize(profile.tagline)} ${capitalize(profile.manifesto)}`,
+        text:
+          "Pour me découvrir vraiment, clique sur l'étoile volcanique (rouge, en bas de la légende en haut à droite). Tu y trouveras ma signature.",
         next: "identity",
       };
-    case "projects": {
-      const list = projects
-        .map((p) => `« ${p.title} » : ${capitalize(p.pitch.split(".")[0])}.`)
-        .join(" ");
+    case "projects":
       return {
-        text: `Voici mes cinq projets. ${list}`,
+        text:
+          "Cinq planètes orbitent autour de toi. Utilise les flèches gauche / droite (ou les touches du clavier) pour les visiter, et clique sur une planète pour ouvrir son dossier.",
         next: "projects",
       };
-    }
-    case "project": {
-      const slug = planetSlug ?? projects[0].slug;
-      const p = projects.find((x) => x.slug === slug) ?? projects[0];
+    case "project":
       return {
-        text: `Pour « ${p.title} » : ${capitalize(p.pitch)}`,
+        text:
+          "Chaque planète a son ambiance et son dossier. Clique directement dessus dans le système, ou ouvre la fiche depuis la flèche en bas. Cinq destinations t'attendent.",
         next: "project",
       };
-    }
-    case "stack": {
-      const byCat: Record<string, string[]> = {};
-      stack.forEach((s) => {
-        (byCat[s.category] ??= []).push(s.label);
-      });
-      const cats: Record<string, string> = {
-        lang: "Langages",
-        data: "Data",
-        cloud: "Cloud",
-        ai: "IA",
-        other: "Automatisation",
-      };
-      const txt = Object.entries(byCat)
-        .map(([k, v]) => `${cats[k] ?? k} : ${v.join(", ")}.`)
-        .join(" ");
-      return { text: `Voici ma stack. ${txt}`, next: "stack" };
-    }
-    case "qualities": {
-      const lines = Object.values(projectQualities)
-        .map(
-          (q) =>
-            `${capitalize(q.qualities[0])} × ${q.qualities[1]}, ${capitalize(q.phrase)}`
-        )
-        .join(" ");
+    case "stack":
       return {
-        text: `Cinq paires, une par projet. ${lines}`,
+        text:
+          "Ma stack vit dans la légende, en haut à droite. Clique sur Stack (l'octaèdre) pour voir mes outils rangés par catégorie.",
+        next: "stack",
+      };
+    case "qualities":
+      return {
+        text:
+          "Mes qualités sont incarnées par chaque planète, une paire par projet. Ouvre Qualités dans la légende, ou explore une planète pour voir la sienne.",
         next: "qualities",
       };
-    }
     case "contact":
       return {
-        text: `Tu peux me joindre par email à ${profile.email}, sur LinkedIn (${profile.linkedin}) ou GitHub (${profile.github}).`,
+        text:
+          "Clique sur Contact (le cube) dans la légende. Email, LinkedIn et GitHub y sont rangés.",
         next: "contact",
       };
     case "hobbies":
       return {
         text:
-          "À côté du code, j'aime : " +
-          hobbies
-            .map((h) => (h.detail ? `${h.label} (${h.detail})` : h.label))
-            .join(", ") +
-          ".",
+          "Loisirs (la sphère) dans la légende, en haut à droite. La liste s'y trouve.",
         next: "hobbies",
       };
     case "formation":
       return {
-        text: `Ma formation : ${capitalize(profile.formation)}`,
+        text:
+          "Ma formation est dans CV (le cône) dans la légende. Clique pour voir le parcours.",
         next: "formation",
       };
     case "cv":
       return {
-        text: `Actuellement : ${capitalize(profile.cvCurrent)} Précédemment : ${capitalize(profile.cvPrevious)}`,
+        text:
+          "Mon parcours est dans CV (le cône) en haut à droite. Présent et passé y sont posés.",
         next: "cv",
       };
     case "languages":
       return {
         text:
-          "Je parle " +
-          profile.languages.map((l) => `${l.label} (${l.level})`).join(", ") +
-          ".",
+          "Langues (le tétraèdre) dans la légende, en haut à droite. Trois langues, niveaux indiqués.",
         next: "languages",
       };
     case "joke":
@@ -174,13 +139,13 @@ function reply(topic: Topic, planetSlug?: string): Reply {
     case "bot":
       return {
         text:
-          "Je suis une version bot d'Aurian. Un fragment d'éditorial qui répond pour lui pendant qu'il code ailleurs.",
+          "Je suis une version bot d'Aurian. Je ne réponds qu'en pointant. Le reste, c'est à toi de le trouver dans l'univers.",
         next: "bot",
       };
     case "root":
     default:
       return {
-        text: "Que veux-tu savoir ? Choisis une question.",
+        text: "Que veux-tu savoir ? Je te dirai où regarder.",
         next: "root",
       };
   }
@@ -235,7 +200,6 @@ export function Chatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [menu, setMenu] = useState<Topic[]>(MENUS.root);
-  const [planetIndex, setPlanetIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   // Greet on first open
@@ -260,19 +224,11 @@ export function Chatbot() {
   }, [messages, open, menu]);
 
   const ask = (topic: Topic) => {
-    // For "project", cycle through projects each click for variety.
-    let slug: string | undefined;
-    let userLabel = ROOT_LABEL[topic];
-    if (topic === "project") {
-      slug = projects[planetIndex % projects.length].slug;
-      userLabel = `« ${projects[planetIndex % projects.length].title} »`;
-      setPlanetIndex((i) => i + 1);
-    }
-    const r = reply(topic, slug);
+    const r = reply(topic);
     const userMsg: Msg = {
       id: `u-${Date.now()}`,
       from: "user",
-      text: userLabel,
+      text: ROOT_LABEL[topic],
     };
     const botMsg: Msg = {
       id: `b-${Date.now()}`,
