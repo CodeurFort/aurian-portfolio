@@ -17,7 +17,7 @@ export function Prelude() {
       className="relative min-h-screen flex items-center justify-center px-6 py-24"
     >
       <div className="relative max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
-        <div className="relative">
+        <div className="relative scale-90 sm:scale-100 origin-center">
           <PaperSilhouette />
           {softSkills.map((s, i) => (
             <motion.span

@@ -21,7 +21,7 @@ export function Landing() {
       {projects.map((p, i) => (
         <motion.div
           key={p.slug}
-          className="absolute"
+          className={`absolute ${i >= 3 ? "hidden sm:block" : ""}`}
           style={{ top: POSITIONS[i].top, left: POSITIONS[i].left }}
           initial={{ opacity: 0, scale: 0.6 }}
           animate={{ opacity: 0.55, scale: 1 }}

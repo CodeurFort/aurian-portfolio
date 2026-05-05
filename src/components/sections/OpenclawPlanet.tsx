@@ -19,11 +19,11 @@ export function OpenclawPlanet({ project, index }: Props) {
     <div className="relative">
       <ProjectPlanet project={project} index={index} enlarged>
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 scale-[0.65] sm:scale-100 origin-center"
           style={{ width: 320, height: 320 }}
         >
           {moons.map((m, i) => (
-            <div className="pointer-events-auto" key={m.name}>
+            <div key={m.name}>
               <PaperMoon
                 label={m.name}
                 detail={m.pitch}

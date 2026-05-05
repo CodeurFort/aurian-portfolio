@@ -44,7 +44,7 @@ export function Threads() {
         </EditorialTitle>
       </div>
 
-      <div className="relative w-full max-w-5xl aspect-[5/3]">
+      <div className="relative w-full max-w-5xl aspect-[4/5] md:aspect-[5/3]">
         <svg viewBox="0 0 1000 600" className="absolute inset-0 w-full h-full">
           {softSkills.map((s, i) => {
             const paths = chainPaths(s.linkedProjectSlugs);
