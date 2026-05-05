@@ -24,6 +24,7 @@ export interface Project {
   liveUrl?: string;
   repoUrl?: string;
   moons?: Moon[];
+  sqlQuery?: string; // optional code snippet (used for thelook)
 }
 
 export interface SoftSkillBlock {
@@ -106,8 +107,9 @@ export const projects: Project[] = [
     paperColor: "paper-ochre",
     role: "lead dev, scoring engine, design",
     pitch:
-      "outil BDR conçu pour le hackathon Mirakl x Eugenia School 2026. il qualifie les marques e-commerce contre 7 profils de marketplaces, enrichit les contacts décisionnaires (LinkedIn + email) et génère des séquences d'outreach personnalisées par GPT-4o. de la prospection brute au mail envoyé en un seul flux.",
+      "outil BDR conçu pour le hackathon Mirakl x Eugenia School 2026 (finaliste). il qualifie les marques e-commerce contre 7 profils de marketplaces, enrichit les contacts décisionnaires (LinkedIn + email) et génère des séquences d'outreach personnalisées par GPT-4o. de la prospection brute au mail envoyé en un seul flux.",
     achievements: [
+      "finaliste du hackathon Mirakl x Eugenia School 2026",
       "scoring engine 6 critères (catégorie, géo, prix, customer, saisonnalité, signaux marketplace) en TypeScript pur, scoring continu pondéré sur 100, exécuté côté serveur ET côté client (re-scoring temps réel sur filtre)",
       "pipeline d'enrichissement hybride : Better Contact API en priorité, fallback Apify Google Search + DNS/SMTP probe pour les sellers hors radar (354/409 hits sur le crawl Python)",
       "génération d'emails GPT-4o avec 5 prompts distincts, envoi via nodemailer/Google Workspace SMTP, persistance Supabase (Postgres). déployé sur Vercel.",
@@ -119,21 +121,21 @@ export const projects: Project[] = [
   {
     slug: "music-agency",
     chapter: "iv",
-    title: "BEYOND",
+    title: "Beyond",
     paperColor: "paper-blush",
     role: "conception du système, design des agents",
     pitch:
-      "système multi-agent pour accompagner des artistes émergents. cinq agents coordonnés — un chef d'orchestre, un cerveau (A&R), des yeux (data), une voix (community), du terrain (networking) — qui transforment l'instinct artistique en stratégie exécutable, sans tuer la magie.",
+      "système multi-agent pour accompagner des artistes émergents. cinq agents coordonnés (un chef d'orchestre, un cerveau A&R, des yeux data, une voix community, du terrain networking) qui transforment l'instinct artistique en stratégie exécutable, sans tuer la magie.",
     achievements: [
       "architecture 5 rôles distincts orchestrés : Orchestrator pilote, A&R Strategist écrit le brief, Growth Analyst nourrit en data, Content & Community amplifie, Networker active le terrain",
-      "système de phase (LANCEMENT / CROISSANCE / CONSOLIDATION) qui cadre les benchmarks et le ton à chaque étape — le bon message au bon stade de carrière",
+      "système de phase (LANCEMENT / CROISSANCE / CONSOLIDATION) qui cadre les benchmarks et le ton à chaque étape : le bon message au bon stade de carrière",
       "logique anti-vanity-metrics : on lit les signaux faibles (« 423 auditeurs, 12% save rate = top 10% émergents ») plutôt que les volumes bruts. Quick Wins puis Long Game.",
     ],
-    stack: ["Dust", "Zapier", "n8n", "Notion"],
+    stack: ["Dust"],
     moons: [
       {
         name: "Orchestrator",
-        pitch: "le chef d'orchestre — coordonne les 4 autres",
+        pitch: "le chef d'orchestre. coordonne les 4 autres.",
         bullets: [
           "définit les priorités et la séquence d'actions",
           "ne produit rien seul, fait produire les autres",
@@ -142,39 +144,39 @@ export const projects: Project[] = [
       },
       {
         name: "A&R Strategist",
-        pitch: "le cerveau — positionnement et brief stratégique",
+        pitch: "le cerveau. positionnement et brief stratégique.",
         bullets: [
           "identifie l'angle différenciant, fixe la phase (lancement / croissance / consolidation)",
           "produit le brief qui déclenche tout le reste",
         ],
-        stack: ["Dust", "Notion"],
+        stack: ["Dust"],
       },
       {
         name: "Growth Analyst",
-        pitch: "les yeux — data, benchmarks, signaux faibles",
+        pitch: "les yeux. data, benchmarks, signaux faibles.",
         bullets: [
           "transforme la data en décisions concrètes",
           "distingue le vrai impact des vanity metrics",
         ],
-        stack: ["Dust", "n8n"],
+        stack: ["Dust"],
       },
       {
         name: "Content & Community",
-        pitch: "la voix — contenu, communauté, superfans",
+        pitch: "la voix. contenu, communauté, superfans.",
         bullets: [
           "transforme le brief A&R en posts, Reels, captions, calendrier",
           "amplificateur final des victoires de l'équipe",
         ],
-        stack: ["Dust", "Zapier"],
+        stack: ["Dust"],
       },
       {
         name: "Networker",
-        pitch: "le terrain — playlists, presse, bookers, syncs",
+        pitch: "le terrain. playlists, presse, bookers, syncs.",
         bullets: [
           "messages humains personnalisés, jamais de templates",
           "Quick Wins d'abord, Long Game ensuite",
         ],
-        stack: ["Dust", "Notion"],
+        stack: ["Dust"],
       },
     ],
   },
@@ -200,42 +202,37 @@ export const projectQualities: Record<string, ProjectQuality> = {
   levels: {
     label: "Autonomie × Pragmatisme",
     qualities: ["Autonomie", "Pragmatisme"],
-    phrase:
-      "Trancher seul, livrer simple. L'autonomie sans pragmatisme tourne en rond ; le pragmatisme sans autonomie attend les ordres.",
+    phrase: "Trancher seul, viser l'usage.",
     context:
-      "Levels est un single-file HTML : zéro build, déploiement instantané, parce qu'il fallait avancer vite et seul. Décider quoi couper avant que ça ralentisse.",
+      "Levels embarque sync Firestore temps réel multi-appareils, PWA installable, mode offline et un système de dates custom. Mais l'architecture, elle, est volontairement minimale (single-file HTML, zéro build) : choisir les bons compromis pour livrer un vrai produit, sans tomber dans l'over-engineering.",
   },
   energizer: {
-    label: "Esprit analytique × Force de proposition",
+    label: "Analyse × Initiative",
     qualities: ["Esprit analytique", "Force de proposition"],
-    phrase:
-      "Décomposer le flou, défendre un angle. Analyser sans proposer reste académique ; proposer sans analyser reste opinion.",
+    phrase: "Décomposer le flou, défendre un angle.",
     context:
-      "Diagnostiquer la visibilité d'une marque sur des moteurs génératifs n'existait pas comme produit. J'ai dû découper le problème en pipeline scoré, puis pitcher l'angle.",
+      "Diagnostiquer une marque sur les moteurs génératifs n'existait pas. J'ai découpé le sujet en pipeline scoré, puis défendu l'approche.",
   },
   mirakl: {
-    label: "Sens stratégique × Travail en équipe",
+    label: "Stratégie × Équipe",
     qualities: ["Sens stratégique", "Travail en équipe"],
-    phrase:
-      "Lire le terrain, construire à plusieurs. La stratégie seule reste un PDF ; l'équipe sans cap construit beaucoup, livre peu.",
+    phrase: "Lire le marché, construire à plusieurs.",
     context:
-      "Hackathon Mirakl x Eugenia, 48h, équipe pluridisciplinaire. Identifier le bon angle BDR puis répartir les pièces du moteur de scoring entre dev, sales, design.",
+      "Hackathon Mirakl x Eugenia, 5 jours, équipe pluridisciplinaire. Choisir le bon angle BDR puis répartir le moteur de scoring entre dev, sales et design.",
   },
   "music-agency": {
-    label: "Adaptabilité × Curiosité métier",
+    label: "Adaptation × Curiosité",
     qualities: ["Adaptabilité", "Curiosité métier"],
-    phrase:
-      "Apprendre la langue avant de proposer l'outil. L'adaptabilité sans curiosité reste polie ; la curiosité sans adaptabilité reste touriste.",
+    phrase: "Comprendre le métier avant de l'outiller.",
     context:
-      "Industrie musicale, codes culturels spécifiques. Avant d'automatiser quoi que ce soit, écouter comment un label parle de ses artistes.",
+      "Industrie musicale, codes culturels propres. Écouter comment un label parle de ses artistes avant d'automatiser quoi que ce soit.",
   },
   thelook: {
-    label: "Rigueur × Communication",
+    label: "Rigueur × Restitution",
     qualities: ["Rigueur", "Communication"],
-    phrase:
-      "Vérifier deux fois, restituer clair. Un chiffre faux et toute la reco s'effondre ; une reco illisible et personne ne l'active.",
+    phrase: "Calcul juste, récit lisible.",
     context:
-      "11 CTEs imbriquées, window functions, vérification croisée des KPIs. Puis transformer l'analyse en récit que le sponsor peut décider la semaine d'après.",
+      "11 CTEs, window functions, vérification croisée. Puis transformer l'analyse en histoire que le sponsor peut activer.",
   },
 };
 
@@ -270,6 +267,16 @@ export const softSkillBlocks: SoftSkillBlock[] = [
     context:
       "construire avec d'autres. les meilleures idées naissent rarement seul devant un écran.",
   },
+  {
+    theme: "humour & écoute",
+    qualities: [
+      "second degré",
+      "écoute attentive",
+      "détendre la pièce",
+    ],
+    context:
+      "savoir relâcher la pression et faire rire quand il faut. on bosse mieux entre humains qui s'aiment bien qu'entre profils LinkedIn.",
+  },
 ];
 
 export const hobbies: Hobby[] = [
@@ -288,6 +295,7 @@ export const stack: StackTool[] = [
   { label: "TypeScript", category: "lang" },
   { label: "JavaScript", category: "lang" },
   { label: "Power BI", category: "data" },
+  { label: "Tableau Desktop", category: "data" },
   { label: "Looker Studio", category: "data" },
   { label: "Google Analytics", category: "data" },
   { label: "BigQuery", category: "data" },

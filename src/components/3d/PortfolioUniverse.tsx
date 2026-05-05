@@ -109,7 +109,7 @@ const CHAPTER_LABELS: Record<string, string> = {
 
 const PLANET_NUMERAL: Record<string, string> = {
   levels: "I",
-  energizer: "Ψ",
+  energizer: "II",
   mirakl: "III",
   "music-agency": "?",
   thelook: "V",
@@ -207,7 +207,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
           className="serif-display text-text leading-none mb-4"
           style={{ fontSize: "clamp(48px, 7vw, 96px)" }}
         >
-          {project.title}
+          {project.title}.
         </h2>
         {project.role && (
           <p className="mono uppercase tracking-widest text-[11px] text-text-muted">
@@ -1185,37 +1185,44 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
   const introDone = intro.length >= INTRO.length;
   const titleDone = title.length >= TITLE.length;
 
+  const [isExiting, setIsExiting] = useState(false);
+  const triggerExit = useCallback(() => {
+    setIsExiting((prev) => {
+      if (prev) return prev;
+      window.setTimeout(onDismiss, 900);
+      return true;
+    });
+  }, [onDismiss]);
+
   // Auto-dismiss after a long beat; user can skip with any input after a short delay.
   useEffect(() => {
-    const auto = setTimeout(onDismiss, 13000);
-    const onAny = () => onDismiss();
-    const t = setTimeout(() => {
+    const auto = window.setTimeout(triggerExit, 13000);
+    const onAny = () => triggerExit();
+    const t = window.setTimeout(() => {
       window.addEventListener("keydown", onAny);
       window.addEventListener("click", onAny);
       window.addEventListener("touchstart", onAny);
     }, 1800);
     return () => {
-      clearTimeout(auto);
-      clearTimeout(t);
+      window.clearTimeout(auto);
+      window.clearTimeout(t);
       window.removeEventListener("keydown", onAny);
       window.removeEventListener("click", onAny);
       window.removeEventListener("touchstart", onAny);
     };
-  }, [onDismiss]);
+  }, [triggerExit]);
 
-  return (
-    <motion.div
-      key="intro"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 1.2, ease: "easeOut" }}
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center pointer-events-auto select-none"
-      style={{
-        background:
-          "radial-gradient(ellipse at center, #0B0D11 0%, #07080A 55%, #050609 100%)",
-      }}
-    >
+  // Jagged tear polygons — the two clip paths share the same zigzag seam at y≈50%
+  const TEAR_TOP =
+    "polygon(0 0, 100% 0, 100% 50%, 95% 51.6%, 90% 49.2%, 85% 51%, 80% 50.4%, 75% 49.4%, 70% 51.2%, 65% 49%, 60% 50.6%, 55% 49.4%, 50% 51.5%, 45% 49.5%, 40% 51%, 35% 48.8%, 30% 50.6%, 25% 51.1%, 20% 49.4%, 15% 51.4%, 10% 49.6%, 5% 51%, 0 50%)";
+  const TEAR_BOTTOM =
+    "polygon(0 50%, 5% 51%, 10% 49.6%, 15% 51.4%, 20% 49.4%, 25% 51.1%, 30% 50.6%, 35% 48.8%, 40% 51%, 45% 49.5%, 50% 51.5%, 55% 49.4%, 60% 50.6%, 65% 49%, 70% 51.2%, 75% 49.4%, 80% 50.4%, 85% 51%, 90% 49.2%, 95% 51.6%, 100% 50%, 100% 100%, 0 100%)";
+
+  const BG =
+    "radial-gradient(ellipse at center, #0B0D11 0%, #07080A 55%, #050609 100%)";
+
+  const renderInner = (
+    <>
       {/* Subtle drifting starfield — pure CSS */}
       <motion.div
         aria-hidden
@@ -1237,7 +1244,7 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
 
       {/* "Aurian." — letter opacity reveals (no width shift) */}
       <p
-        className="serif-italic mb-8"
+        className="serif-italic mb-8 relative"
         style={{
           fontSize: "clamp(15px, 1.5vw, 18px)",
           color: "rgba(236,230,214,0.55)",
@@ -1252,9 +1259,9 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
         <span style={{ opacity: introDone ? 1 : 0, transition: "opacity 0.18s linear" }}>.</span>
       </p>
 
-      {/* "Univers." — letters always present (invisible until typed), space reserved, no layout shift */}
+      {/* "Univers." */}
       <h1
-        className="serif-display text-center"
+        className="serif-display text-center relative"
         style={{
           fontSize: "clamp(64px, 12vw, 160px)",
           color: "rgba(236,230,214,0.95)",
@@ -1270,15 +1277,15 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
         <span style={{ opacity: titleDone ? 1 : 0, transition: "opacity 0.18s linear" }}>.</span>
       </h1>
 
-      {/* Hint slot — height reserved always to prevent layout shift when titleDone flips */}
-      <div className="mt-16" style={{ height: 14, display: "flex", alignItems: "center" }}>
+      {/* Hint slot */}
+      <div className="mt-16 relative" style={{ height: 14, display: "flex", alignItems: "center" }}>
         <motion.p
           initial={{ opacity: 0 }}
-          animate={{ opacity: titleDone ? [0, 1, 0.45, 1] : 0 }}
+          animate={{ opacity: titleDone && !isExiting ? [0, 1, 0.45, 1] : 0 }}
           transition={
-            titleDone
+            titleDone && !isExiting
               ? { duration: 1.6, repeat: Infinity, ease: "easeInOut", delay: 0.3 }
-              : { duration: 0 }
+              : { duration: 0.2 }
           }
           className="mono uppercase text-thread"
           style={{
@@ -1289,7 +1296,85 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
           entrer
         </motion.p>
       </div>
-    </motion.div>
+    </>
+  );
+
+  const halfClass =
+    "fixed inset-0 z-[60] flex flex-col items-center justify-center select-none overflow-hidden";
+
+  return (
+    <>
+      {/* Top half */}
+      <motion.div
+        key="intro-top"
+        initial={{ opacity: 0, y: 0, rotate: 0 }}
+        animate={{
+          opacity: 1,
+          y: isExiting ? "-110vh" : 0,
+          rotate: isExiting ? -1.6 : 0,
+        }}
+        exit={{ opacity: 0 }}
+        transition={
+          isExiting
+            ? { duration: 0.85, ease: [0.65, 0, 0.35, 1] }
+            : { duration: 1.2, ease: "easeOut" }
+        }
+        className={halfClass}
+        style={{
+          background: BG,
+          clipPath: TEAR_TOP,
+          WebkitClipPath: TEAR_TOP,
+          pointerEvents: isExiting ? "none" : "auto",
+        }}
+      >
+        {renderInner}
+      </motion.div>
+
+      {/* Bottom half */}
+      <motion.div
+        key="intro-bottom"
+        initial={{ opacity: 0, y: 0, rotate: 0 }}
+        animate={{
+          opacity: 1,
+          y: isExiting ? "110vh" : 0,
+          rotate: isExiting ? 1.6 : 0,
+        }}
+        exit={{ opacity: 0 }}
+        transition={
+          isExiting
+            ? { duration: 0.85, ease: [0.65, 0, 0.35, 1] }
+            : { duration: 1.2, ease: "easeOut" }
+        }
+        className={halfClass}
+        style={{
+          background: BG,
+          clipPath: TEAR_BOTTOM,
+          WebkitClipPath: TEAR_BOTTOM,
+          pointerEvents: isExiting ? "none" : "auto",
+        }}
+      >
+        {renderInner}
+      </motion.div>
+
+      {/* White-hot tear flash at the seam */}
+      {isExiting && (
+        <motion.div
+          key="tear-flash"
+          initial={{ opacity: 0, scaleY: 0.4 }}
+          animate={{ opacity: [0, 1, 0], scaleY: [0.4, 1, 1.6] }}
+          transition={{ duration: 0.55, ease: "easeOut", times: [0, 0.18, 1] }}
+          className="fixed left-0 right-0 z-[61] pointer-events-none"
+          style={{
+            top: "calc(50% - 1px)",
+            height: 2,
+            background: "rgba(236,230,214,0.95)",
+            boxShadow:
+              "0 0 24px 4px rgba(164,245,200,0.7), 0 0 60px 8px rgba(236,230,214,0.45)",
+            transformOrigin: "center",
+          }}
+        />
+      )}
+    </>
   );
 }
 
@@ -1314,7 +1399,7 @@ function ChapterCaption({ index, visible }: { index: number; visible: boolean })
             {chapterLabel}
           </p>
           <p className="serif-display text-text" style={{ fontSize: "clamp(40px, 6vw, 80px)" }}>
-            {project.title}
+            {project.title}.
           </p>
         </motion.div>
       )}
@@ -1643,7 +1728,7 @@ export function PortfolioUniverse() {
     }
     const [type, value] = id.split(":");
     if (type !== "info") return;
-    const isConverge = value === "cv" || value === "stack";
+    const isConverge = value === "cv" || value === "stack" || value === "qualites";
     setLegendFx({
       kind: isConverge ? "converge" : "expand",
       shape: STAR_SHAPES[value] ?? "octa",
