@@ -2029,7 +2029,7 @@ function LegendFX({ kind, shape, color, onComplete }: LegendFXProps) {
   );
 }
 
-function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
+function StarLegend({ onSelect, eruption = false }: { onSelect: (id: string) => void; eruption?: boolean }) {
   const ui = useUi();
   const categoryLabels = getCategoryLabels(ui);
   const order: { id: string; shape: StarShape }[] = [
@@ -2096,20 +2096,110 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
               aria-label={ui.identityChapter}
             >
               <span
-                className="shrink-0 grid place-items-center"
+                className="shrink-0 grid place-items-center relative"
                 style={{ width: 18, height: 18 }}
               >
-                <svg width="18" height="18" viewBox="0 0 18 18">
+                {eruption && (
+                  <>
+                    {/* Lava aura — pulsing radial halo */}
+                    <motion.span
+                      aria-hidden
+                      className="absolute inset-0 rounded-full pointer-events-none"
+                      style={{
+                        background:
+                          "radial-gradient(circle, rgba(255,88,40,0.55) 0%, rgba(229,91,91,0.25) 45%, rgba(229,91,91,0) 75%)",
+                        filter: "blur(2px)",
+                      }}
+                      animate={{ opacity: [0.45, 1, 0.45], scale: [0.95, 1.25, 0.95] }}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    {/* Fire spark 1 — rising tongue of flame */}
+                    <motion.span
+                      aria-hidden
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: "50%",
+                        top: -2,
+                        width: 2,
+                        height: 6,
+                        marginLeft: -1,
+                        borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                        background:
+                          "linear-gradient(180deg, #FFE08A 0%, #FF8A2A 55%, #E55B5B 100%)",
+                        boxShadow: "0 0 6px rgba(255,138,42,0.85)",
+                      }}
+                      animate={{ y: [0, -6, -10], opacity: [0, 1, 0], scaleY: [0.6, 1, 0.4] }}
+                      transition={{ duration: 1.1, repeat: Infinity, ease: "easeOut" }}
+                    />
+                    {/* Fire spark 2 — offset, slower */}
+                    <motion.span
+                      aria-hidden
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: "30%",
+                        top: 0,
+                        width: 1.5,
+                        height: 5,
+                        borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                        background:
+                          "linear-gradient(180deg, #FFE08A 0%, #FF8A2A 60%, #E55B5B 100%)",
+                        boxShadow: "0 0 5px rgba(255,138,42,0.8)",
+                      }}
+                      animate={{ y: [0, -5, -8], opacity: [0, 1, 0], scaleY: [0.5, 1, 0.3] }}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut", delay: 0.4 }}
+                    />
+                    {/* Fire spark 3 — right side */}
+                    <motion.span
+                      aria-hidden
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: "68%",
+                        top: 1,
+                        width: 1.5,
+                        height: 4,
+                        borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                        background:
+                          "linear-gradient(180deg, #FFE08A 0%, #FF8A2A 60%, #E55B5B 100%)",
+                        boxShadow: "0 0 5px rgba(255,138,42,0.8)",
+                      }}
+                      animate={{ y: [0, -4, -7], opacity: [0, 1, 0], scaleY: [0.5, 1, 0.3] }}
+                      transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut", delay: 0.7 }}
+                    />
+                  </>
+                )}
+                <svg width="18" height="18" viewBox="0 0 18 18" style={{ position: "relative" }}>
+                  <defs>
+                    <radialGradient id="moi-erupt" cx="50%" cy="55%" r="55%">
+                      <stop offset="0%" stopColor="#FFE08A" stopOpacity="0.95" />
+                      <stop offset="45%" stopColor="#FF5828" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="#B22222" stopOpacity="0.85" />
+                    </radialGradient>
+                  </defs>
                   <polygon
                     points="9,1 11,7 17,9 11,11 9,17 7,11 1,9 7,7"
-                    fill="#E55B5B33"
-                    stroke="#E55B5B"
-                    strokeWidth="1.1"
+                    fill={eruption ? "url(#moi-erupt)" : "#E55B5B33"}
+                    stroke={eruption ? "#FF5828" : "#E55B5B"}
+                    strokeWidth={eruption ? 1.4 : 1.1}
                     strokeLinejoin="round"
+                    style={
+                      eruption
+                        ? { filter: "drop-shadow(0 0 4px rgba(255,88,40,0.85))" }
+                        : undefined
+                    }
                   />
                 </svg>
               </span>
-              <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors hidden sm:inline">
+              <span
+                className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors hidden sm:inline"
+                style={
+                  eruption
+                    ? {
+                        color: "#FF8A2A",
+                        textShadow: "0 0 6px rgba(255,88,40,0.55)",
+                      }
+                    : undefined
+                }
+              >
                 {ui.identityChapter}
               </span>
             </button>
@@ -2325,7 +2415,7 @@ export function PortfolioUniverse() {
       </AnimatePresence>
 
       {/* Star legend (top right, pokemon-badge style) — clickable for global details */}
-      {introDismissed && <StarLegend onSelect={handleLegendSelect} />}
+      {introDismissed && <StarLegend onSelect={handleLegendSelect} eruption={index === 3} />}
 
       {/* Chatbot guide (top-center, opens dropdown panel) */}
       {introDismissed && <Chatbot />}
