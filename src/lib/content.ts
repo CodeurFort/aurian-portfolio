@@ -346,3 +346,245 @@ export const profile: Profile = {
 };
 
 export const outroQuote = placeholder("outro.quote");
+
+// ---------------------------------------------------------------------------
+// English version of all content (parallel exports). The components select FR
+// or EN at runtime via the useContent() hook in src/lib/i18n-content.ts.
+// ---------------------------------------------------------------------------
+
+export const projectsEn: Project[] = [
+  {
+    slug: "levels",
+    chapter: "i",
+    title: "Levels",
+    paperColor: "paper-cream",
+    role: "concept, dev, design (solo)",
+    pitch:
+      "Discipline plays out in LEVELS: become the hero of your own story. A web app for goal tracking with full daily history and multi-horizon planning across the week, month, year and life. The user defines goals, validates them throughout the day, browses past history and projects targets onto every horizon. Single-file PWA, real-time sync across devices.",
+    achievements: [
+      "Full daily history and multi-horizon planning (week, month, year, lifetime): the core feature.",
+      "Single-file architecture (HTML, CSS, JS in one index.html): zero build, instant deploy.",
+      "Real-time multi-device Firestore sync with single-session anti-conflict logic.",
+      "Custom date system with 0h-2h grace period to preserve user consistency.",
+      "Installable PWA, works offline thanks to the service worker.",
+    ],
+    stack: ["HTML", "CSS", "JavaScript", "TypeScript", "Firebase", "Firestore", "Firebase Auth", "PWA"],
+    liveUrl: "https://levels-app-f50a9.web.app",
+  },
+  {
+    slug: "energizer",
+    chapter: "ii",
+    title: "Energizer SEO GEO AEO",
+    paperColor: "paper-mint",
+    pitch:
+      "Web app helping companies shine in both traditional and generative search engines. Energizer audits the site, builds an action plan, and offers as flagship feature personalized blog generation: copy fueled by the best keywords from a dense scrape and the diagnostic scoring. Multi-tenant architecture, AI agent orchestrated in five steps (strategy, watch, competition, critique, scoring), Blog Redactor v2 pipeline that self-revises until the target score (out of 100, on SEO, GEO, E-E-A-T and relevance) is reached.",
+    role: "concept, architecture, dev (solo)",
+    achievements: [
+      "5-step diagnostic pipeline + self-revising Blog Redactor.",
+      "Multi-tenant architecture (company = agent context).",
+      "Custom BeautifulSoup crawler, diagnostic on the 3 SEO/GEO/E-E-A-T pillars.",
+    ],
+    stack: ["Python", "FastAPI", "Next.js 16", "Tailwind v4", "Supabase", "OpenAI", "Claude", "Anthropic SDK", "OpenClaw", "DALL-E 3", "Vercel", "Railway"],
+  },
+  {
+    slug: "mirakl",
+    chapter: "iii",
+    title: "Mirakl Prospector",
+    paperColor: "paper-ochre",
+    role: "lead dev, scoring engine, design",
+    pitch:
+      "BDR app built for the Mirakl x Eugenia School 2026 hackathon (finalist). It identifies sellers fit for a marketplace: from the Mirakl base (Supabase, fed weekly by an automated scrape) or by targeting sellers with weighted criteria (category, geo, price, customer, seasonality, marketplace signals). You can also enter a seller name: scraping is then done live, then matched with a relevant marketplace. Next, the app drafts a customizable BDR outreach sequence aligned with the commercial strategy and events, regeneratable by prompt, enriched via Better Contact (Apify fallback) and sent through SMTP.",
+    achievements: [
+      "Scoring engine on 6 criteria (category, geo, price, customer, seasonality, marketplace signals) in pure TypeScript, weighted continuous score on 100, run server-side AND client-side (real-time re-scoring on filter).",
+      "Hybrid enrichment pipeline: Better Contact API first, Apify Google Search + DNS/SMTP probe fallback for off-radar sellers (354/409 hits on the Python crawl).",
+      "GPT-4o email generation with 5 distinct prompts, sending via nodemailer / Google Workspace SMTP, Supabase (Postgres) persistence. Deployed on Vercel.",
+    ],
+    stack: ["Next.js 16", "React 19", "TypeScript", "Zustand", "Tailwind v4", "Recharts", "OpenAI GPT-4o", "Supabase", "Vercel", "Apify", "Better Contact"],
+    liveUrl: "https://mirakl-prospector.vercel.app",
+    repoUrl: "https://github.com/CodeurFort/mirakl-prospector",
+  },
+  {
+    slug: "music-agency",
+    chapter: "iv",
+    title: "Beyond",
+    paperColor: "paper-blush",
+    role: "system design, agent design",
+    pitch:
+      "Multi-agent system supporting emerging artists. Five coordinated agents (a conductor, an A&R brain, data eyes, a community voice, networking on the ground) that turn artistic instinct into executable strategy without killing the magic.",
+    achievements: [
+      "Architecture with 5 distinct orchestrated roles: Orchestrator drives, A&R Strategist writes the brief, Growth Analyst feeds data, Content & Community amplifies, Networker activates the field.",
+      "Phase system (LAUNCH / GROWTH / CONSOLIDATION) framing benchmarks and tone at every step: the right message at the right career stage.",
+      "Anti-vanity-metrics logic: read weak signals (\"423 listeners, 12% save rate = top 10% emerging\") instead of raw volumes. Quick Wins first, Long Game next.",
+    ],
+    stack: ["Dust"],
+    moons: [
+      {
+        name: "Orchestrator",
+        pitch: "The conductor. Coordinates the four others.",
+        bullets: [
+          "Sets priorities and the action sequence.",
+          "Produces nothing alone, makes others produce.",
+        ],
+        stack: ["Dust"],
+      },
+      {
+        name: "A&R Strategist",
+        pitch: "The brain. Positioning and strategic brief.",
+        bullets: [
+          "Identifies the differentiating angle, sets the phase (launch / growth / consolidation).",
+          "Produces the brief that triggers everything else.",
+        ],
+        stack: ["Dust"],
+      },
+      {
+        name: "Growth Analyst",
+        pitch: "The eyes. Data, benchmarks, weak signals.",
+        bullets: [
+          "Turns data into concrete decisions.",
+          "Distinguishes real impact from vanity metrics.",
+        ],
+        stack: ["Dust"],
+      },
+      {
+        name: "Content & Community",
+        pitch: "The voice. Content, community, superfans.",
+        bullets: [
+          "Turns the A&R brief into posts, Reels, captions, calendar.",
+          "Final amplifier of the team's wins.",
+        ],
+        stack: ["Dust"],
+      },
+      {
+        name: "Networker",
+        pitch: "The field. Playlists, press, bookers, syncs.",
+        bullets: [
+          "Personalized human messages, never templates.",
+          "Quick Wins first, Long Game next.",
+        ],
+        stack: ["Dust"],
+      },
+    ],
+  },
+  {
+    slug: "thelook",
+    chapter: "v",
+    title: "TheLook Analytics",
+    paperColor: "paper-stone",
+    role: "advanced SQL audit",
+    pitch:
+      "Fashion Hoodies & Sweatshirts audit on TheLook eCommerce (BigQuery public). 12 chained CTEs, LAG and ROW_NUMBER window functions, monthly business KPIs: revenue, margin, average basket, growth, stock rotation, top channel, bounce and conversion rates, top region.",
+    achievements: [
+      "12 CTEs orchestrated as a monthly analysis pipeline.",
+      "Window functions: LAG for month-over-month growth, ROW_NUMBER to isolate the dominant channel and region.",
+      "Stock rotation ratio (sold / end-of-month inventory) to detect stock-out vs overstock.",
+      "Bounce and conversion rates computed via LEFT JOIN sessions / orders.",
+      "Tunable period via DECLARE start_date / end_date.",
+    ],
+    stack: ["SQL", "BigQuery", "Looker Studio", "Tableau Desktop", "Pandas"],
+    sqlQuery: thelookQuery,
+  },
+];
+
+export const projectQualitiesEn: Record<string, ProjectQuality> = {
+  levels: {
+    label: "Autonomy × Pragmatism",
+    qualities: ["Autonomy", "Pragmatism"],
+    phrase: "Decide alone, aim for usage.",
+    context:
+      "Levels ships real-time multi-device Firestore sync, an installable PWA, offline mode and a custom date system. But the architecture itself is intentionally minimal (single-file HTML, zero build): picking the right trade-offs to ship a real product without over-engineering.",
+  },
+  energizer: {
+    label: "Analysis × Initiative",
+    qualities: ["Analytical mind", "Drive to propose"],
+    phrase: "Break down the fog, defend an angle.",
+    context:
+      "Diagnosing a brand on generative engines did not exist. I sliced the topic into a scored pipeline, then defended the approach.",
+  },
+  mirakl: {
+    label: "Strategy × Team",
+    qualities: ["Strategic sense", "Teamwork"],
+    phrase: "Read the market, build with others.",
+    context:
+      "Mirakl x Eugenia hackathon, 5 days, multidisciplinary team. Picking the right BDR angle then splitting the scoring engine across dev, sales and design.",
+  },
+  "music-agency": {
+    label: "Adaptation × Curiosity",
+    qualities: ["Adaptability", "Domain curiosity"],
+    phrase: "Understand the craft before tooling it.",
+    context:
+      "Music industry, distinct cultural codes. Listening to how a label talks about its artists before automating anything.",
+  },
+  thelook: {
+    label: "Rigor × Delivery",
+    qualities: ["Rigor", "Communication"],
+    phrase: "Right numbers, readable story.",
+    context:
+      "12 CTEs, window functions, cross-checking. Then turning the analysis into a story the sponsor can act on.",
+  },
+};
+
+export const softSkillBlocksEn: SoftSkillBlock[] = [
+  {
+    theme: "communication & synthesis",
+    qualities: ["writing skills", "active listening", "people skills"],
+    context:
+      "listen, synthesize, transmit. raw matter becomes a story the business can read.",
+  },
+  {
+    theme: "initiative & autonomy",
+    qualities: ["drive to propose", "autonomy", "rigor"],
+    context:
+      "spotting gaps, proposing a direction, executing without permanent supervision.",
+  },
+  {
+    theme: "collaboration",
+    qualities: ["teamwork", "adaptability", "domain curiosity"],
+    context:
+      "building with others. the best ideas rarely show up alone in front of a screen.",
+  },
+  {
+    theme: "humour & ear",
+    qualities: ["dry humour", "attentive listening", "easing the room"],
+    context:
+      "knowing when to release pressure and crack a joke. work flows better between humans who like each other than between LinkedIn profiles.",
+  },
+];
+
+export const hobbiesEn: Hobby[] = [
+  { label: "Music", detail: "composition, FL Studio" },
+  { label: "Theatre" },
+  { label: "Chess", detail: "1600 elo" },
+  { label: "Brazilian Jiu-Jitsu" },
+  { label: "Poetry" },
+  { label: "TV series" },
+  { label: "Mindset" },
+];
+
+export const profileEn: Profile = {
+  name: "Me",
+  tagline:
+    "Automation, AI agents, data, digital strategy. Turning an idea into a concrete workflow.",
+  manifesto:
+    "MSc student in AI Applied to Business. I love building tools that mix AI, data and operational execution: prototype fast, measure, iterate. This portfolio is a universe, not a grid. Wander at your own pace.",
+  email: "aurianreal@gmail.com",
+  linkedin: "https://www.linkedin.com/in/aurian-bingangoye",
+  github: "https://github.com/CodeurFort",
+  twitter: undefined,
+  cvPdf: "/cv-aurian.pdf",
+  cvCurrent:
+    "VSOLUTION: apprentice in Automation, AI Agents & Digital Performance (2026, ongoing). Built Energizer, deepened OpenClaw, prototyped automations.",
+  cvPrevious:
+    "Le Chalet Studio: right hand in Marketing & Data Analyst, summer 2024 (+22% clicks, +10% subscribers in 2 months). Odillon SARL: consultant since 2021, HR for a 5-person team, built Chronodil.",
+  formation:
+    "MSc AI Applied to Business, Eugenia School (2026, ongoing). Bachelor in Economic & Social Administration, Paris 1 Panthéon-Sorbonne (2025). Baccalaureate with honours (Math, Economics), Lycée français Blaise Pascal du Gabon (2021). Certifications: TOEFL, PIX.",
+  languages: [
+    { label: "Français", level: "native" },
+    { label: "English", level: "C1 (TOEFL)" },
+    { label: "Español", level: "B1" },
+  ],
+};
+
+// stack labels stay identical (technologies don't translate). Categories are
+// the same too — we translate the category labels in the UI layer.
+export const stackEn: StackTool[] = stack;
+

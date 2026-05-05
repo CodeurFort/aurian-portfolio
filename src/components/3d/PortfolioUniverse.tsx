@@ -5,14 +5,9 @@ import { Stars, Line, Sparkles, MeshDistortMaterial, Text, Html } from "@react-t
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import * as THREE from "three";
-import {
-  projects,
-  projectQualities,
-  profile,
-  hobbies,
-  stack,
-  type Project,
-} from "@/lib/content";
+import { type Project } from "@/lib/content";
+import { useContent, useUi, useLang } from "@/lib/i18n";
+import { LangToggle } from "@/components/LangToggle";
 import { TechPill } from "@/components/ui/TechPill";
 import { Chatbot } from "@/components/Chatbot";
 import { PlanetTransition, pickVariant } from "@/components/PlanetTransition";
@@ -93,22 +88,29 @@ type OpenCard =
 // ---------------------------------------------------------------------------
 // Star definitions per planet
 // ---------------------------------------------------------------------------
-const INFO_STARS = [
-  { id: "cv", label: "Parcours", icon: "▲" },
-  { id: "stack", label: "Stack", icon: "◆" },
-  { id: "qualites", label: "Qualités", icon: "✦" },
-  { id: "languages", label: "Langues", icon: "✧" },
-  { id: "hobbies", label: "Orbites", icon: "○" },
-  { id: "contact", label: "Contact", icon: "@" },
-];
+type UiText = ReturnType<typeof useUi>;
 
-const CHAPTER_LABELS: Record<string, string> = {
-  levels: "Chapitre I",
-  energizer: "Chapitre II",
-  mirakl: "Chapitre III",
-  "music-agency": "Exoplanète",
-  thelook: "Chapitre V",
-};
+function getInfoStars(ui: UiText) {
+  return [
+    { id: "cv", label: ui.starParcours, icon: "▲" },
+    { id: "stack", label: ui.starStack, icon: "◆" },
+    { id: "qualites", label: ui.starQualites, icon: "✦" },
+    { id: "languages", label: ui.starLangues, icon: "✧" },
+    { id: "hobbies", label: ui.starOrbites, icon: "○" },
+    { id: "contact", label: ui.starContact, icon: "@" },
+  ];
+}
+
+function getChapterLabel(slug: string, ui: UiText): string {
+  const map: Record<string, string> = {
+    levels: ui.chapter1,
+    energizer: ui.chapter2,
+    mirakl: ui.chapter3,
+    "music-agency": ui.chapterExo,
+    thelook: ui.chapter5,
+  };
+  return map[slug] ?? "";
+}
 
 const PLANET_NUMERAL: Record<string, string> = {
   levels: "I",
@@ -155,19 +157,22 @@ const STAR_COLORS: Record<string, string> = {
   contact: "#E8D26A", // jaune — contact
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  cv: "Parcours",
-  stack: "Stack",
-  qualites: "Qualité contextuelle",
-  languages: "Langues",
-  hobbies: "Orbites",
-  contact: "Contact",
-};
+function getCategoryLabels(ui: UiText): Record<string, string> {
+  return {
+    cv: ui.infoCv,
+    stack: ui.infoStack,
+    qualites: ui.infoQualites,
+    languages: ui.infoLangues,
+    hobbies: ui.infoOrbites,
+    contact: ui.infoContact,
+  };
+}
 
-function getStarsForPlanet(slug: string): StarDef[] {
+function getStarsForPlanet(slug: string, ui: UiText): StarDef[] {
   const infoIds = PLANET_INFO[slug] ?? ["cv", "stack", "qualites"];
+  const stars = getInfoStars(ui);
   return infoIds.map((iid) => {
-    const def = INFO_STARS.find((s) => s.id === iid) ?? INFO_STARS[0];
+    const def = stars.find((s) => s.id === iid) ?? stars[0];
     let id: string;
     if (iid === "qualites") id = `quality:${slug}`;
     else if (iid === "stack") id = `stack:${slug}`;
@@ -187,13 +192,14 @@ function getStarsForPlanet(slug: string): StarDef[] {
 // ---------------------------------------------------------------------------
 
 function OverlayCloseBtn({ onClose }: { onClose: () => void }) {
+  const ui = useUi();
   return (
     <button
       onClick={onClose}
-      aria-label="Fermer"
+      aria-label={ui.closeAria}
       className="absolute top-3 right-3 sm:top-6 sm:right-6 text-text-muted hover:text-thread transition mono uppercase tracking-[0.3em] text-[10px]"
     >
-      Fermer ✕
+      {ui.closeLabel}
     </button>
   );
 }
@@ -401,12 +407,13 @@ function SqlViewer({ code }: { code: string }) {
 }
 
 function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: () => void }) {
+  const ui = useUi();
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
       <header className="mb-8 sm:mb-10">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">
-          {CHAPTER_LABELS[project.slug] ?? `Chapitre ${project.chapter}`}.
+          {getChapterLabel(project.slug, ui)}.
         </p>
         <h2
           className="serif-display text-text leading-none mb-4"
@@ -425,7 +432,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
       </p>
       <div className="grid md:grid-cols-2 gap-8 md:gap-12 mb-8 sm:mb-10">
         <div>
-          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">Stack</p>
+          <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">{ui.stackLabel}</p>
           <div className="flex flex-wrap gap-2">
             {project.stack.map((s) => (
               <TechPill key={s} label={s} />
@@ -434,7 +441,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
         </div>
         <div>
           <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-4">
-            Accomplissements
+            {ui.accomplishments}
           </p>
           <ul className="space-y-3">
             {project.achievements.map((a, i) => (
@@ -449,7 +456,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
       {project.moons && project.moons.length > 0 && (
         <div className="mb-10 pt-6 border-t border-hairline">
           <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-5">
-            Agents en orbite
+            {ui.moonsLabel}
           </p>
           <div className="grid md:grid-cols-2 gap-5">
             {project.moons.map((m) => (
@@ -486,7 +493,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
               rel="noreferrer"
               className="mono uppercase tracking-widest text-[11px] text-thread border-b border-thread hover:opacity-80"
             >
-              Voir live →
+              {ui.seeLive}
             </a>
           )}
           {project.repoUrl && (
@@ -496,7 +503,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
               rel="noreferrer"
               className="mono uppercase tracking-widest text-[11px] text-text-muted hover:text-thread border-b border-hairline hover:border-thread transition"
             >
-              Github →
+              {ui.seeGithub}
             </a>
           )}
         </div>
@@ -512,6 +519,8 @@ function QualityOverlayCard({
   planetSlug: string;
   onClose: () => void;
 }) {
+  const ui = useUi();
+  const { projects, projectQualities } = useContent();
   const project = projects.find((p) => p.slug === planetSlug);
   const quality = projectQualities[planetSlug];
   if (!project || !quality) return null;
@@ -521,7 +530,7 @@ function QualityOverlayCard({
       <OverlayCloseBtn onClose={onClose} />
       <header className="mb-10 text-center">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-6">
-          Qualités tendues avec « {project.title} »
+          {ui.qualityContext} « {project.title} »
         </p>
         <h2
           className="serif-display text-text leading-none flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2"
@@ -549,6 +558,8 @@ function StackOverlayCard({
   planetSlug: string;
   onClose: () => void;
 }) {
+  const ui = useUi();
+  const { projects } = useContent();
   const project = projects.find((p) => p.slug === planetSlug);
   if (!project) return null;
   return (
@@ -556,17 +567,17 @@ function StackOverlayCard({
       <OverlayCloseBtn onClose={onClose} />
       <header className="mb-8 sm:mb-10">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">
-          Stack pertinente · « {project.title} »
+          {ui.stackContext} · « {project.title} »
         </p>
         <h2
           className="serif-display text-text leading-none"
           style={{ fontSize: "clamp(34px, 7vw, 96px)" }}
         >
-          Stack<span className="text-thread">.</span>
+          {ui.stackLabel}<span className="text-thread">.</span>
         </h2>
       </header>
       <p className="serif-italic text-text-muted text-lg mb-8 max-w-xl">
-        Les outils mobilisés sur cette planète.
+        {ui.stackSubtitle}
       </p>
       <div className="flex flex-wrap gap-2">
         {project.stack.map((s) => (
@@ -578,18 +589,20 @@ function StackOverlayCard({
 }
 
 function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => void }) {
+  const ui = useUi();
+  const { projects, projectQualities, profile, hobbies, stack } = useContent();
   const titles: Record<string, string> = {
-    cv: "Parcours",
-    stack: "Stack",
-    qualites: "Qualités",
-    languages: "Langues",
-    hobbies: "Orbites",
-    contact: "Contact",
+    cv: ui.infoCv,
+    stack: ui.infoStack,
+    qualites: ui.infoQualites,
+    languages: ui.infoLangues,
+    hobbies: ui.infoOrbites,
+    contact: ui.infoContact,
   };
 
   const categories = ["lang", "data", "cloud", "ai", "other"] as const;
   const catLabels: Record<string, string> = {
-    lang: "Langages", data: "Data", cloud: "Cloud", ai: "IA", other: "Outils",
+    lang: ui.catLang, data: ui.catData, cloud: ui.catCloud, ai: ui.catAi, other: ui.catOther,
   };
 
   return (
@@ -607,15 +620,15 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
       {infoId === "cv" && (
         <div className="space-y-6">
           <div>
-            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">Poste actuel</p>
+            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">{ui.cvCurrent}</p>
             <p className="text-lg text-text leading-relaxed">{profile.cvCurrent}</p>
           </div>
           <div>
-            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">Parcours</p>
+            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">{ui.cvPath}</p>
             <p className="text-base text-text-muted leading-relaxed">{profile.cvPrevious}</p>
           </div>
           <div>
-            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">Formation</p>
+            <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-3">{ui.cvFormation}</p>
             <p className="text-base text-text-muted leading-relaxed">{profile.formation}</p>
           </div>
           <div className="pt-6 border-t border-hairline">
@@ -625,7 +638,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
               rel="noreferrer"
               className="mono uppercase tracking-widest text-[11px] text-thread border-b border-thread hover:opacity-80"
             >
-              Télécharger CV ↗
+              {ui.cvDownload}
             </a>
           </div>
         </div>
@@ -655,8 +668,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
       {infoId === "qualites" && (
         <div className="space-y-8">
           <p className="serif-italic text-text-muted text-lg max-w-xl">
-            Cinq paires de qualités, une par planète. Deux qualités tenues
-            ensemble, chacune corrigeant l&rsquo;excès de l&rsquo;autre.
+            {ui.qualitiesIntro}
           </p>
           <div className="space-y-8">
             {projects.map((p) => {
@@ -669,7 +681,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
                   className="pb-7 border-b border-hairline last:border-0"
                 >
                   <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-2">
-                    {CHAPTER_LABELS[p.slug] ?? p.title} · {p.title}
+                    {getChapterLabel(p.slug, ui) || p.title} · {p.title}
                   </p>
                   <p
                     className="serif-display text-text mb-3 flex flex-wrap items-baseline gap-x-3"
@@ -730,12 +742,14 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
 }
 
 function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
+  const ui = useUi();
+  const { profile } = useContent();
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
       <header className="mb-8 sm:mb-10 text-center">
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4 sm:mb-6">
-          Volcanique
+          {ui.identityChapter}
         </p>
         <h2
           className="serif-display text-text leading-none"
@@ -950,6 +964,7 @@ function SatStar({ position, starId, shape, color, onSelect }: SatStarProps) {
 // ExoMoon — visual signature for music-agency exoplanet
 // ---------------------------------------------------------------------------
 function ExoMoon() {
+  const { lang } = useLang();
   const groupRef = useRef<THREE.Group>(null);
   const moonRef = useRef<THREE.Mesh>(null);
 
@@ -989,7 +1004,9 @@ function ExoMoon() {
             textShadow: "0 0 12px rgba(229,161,185,0.35)",
           }}
         >
-          « Bonus track. Juste parce que j&rsquo;aime cette planète. »
+          {lang === "fr"
+            ? "« Bonus track. Juste parce que j\u2019aime cette planète. »"
+            : "\u201CBonus track. Just because I love this planet.\u201D"}
         </span>
       </Html>
     </group>
@@ -1021,8 +1038,9 @@ function PlanetMesh({
   const initializedRef = useRef(false);
   const [hovered, setHovered] = useState(false);
 
+  const ui = useUi();
   const variant = PLANET_VARIANTS[project.slug] ?? PLANET_VARIANTS.levels;
-  const stars = getStarsForPlanet(project.slug);
+  const stars = getStarsForPlanet(project.slug, ui);
   const N = stars.length;
   const ORBIT_R = 2.5;
   const color = PAPER_HEX[project.paperColor] ?? "#ECE6D6";
@@ -1176,6 +1194,7 @@ interface IdentityStarProps {
 }
 
 function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
+  const { lang } = useLang();
   const groupRef = useRef<THREE.Group>(null);
   const innerRef = useRef<THREE.Mesh>(null);
   const spikesRef = useRef<THREE.Group>(null);
@@ -1268,7 +1287,7 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
         anchorY="top"
         letterSpacing={0.05}
       >
-        Moi
+        {lang === "fr" ? "Moi" : "Me"}
       </Text>
     </group>
   );
@@ -1278,6 +1297,7 @@ function IdentityStar({ cameraX, onSelect }: IdentityStarProps) {
 // Connecting thread line between planets
 // ---------------------------------------------------------------------------
 function PlanetConnector() {
+  const { projects } = useContent();
   const points = projects.map((_, i) => new THREE.Vector3(i * 6 - 12, 0, 0));
   return (
     <Line
@@ -1301,6 +1321,7 @@ interface UniverseProps {
 }
 
 function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
+  const { projects } = useContent();
   const { camera } = useThree();
   const camTarget = useRef(new THREE.Vector3(0, 0, 6));
   const lookTarget = useRef(new THREE.Vector3(0, 0, 0));
@@ -1383,8 +1404,9 @@ function useTypewriter(
 // Intro overlay
 // ---------------------------------------------------------------------------
 function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
+  const ui = useUi();
   const INTRO = "Aurian";
-  const TITLE = "Univers";
+  const TITLE = ui.worldTitle;
   const intro = useTypewriter(INTRO, { min: 150, max: 280, startDelay: 800 });
   const title = useTypewriter(TITLE, { min: 180, max: 340, startDelay: 2800 });
   const introDone = intro.length >= INTRO.length;
@@ -1498,7 +1520,7 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
             fontSize: "9px",
           }}
         >
-          entrer
+          {ui.enter}
         </motion.p>
       </div>
     </>
@@ -1587,8 +1609,10 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
 // Chapter caption (fades in on index change, auto-dismisses)
 // ---------------------------------------------------------------------------
 function ChapterCaption({ index, visible }: { index: number; visible: boolean }) {
+  const ui = useUi();
+  const { projects } = useContent();
   const project = projects[index];
-  const chapterLabel = CHAPTER_LABELS[project.slug] ?? `Chapitre ${project.chapter}`;
+  const chapterLabel = getChapterLabel(project.slug, ui) || project.title;
   return (
     <AnimatePresence mode="wait">
       {visible && (
@@ -1804,6 +1828,8 @@ function LegendFX({ kind, shape, color, onComplete }: LegendFXProps) {
 }
 
 function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
+  const ui = useUi();
+  const categoryLabels = getCategoryLabels(ui);
   const order: { id: string; shape: StarShape }[] = [
     { id: "cv", shape: "cone" },
     { id: "stack", shape: "octa" },
@@ -1817,8 +1843,8 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
       initial={{ opacity: 0, x: 10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.4, duration: 0.7 }}
-      aria-label="légende des étoiles"
-      className="absolute top-4 right-4 md:top-6 md:right-6 z-10 select-none"
+      aria-label={ui.legendTitle}
+      className="absolute top-14 right-3 md:top-20 md:right-6 z-10 select-none"
     >
       <div
         className="border rounded-md px-1.5 py-2 md:px-2 md:py-2.5"
@@ -1831,7 +1857,7 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
         <p
           className="mono uppercase tracking-[0.3em] text-[9px] text-text-subtle mb-2 px-2 hidden sm:block"
         >
-          Étoiles
+          {ui.legendTitle}
         </p>
         <ul className="flex flex-col">
           {order.map(({ id, shape }) => (
@@ -1841,7 +1867,7 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
                 onClick={() => onSelect(`info:${id}`)}
                 className="w-full flex items-center justify-center sm:justify-start gap-2.5 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded transition group hover:bg-white/[0.04]"
                 style={{ outline: "none" }}
-                aria-label={CATEGORY_LABELS[id]}
+                aria-label={categoryLabels[id]}
               >
                 <span
                   className="shrink-0 grid place-items-center"
@@ -1850,7 +1876,7 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
                   <ShapeIcon shape={shape} color={STAR_COLORS[id]} />
                 </span>
                 <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors hidden sm:inline">
-                  {CATEGORY_LABELS[id]}
+                  {categoryLabels[id]}
                 </span>
               </button>
             </li>
@@ -1864,7 +1890,7 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
               onClick={() => onSelect("identity")}
               className="w-full flex items-center justify-center sm:justify-start gap-2.5 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded transition group hover:bg-white/[0.04]"
               style={{ outline: "none" }}
-              aria-label="Volcanique"
+              aria-label={ui.identityChapter}
             >
               <span
                 className="shrink-0 grid place-items-center"
@@ -1881,7 +1907,7 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
                 </svg>
               </span>
               <span className="mono uppercase tracking-[0.18em] text-[10px] text-text-muted group-hover:text-text transition-colors hidden sm:inline">
-                Volcanique
+                {ui.identityChapter}
               </span>
             </button>
           </li>
@@ -1895,6 +1921,9 @@ function StarLegend({ onSelect }: { onSelect: (id: string) => void }) {
 // Main exported component
 // ---------------------------------------------------------------------------
 export function PortfolioUniverse() {
+  const ui = useUi();
+  const { lang } = useLang();
+  const { projects } = useContent();
   const [index, setIndex] = useState(0);
   const [openCard, setOpenCard] = useState<OpenCard | null>(null);
   const [introDismissed, setIntroDismissed] = useState(false);
@@ -2075,7 +2104,7 @@ export function PortfolioUniverse() {
           Aurian<span className="text-thread">.</span>
         </p>
         <p className="mono uppercase tracking-[0.3em] text-[9px] md:text-[10px] text-text-muted mt-1 hidden sm:block">
-          Portfolio · Univers
+          {ui.headerSubtitle}
         </p>
       </header>
 
@@ -2119,7 +2148,7 @@ export function PortfolioUniverse() {
         <>
           <motion.button
             onClick={prev}
-            aria-label="Planète précédente"
+            aria-label={lang === "fr" ? "Planète précédente" : "Previous planet"}
             className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 z-20 group"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -2150,7 +2179,7 @@ export function PortfolioUniverse() {
 
           <motion.button
             onClick={next}
-            aria-label="Planète suivante"
+            aria-label={lang === "fr" ? "Planète suivante" : "Next planet"}
             className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 z-20 group"
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -2194,7 +2223,7 @@ export function PortfolioUniverse() {
         <motion.button
           type="button"
           onClick={() => setIntroDismissed(false)}
-          aria-label="Retour à la landing"
+          aria-label={lang === "fr" ? "Retour à la landing" : "Back to landing"}
           className="fixed bottom-6 left-6 z-[40] flex items-center gap-2 group"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -2231,7 +2260,7 @@ export function PortfolioUniverse() {
             className="mono uppercase tracking-[0.25em] text-[10px]"
             style={{ color: "rgba(236,230,214,0.78)" }}
           >
-            Retour
+            {lang === "fr" ? "Retour" : "Back"}
           </span>
         </motion.button>
       )}
@@ -2242,6 +2271,9 @@ export function PortfolioUniverse() {
           <IntroOverlay onDismiss={() => setIntroDismissed(true)} />
         )}
       </AnimatePresence>
+
+      {/* Language toggle — always visible (landing + universe) */}
+      <LangToggle z={70} />
     </div>
   );
 }

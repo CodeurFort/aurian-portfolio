@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EB_Garamond, Inter_Tight, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import { LangProvider } from "@/lib/i18n";
 
 const serif = EB_Garamond({
   subsets: ["latin"],
@@ -39,7 +40,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
-      <body className="grain bg-paper-bg text-text antialiased overflow-hidden">{children}</body>
+      <body className="grain bg-paper-bg text-text antialiased overflow-hidden">
+        <LangProvider>{children}</LangProvider>
+      </body>
     </html>
   );
 }

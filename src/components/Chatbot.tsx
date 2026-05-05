@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useUi } from "@/lib/i18n";
 
 // The bot IS Aurian (a bot version of him). Visitors address questions TO him.
 // Philosophy: the bot REDIRECTS, never data-dumps. It points to the UI element
 // where the answer lives (a star in the legend, a planet, a button) so the
 // user has to explore. Tone: 1ère personne, sobre, encourageant.
 // Strict rule: no em dashes ("—"). No free chat (predefined menu only).
+// Bilingual: all visible strings come from useUi() (FR/EN switch).
 
 interface Msg {
   id: string;
@@ -35,22 +37,6 @@ interface Reply {
   next: Topic;
 }
 
-const ROOT_LABEL: Record<Topic, string> = {
-  root: "Menu",
-  identity: "Qui es-tu",
-  projects: "Tes projets",
-  project: "Explore une planète",
-  stack: "Ta stack",
-  qualities: "Tes qualités",
-  contact: "Comment te contacter",
-  hobbies: "Tes loisirs",
-  formation: "Ta formation",
-  cv: "Ton parcours",
-  languages: "Tes langues",
-  joke: "Une blague",
-  bot: "Qui es-tu, toi le bot",
-};
-
 // Suggestion menus per topic — always 4-5 fresh choices that lead elsewhere.
 const MENUS: Record<Topic, Topic[]> = {
   root: ["identity", "projects", "stack", "qualities", "contact"],
@@ -68,86 +54,53 @@ const MENUS: Record<Topic, Topic[]> = {
   bot: ["projects", "qualities", "joke", "contact", "identity"],
 };
 
-function reply(topic: Topic): Reply {
+function buildLabels(ui: ReturnType<typeof useUi>): Record<Topic, string> {
+  return {
+    root: ui.bMenu,
+    identity: ui.bIdentity,
+    projects: ui.bProjects,
+    project: ui.bProject,
+    stack: ui.bStack,
+    qualities: ui.bQualities,
+    contact: ui.bContact,
+    hobbies: ui.bHobbies,
+    formation: ui.bFormation,
+    cv: ui.bCv,
+    languages: ui.bLanguages,
+    joke: ui.bJoke,
+    bot: ui.bBot,
+  };
+}
+
+function reply(topic: Topic, ui: ReturnType<typeof useUi>): Reply {
   switch (topic) {
     case "identity":
-      return {
-        text:
-          "Pour me découvrir vraiment, clique sur l'étoile volcanique (rouge, en bas de la légende en haut à droite). Tu y trouveras ma signature.",
-        next: "identity",
-      };
+      return { text: ui.botIdentity, next: "identity" };
     case "projects":
-      return {
-        text:
-          "Cinq planètes orbitent autour de toi. Utilise les flèches gauche / droite (ou les touches du clavier) pour les visiter, et clique sur une planète pour ouvrir son dossier.",
-        next: "projects",
-      };
+      return { text: ui.botProjects, next: "projects" };
     case "project":
-      return {
-        text:
-          "Chaque planète a son ambiance et son dossier. Clique directement dessus dans le système, ou ouvre la fiche depuis la flèche en bas. Cinq destinations t'attendent.",
-        next: "project",
-      };
+      return { text: ui.botProject, next: "project" };
     case "stack":
-      return {
-        text:
-          "Ma stack vit dans la légende, en haut à droite. Clique sur Stack (l'octaèdre) pour voir mes outils rangés par catégorie.",
-        next: "stack",
-      };
+      return { text: ui.botStack, next: "stack" };
     case "qualities":
-      return {
-        text:
-          "Mes qualités sont incarnées par chaque planète, une paire par projet. Ouvre Qualités dans la légende, ou explore une planète pour voir la sienne.",
-        next: "qualities",
-      };
+      return { text: ui.botQualities, next: "qualities" };
     case "contact":
-      return {
-        text:
-          "Clique sur Contact (le cube) dans la légende. Email, LinkedIn et GitHub y sont rangés.",
-        next: "contact",
-      };
+      return { text: ui.botContact, next: "contact" };
     case "hobbies":
-      return {
-        text:
-          "Loisirs (la sphère) dans la légende, en haut à droite. La liste s'y trouve.",
-        next: "hobbies",
-      };
+      return { text: ui.botHobbies, next: "hobbies" };
     case "formation":
-      return {
-        text:
-          "Ma formation est dans Parcours (le triangle) dans la légende. Clique pour voir le détail.",
-        next: "formation",
-      };
+      return { text: ui.botFormation, next: "formation" };
     case "cv":
-      return {
-        text:
-          "Mon parcours est dans Parcours (le triangle) en haut à droite. Présent, passé et CV à télécharger y sont posés.",
-        next: "cv",
-      };
+      return { text: ui.botCv, next: "cv" };
     case "languages":
-      return {
-        text:
-          "Langues (le tétraèdre) dans la légende, en haut à droite. Trois langues, niveaux indiqués.",
-        next: "languages",
-      };
+      return { text: ui.botLanguages, next: "languages" };
     case "joke":
-      return {
-        text:
-          "Voici. Deux étoiles entrent dans un bar. L'une dit à l'autre : « Tu brilles trop, on nous regarde ». La blague est faible, l'univers aussi parfois.",
-        next: "joke",
-      };
+      return { text: ui.botJoke, next: "joke" };
     case "bot":
-      return {
-        text:
-          "Je suis une version bot d'Aurian. Je ne réponds qu'en pointant. Le reste, c'est à toi de le trouver dans l'univers.",
-        next: "bot",
-      };
+      return { text: ui.botBot, next: "bot" };
     case "root":
     default:
-      return {
-        text: "Que veux-tu savoir ? Je te dirai où regarder.",
-        next: "root",
-      };
+      return { text: ui.botRoot, next: "root" };
   }
 }
 
@@ -197,25 +150,33 @@ function BotMessage({ text }: { text: string }) {
 }
 
 export function Chatbot() {
+  const ui = useUi();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [menu, setMenu] = useState<Topic[]>(MENUS.root);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Greet on first open
+  const labels = buildLabels(ui);
+
+  // Greet on first open + reset messages when language changes (so greet matches lang)
   useEffect(() => {
     if (open && messages.length === 0) {
       setMessages([
         {
           id: "greet",
           from: "bot",
-          text:
-            "Salut. Je suis Aurian, version bot. Pose-moi une question.",
+          text: ui.botGreet,
         },
       ]);
       setMenu(MENUS.root);
     }
-  }, [open, messages.length]);
+  }, [open, messages.length, ui.botGreet]);
+
+  // Reset chat history when language changes (keeps the conversation coherent in one lang)
+  useEffect(() => {
+    setMessages([]);
+    setMenu(MENUS.root);
+  }, [ui.botGreet]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -224,11 +185,11 @@ export function Chatbot() {
   }, [messages, open, menu]);
 
   const ask = (topic: Topic) => {
-    const r = reply(topic);
+    const r = reply(topic, ui);
     const userMsg: Msg = {
       id: `u-${Date.now()}`,
       from: "user",
-      text: ROOT_LABEL[topic],
+      text: labels[topic],
     };
     const botMsg: Msg = {
       id: `b-${Date.now()}`,
@@ -248,7 +209,7 @@ export function Chatbot() {
       <motion.button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Fermer le guide" : "Ouvrir le guide"}
+        aria-label={open ? ui.botCloseAria : ui.botOpenAria}
         className="fixed z-[41] grid place-items-center select-none top-3 left-[96px] w-9 h-9 md:top-9 md:left-[250px] md:w-11 md:h-11"
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -382,10 +343,10 @@ export function Chatbot() {
               style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
             >
               <p className="mono uppercase tracking-[0.4em] text-[9px] text-thread">
-                Aurian · Bot
+                {ui.botBadge}
               </p>
               <p className="serif-italic text-text mt-1" style={{ fontSize: 18 }}>
-                Qu'aimerais-tu savoir ?
+                {ui.botPrompt}
               </p>
             </div>
 
@@ -430,7 +391,7 @@ export function Chatbot() {
                 className="mono uppercase tracking-[0.3em] text-[8px] mb-2"
                 style={{ color: "rgba(236,230,214,0.45)" }}
               >
-                Choisis une question
+                {ui.botMenuLabel}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {menu.map((t) => (
@@ -450,7 +411,7 @@ export function Chatbot() {
                       cursor: "pointer",
                     }}
                   >
-                    {ROOT_LABEL[t]}
+                    {labels[t]}
                   </button>
                 ))}
               </div>
