@@ -38,7 +38,7 @@ export function SocialDock({ z = 50 }: { z?: number }) {
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed top-3 left-[140px] md:top-9 md:left-[306px] select-none"
+      className="fixed top-2 left-[160px] md:top-7 md:left-[330px] select-none"
       style={{
         zIndex: z,
         display: "flex",
