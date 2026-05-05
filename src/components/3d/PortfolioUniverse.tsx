@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Stars, Line, Sparkles, MeshDistortMaterial, Text } from "@react-three/drei";
+import { Stars, Line, Sparkles, MeshDistortMaterial, Text, Html } from "@react-three/drei";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import * as THREE from "three";
@@ -83,6 +83,7 @@ const PLANET_VARIANTS: Record<string, PlanetVariant> = {
 type OpenCard =
   | { type: "planet"; project: Project }
   | { type: "quality"; planetSlug: string }
+  | { type: "stack"; planetSlug: string }
   | { type: "info"; infoId: string }
   | { type: "identity" };
 
@@ -104,6 +105,10 @@ const CHAPTER_LABELS: Record<string, string> = {
   mirakl: "Chapitre III",
   "music-agency": "Exoplanète",
   thelook: "Chapitre V",
+};
+
+const ROMAN: Record<string, string> = {
+  i: "I", ii: "II", iii: "III", iv: "IV", v: "V",
 };
 
 const PLANET_INFO: Record<string, string[]> = {
@@ -156,7 +161,10 @@ function getStarsForPlanet(slug: string): StarDef[] {
   const infoIds = PLANET_INFO[slug] ?? ["cv", "stack", "qualites"];
   return infoIds.map((iid) => {
     const def = INFO_STARS.find((s) => s.id === iid) ?? INFO_STARS[0];
-    const id = iid === "qualites" ? `quality:${slug}` : `info:${iid}`;
+    let id: string;
+    if (iid === "qualites") id = `quality:${slug}`;
+    else if (iid === "stack") id = `stack:${slug}`;
+    else id = `info:${iid}`;
     return {
       id,
       label: def.label,
@@ -284,6 +292,42 @@ function QualityOverlayCard({
       <p className="serif-italic text-2xl md:text-3xl leading-snug text-text-muted text-center max-w-2xl mx-auto">
         {quality.context}
       </p>
+    </>
+  );
+}
+
+function StackOverlayCard({
+  planetSlug,
+  onClose,
+}: {
+  planetSlug: string;
+  onClose: () => void;
+}) {
+  const project = projects.find((p) => p.slug === planetSlug);
+  if (!project) return null;
+  return (
+    <>
+      <OverlayCloseBtn onClose={onClose} />
+      <header className="mb-10">
+        <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4">
+          Stack pertinente · « {project.title} »
+        </p>
+        <h2
+          className="serif-display text-text leading-none"
+          style={{ fontSize: "clamp(48px, 7vw, 96px)" }}
+        >
+          Stack<span className="text-thread">.</span>
+        </h2>
+      </header>
+      <p className="serif-italic text-text-muted text-lg mb-8 max-w-xl">
+        Les outils mobilisés sur cette planète. Réunissez les cinq, vous avez
+        l'inventaire complet.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {project.stack.map((s) => (
+          <TechPill key={s} label={s} />
+        ))}
+      </div>
     </>
   );
 }
@@ -499,6 +543,9 @@ function CardOverlay({
             {openCard.type === "quality" && (
               <QualityOverlayCard planetSlug={openCard.planetSlug} onClose={onClose} />
             )}
+            {openCard.type === "stack" && (
+              <StackOverlayCard planetSlug={openCard.planetSlug} onClose={onClose} />
+            )}
             {openCard.type === "info" && (
               <InfoOverlayCard infoId={openCard.infoId} onClose={onClose} />
             )}
@@ -641,6 +688,28 @@ function ExoMoon() {
           metalness={0.1}
         />
       </mesh>
+      {/* Joke annotation that orbits with the moon */}
+      <Html
+        position={[1.85, 0.55, 0]}
+        center
+        zIndexRange={[15, 0]}
+        style={{ pointerEvents: "none", userSelect: "none" }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-serif), Georgia, serif",
+            fontStyle: "italic",
+            fontWeight: 400,
+            fontSize: "11px",
+            color: "#E5A1B9",
+            whiteSpace: "nowrap",
+            opacity: 0.85,
+            textShadow: "0 0 12px rgba(229,161,185,0.35)",
+          }}
+        >
+          « Bonus track. Juste parce que j&rsquo;aime cette planète. »
+        </span>
+      </Html>
     </group>
   );
 }
@@ -759,6 +828,31 @@ function PlanetMesh({
           />
         </mesh>
       )}
+
+      {/* Roman numeral under planet, serif font via Html overlay */}
+      <Html
+        position={[0, -1.95, 0]}
+        center
+        zIndexRange={[20, 0]}
+        style={{ pointerEvents: "none", userSelect: "none" }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-serif), Georgia, serif",
+            fontWeight: 500,
+            fontStyle: "italic",
+            fontSize: isFocused ? "44px" : "26px",
+            letterSpacing: "0.04em",
+            color: isFocused ? "#ECE6D6" : "#3A3D38",
+            opacity: isFocused ? 1 : 0.55,
+            transition: "all 0.4s ease",
+            whiteSpace: "nowrap",
+            textShadow: isFocused ? "0 0 24px rgba(164,245,200,0.15)" : "none",
+          }}
+        >
+          {ROMAN[project.chapter] ?? project.chapter.toUpperCase()}
+        </span>
+      </Html>
 
       {/* Satellite stars orbit group */}
       {isFocused && (
@@ -966,26 +1060,34 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Typewriter hook — reveals text letter by letter
+// Typewriter hook — Awkward-style, slow with irregular rhythm
 // ---------------------------------------------------------------------------
-function useTypewriter(text: string, speed = 80, startDelay = 0) {
+function useTypewriter(
+  text: string,
+  options: { min?: number; max?: number; startDelay?: number; pauseChars?: string } = {}
+) {
+  const { min = 130, max = 240, startDelay = 0, pauseChars = " '" } = options;
   const [out, setOut] = useState("");
   useEffect(() => {
     setOut("");
     let i = 0;
-    let interval: ReturnType<typeof setInterval> | undefined;
-    const start = setTimeout(() => {
-      interval = setInterval(() => {
-        i += 1;
-        setOut(text.slice(0, i));
-        if (i >= text.length && interval) clearInterval(interval);
-      }, speed);
-    }, startDelay);
-    return () => {
-      clearTimeout(start);
-      if (interval) clearInterval(interval);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const tick = () => {
+      i += 1;
+      setOut(text.slice(0, i));
+      if (i < text.length) {
+        const prev = text[i - 1];
+        const variance = min + Math.random() * (max - min);
+        // small extra pause after word breaks / apostrophes for hand-typed feel
+        const pause = pauseChars.includes(prev) ? 220 : 0;
+        timeout = setTimeout(tick, variance + pause);
+      }
     };
-  }, [text, speed, startDelay]);
+    timeout = setTimeout(tick, startDelay);
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [text, min, max, startDelay, pauseChars]);
   return out;
 }
 
@@ -993,10 +1095,10 @@ function useTypewriter(text: string, speed = 80, startDelay = 0) {
 // Intro overlay
 // ---------------------------------------------------------------------------
 function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
-  const intro = useTypewriter("Aurian", 95, 350);
-  const title = useTypewriter("L'Observatoire", 105, 1500);
+  const intro = useTypewriter("Aurian", { min: 150, max: 280, startDelay: 500 });
+  const title = useTypewriter("Univers", { min: 180, max: 340, startDelay: 2400 });
   const introDone = intro.length >= "Aurian".length;
-  const titleDone = title.length >= "L'Observatoire".length;
+  const titleDone = title.length >= "Univers".length;
 
   useEffect(() => {
     const onAny = () => onDismiss();
@@ -1235,6 +1337,7 @@ export function PortfolioUniverse() {
       const [type, value] = id.split(":");
       if (type === "info") setOpenCard({ type: "info", infoId: value });
       else if (type === "quality") setOpenCard({ type: "quality", planetSlug: value });
+      else if (type === "stack") setOpenCard({ type: "stack", planetSlug: value });
     },
     []
   );

@@ -79,7 +79,7 @@ export const projects: Project[] = [
       "système de dates custom : grace period 0h, 2h pour préserver la régularité de l'utilisateur",
       "PWA installable sur mobile, fonctionne offline grâce au service worker",
     ],
-    stack: ["HTML", "CSS", "JavaScript", "Firebase Auth", "Firestore", "PWA"],
+    stack: ["HTML", "CSS", "JavaScript", "TypeScript", "Firebase", "Firestore", "Firebase Auth", "PWA"],
     liveUrl: "https://levels-app-f50a9.web.app",
   },
   {
@@ -88,14 +88,14 @@ export const projects: Project[] = [
     title: "Energizer SEO GEO AEO",
     paperColor: "paper-mint",
     pitch:
-      "agent IA en cinq étapes : stratégie, veille, concurrence, critique, scoring. il diagnostique la présence d'une marque sur les moteurs traditionnels et génératifs. multi-tenant : chaque entreprise est un contexte injecté dans l'agent, avec son propre crawler maison et sa pipeline Blog Redactor v2 qui s'auto-révise tant que le score sur 100 (SEO, GEO, E-E-A-T, pertinence) n'est pas atteint.",
+      "agent IA en cinq étapes : stratégie, veille, concurrence, critique, scoring. il diagnostique la présence d'une marque sur les moteurs traditionnels et génératifs. multi-tenant : chaque entreprise est un contexte injecté dans l'agent, avec son propre crawler maison et sa pipeline Blog Redactor v2 qui s'auto-révise tant que le score cible sur 100 (SEO, GEO, E-E-A-T, pertinence) n'est pas atteint.",
     role: "conception, architecture, dev solo",
     achievements: [
       "pipeline 5 étapes diagnostic + Blog Redactor avec auto-révision",
       "architecture multi-tenant (entreprise = contexte agent)",
       "crawler maison BeautifulSoup, diagnostic 3 piliers SEO, GEO, E-E-A-T",
     ],
-    stack: ["FastAPI", "Next.js 16", "Supabase", "OpenAI GPT-4", "DALL-E 3", "Tailwind v4", "Vercel", "Railway"],
+    stack: ["Python", "FastAPI", "Next.js 16", "Tailwind v4", "Supabase", "OpenAI", "Claude", "Anthropic SDK", "OpenClaw", "DALL-E 3", "Vercel", "Railway"],
   },
   {
     slug: "mirakl",
@@ -109,7 +109,7 @@ export const projects: Project[] = [
       placeholder("mirakl.achievement.2"),
       placeholder("mirakl.achievement.3"),
     ],
-    stack: [placeholder("mirakl.stack")],
+    stack: ["Hubspot", "Make", "Power Automate", "Power BI"],
   },
   {
     slug: "music-agency",
@@ -122,7 +122,7 @@ export const projects: Project[] = [
       placeholder("music.achievement.2"),
       placeholder("music.achievement.3"),
     ],
-    stack: ["Dust", placeholder("music.stack")],
+    stack: ["Dust", "Zapier", "n8n", "Notion"],
   },
   {
     slug: "thelook",
