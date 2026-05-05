@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { type Project } from "@/lib/content";
 import { useContent, useUi, useLang } from "@/lib/i18n";
 import { LangToggle } from "@/components/LangToggle";
+import { SocialDock } from "@/components/SocialDock";
 import { TechPill } from "@/components/ui/TechPill";
 import { Chatbot } from "@/components/Chatbot";
 import { PlanetTransition, pickVariant } from "@/components/PlanetTransition";
@@ -658,7 +659,7 @@ function StackOverlayCard({
 
 function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => void }) {
   const ui = useUi();
-  const { projects, projectQualities, profile, hobbies, stack, certifications } = useContent();
+  const { projects, projectQualities, profile, hobbies, stack, certifications, softSkillBlocks } = useContent();
   const basePath = process.env.NEXT_PUBLIC_USE_BASE_PATH === "true" ? "/aurian-portfolio" : "";
   const titles: Record<string, string> = {
     cv: ui.infoCv,
@@ -736,7 +737,7 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
       )}
 
       {infoId === "qualites" && (
-        <div className="space-y-8">
+        <div className="space-y-10">
           <p className="serif-italic text-text-muted text-lg max-w-xl">
             {ui.qualitiesIntro}
           </p>
@@ -767,6 +768,46 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
                 </div>
               );
             })}
+          </div>
+
+          {/* Soft skills — cross-cutting families */}
+          <div className="pt-8 border-t border-hairline">
+            <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-2">
+              {ui.softSkillsTitle}
+            </p>
+            <p className="serif-italic text-text-muted text-base max-w-xl mb-6">
+              {ui.softSkillsIntro}
+            </p>
+            <div className="space-y-6">
+              {softSkillBlocks.map((b) => (
+                <div key={b.theme} className="pb-5 border-b border-hairline last:border-0">
+                  <p
+                    className="serif-display text-text mb-3"
+                    style={{ fontSize: "20px" }}
+                  >
+                    {b.theme}<span className="text-thread">.</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {b.qualities.map((q) => (
+                      <span
+                        key={q}
+                        className="mono uppercase tracking-widest text-[10px] px-2.5 py-1 rounded-full"
+                        style={{
+                          color: "rgba(164,245,200,0.92)",
+                          border: "1px solid rgba(164,245,200,0.35)",
+                          background: "rgba(164,245,200,0.06)",
+                        }}
+                      >
+                        {q}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="serif-italic text-text-muted text-sm leading-snug">
+                    {b.context}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -887,10 +928,40 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
 function IdentityOverlayCard({ onClose }: { onClose: () => void }) {
   const ui = useUi();
   const { profile } = useContent();
+  const basePath = process.env.NEXT_PUBLIC_USE_BASE_PATH === "true" ? "/aurian-portfolio" : "";
   return (
     <>
       <OverlayCloseBtn onClose={onClose} />
+      {/* Small portrait, top-right of the card */}
+      <img
+        src={`${basePath}/aurian-portrait.jpg`}
+        alt={profile.name}
+        className="absolute hidden sm:block"
+        style={{
+          top: 28,
+          right: 56,
+          width: 96,
+          height: 96,
+          objectFit: "cover",
+          borderRadius: "50%",
+          border: "1px solid rgba(164,245,200,0.35)",
+          boxShadow: "0 4px 18px rgba(0,0,0,0.55), 0 0 14px rgba(164,245,200,0.12)",
+        }}
+      />
       <header className="mb-8 sm:mb-10 text-center">
+        {/* Mobile-only portrait — centered above name */}
+        <img
+          src={`${basePath}/aurian-portrait.jpg`}
+          alt={profile.name}
+          className="sm:hidden mx-auto mb-5"
+          style={{
+            width: 80,
+            height: 80,
+            objectFit: "cover",
+            borderRadius: "50%",
+            border: "1px solid rgba(164,245,200,0.35)",
+          }}
+        />
         <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-4 sm:mb-6">
           {ui.identityChapter}
         </p>
@@ -2436,6 +2507,9 @@ export function PortfolioUniverse() {
 
       {/* Language toggle — always visible (landing + universe) */}
       <LangToggle z={70} />
+
+      {/* Permanent social dock (LinkedIn + GitHub) */}
+      <SocialDock z={70} />
     </div>
   );
 }

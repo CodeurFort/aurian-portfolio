@@ -277,6 +277,8 @@ export const softSkillBlocks: SoftSkillBlock[] = [
     qualities: [
       "capacités rédactionnelles",
       "écoute active",
+      "aisance verbale",
+      "sait pitcher",
       "qualités relationnelles",
     ],
     context:
@@ -287,6 +289,7 @@ export const softSkillBlocks: SoftSkillBlock[] = [
     qualities: [
       "force de proposition",
       "autonomie",
+      "à l'aise dans l'inconnu",
       "rigueur",
     ],
     context:
@@ -307,6 +310,7 @@ export const softSkillBlocks: SoftSkillBlock[] = [
     qualities: [
       "second degré",
       "écoute attentive",
+      "calme sous pression",
       "détendre la pièce",
     ],
     context:
@@ -607,13 +611,24 @@ export const projectQualitiesEn: Record<string, ProjectQuality> = {
 export const softSkillBlocksEn: SoftSkillBlock[] = [
   {
     theme: "communication & synthesis",
-    qualities: ["writing skills", "active listening", "people skills"],
+    qualities: [
+      "writing skills",
+      "active listening",
+      "verbal ease",
+      "comfortable pitching",
+      "people skills",
+    ],
     context:
       "listen, synthesize, transmit. raw matter becomes a story the business can read.",
   },
   {
     theme: "initiative & autonomy",
-    qualities: ["drive to propose", "autonomy", "rigor"],
+    qualities: [
+      "drive to propose",
+      "autonomy",
+      "comfortable with the unknown",
+      "rigor",
+    ],
     context:
       "spotting gaps, proposing a direction, executing without permanent supervision.",
   },
@@ -625,7 +640,12 @@ export const softSkillBlocksEn: SoftSkillBlock[] = [
   },
   {
     theme: "humour & ear",
-    qualities: ["dry humour", "attentive listening", "easing the room"],
+    qualities: [
+      "dry humour",
+      "attentive listening",
+      "calm under pressure",
+      "easing the room",
+    ],
     context:
       "knowing when to release pressure and crack a joke. work flows better between humans who like each other than between LinkedIn profiles.",
   },

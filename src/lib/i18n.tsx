@@ -177,6 +177,9 @@ const UI_TEXT = {
     cvDownload: "Télécharger CV ↗",
     qualitiesIntro:
       "Cinq paires de qualités, une par planète. Deux qualités tenues ensemble, chacune corrigeant l'excès de l'autre.",
+    softSkillsTitle: "Soft skills",
+    softSkillsIntro:
+      "Quatre familles transversales, présentes sur tous les projets — pas attachées à une planète.",
     // Stack categories
     catLang: "Langages",
     catData: "Data",
@@ -279,6 +282,9 @@ const UI_TEXT = {
     cvDownload: "Download CV ↗",
     qualitiesIntro:
       "Five pairs of qualities, one per planet. Two qualities held together, each correcting the other's excess.",
+    softSkillsTitle: "Soft skills",
+    softSkillsIntro:
+      "Four cross-cutting families that show up on every project — not tied to a single planet.",
     catLang: "Languages",
     catData: "Data",
     catCloud: "Cloud",
