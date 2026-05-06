@@ -11,7 +11,7 @@ const listeners = new Set<(m: boolean) => void>();
 
 // Eruption ambience nodes (kept around so we can stop/start cleanly)
 let eruptionLowOsc: OscillatorNode | null = null;
-let eruptionNoise: AudioBufferSourceNode | null = null;
+let eruptionBreath: OscillatorNode | null = null;
 let eruptionGain: GainNode | null = null;
 
 function getCtx(): AudioContext | null {
@@ -111,34 +111,30 @@ export function playTap() {
   o.stop(t0 + 0.26);
 }
 
-// Hyperspace whoosh — used on planet transitions
+// Minimalist transition swell — soft sine swoop, no noise. ~0.25s, very low.
 export function playWhoosh() {
   if (muted) return;
   const c = getCtx();
   if (!c || !masterGain) return;
   const t0 = c.currentTime;
-  const noise = c.createBufferSource();
-  noise.buffer = makeNoiseBuffer(c, 0.8);
-  const filter = c.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.setValueAtTime(400, t0);
-  filter.frequency.exponentialRampToValueAtTime(3200, t0 + 0.55);
-  filter.Q.value = 6;
+  const o = c.createOscillator();
   const g = c.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(520, t0);
+  o.frequency.exponentialRampToValueAtTime(280, t0 + 0.22);
   g.gain.setValueAtTime(0, t0);
-  g.gain.linearRampToValueAtTime(0.22, t0 + 0.08);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.7);
-  noise.connect(filter).connect(g).connect(masterGain);
-  noise.start(t0);
-  noise.stop(t0 + 0.75);
+  g.gain.linearRampToValueAtTime(0.06, t0 + 0.04);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.28);
+  o.connect(g).connect(masterGain);
+  o.start(t0);
+  o.stop(t0 + 0.32);
 }
 
-// Volcanic rumble — looping ambience for the "Moi" star eruption
+// Quiet "breathing" pad for the eruption planet — sober, ambient, no noise.
+// Two sine layers with very slow gain pulsing; sits just under the threshold
+// of attention rather than dominating the soundstage.
 export function startEruptionRumble() {
-  if (muted) {
-    // still set up so unmute later starts it; but skip building if unused
-    return;
-  }
+  if (muted) return;
   const c = getCtx();
   if (!c || !masterGain) return;
   if (eruptionGain) return; // already running
@@ -146,37 +142,26 @@ export function startEruptionRumble() {
 
   eruptionGain = c.createGain();
   eruptionGain.gain.setValueAtTime(0, t0);
-  eruptionGain.gain.linearRampToValueAtTime(0.05, t0 + 1.5);
+  eruptionGain.gain.linearRampToValueAtTime(0.018, t0 + 2.0); // very low ceiling
   eruptionGain.connect(masterGain);
 
-  // Sub-bass drone
+  // Soft low sine — no sawtooth grit
   eruptionLowOsc = c.createOscillator();
-  eruptionLowOsc.type = "sawtooth";
-  eruptionLowOsc.frequency.value = 48;
-  const lowGain = c.createGain();
-  lowGain.gain.value = 0.35;
-  // Slow LFO on the bass to make it feel alive
-  const lfo = c.createOscillator();
-  lfo.frequency.value = 0.4;
-  const lfoGain = c.createGain();
-  lfoGain.gain.value = 8;
-  lfo.connect(lfoGain).connect(eruptionLowOsc.frequency);
-  eruptionLowOsc.connect(lowGain).connect(eruptionGain);
+  eruptionLowOsc.type = "sine";
+  eruptionLowOsc.frequency.value = 110;
+  eruptionLowOsc.connect(eruptionGain);
   eruptionLowOsc.start(t0);
-  lfo.start(t0);
 
-  // Filtered noise for crackle/lava bubble
-  eruptionNoise = c.createBufferSource();
-  eruptionNoise.buffer = makeNoiseBuffer(c, 4);
-  eruptionNoise.loop = true;
-  const noiseFilter = c.createBiquadFilter();
-  noiseFilter.type = "lowpass";
-  noiseFilter.frequency.value = 220;
-  noiseFilter.Q.value = 2;
-  const noiseGain = c.createGain();
-  noiseGain.gain.value = 0.5;
-  eruptionNoise.connect(noiseFilter).connect(noiseGain).connect(eruptionGain);
-  eruptionNoise.start(t0);
+  // Slow gain LFO on the master eruption gain — gentle breathing, ~12s cycle
+  const breath = c.createOscillator();
+  breath.type = "sine";
+  breath.frequency.value = 0.08;
+  const breathDepth = c.createGain();
+  breathDepth.gain.value = 0.008;
+  breath.connect(breathDepth).connect(eruptionGain.gain);
+  breath.start(t0);
+
+  eruptionBreath = breath;
 }
 
 export function stopEruptionRumble() {
@@ -185,20 +170,20 @@ export function stopEruptionRumble() {
   const t = c.currentTime;
   eruptionGain.gain.cancelScheduledValues(t);
   eruptionGain.gain.setValueAtTime(eruptionGain.gain.value, t);
-  eruptionGain.gain.linearRampToValueAtTime(0, t + 0.6);
+  eruptionGain.gain.linearRampToValueAtTime(0, t + 0.8);
   const lowOsc = eruptionLowOsc;
-  const noise = eruptionNoise;
+  const breath = eruptionBreath;
   const gain = eruptionGain;
   eruptionLowOsc = null;
-  eruptionNoise = null;
+  eruptionBreath = null;
   eruptionGain = null;
   window.setTimeout(() => {
     try {
       lowOsc?.stop();
-      noise?.stop();
+      breath?.stop();
       gain.disconnect();
     } catch {
       // ignore double-stop errors
     }
-  }, 700);
+  }, 900);
 }
