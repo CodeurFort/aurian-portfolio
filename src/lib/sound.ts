@@ -64,15 +64,6 @@ export function toggleMuted() {
   setMuted(!muted);
 }
 
-// Build a 1s noise buffer used by whoosh + rumble
-function makeNoiseBuffer(c: AudioContext, seconds = 1): AudioBuffer {
-  const len = c.sampleRate * seconds;
-  const buf = c.createBuffer(1, len, c.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
-  return buf;
-}
-
 // Crystal blip — used on legend star clicks
 export function playBlip() {
   if (muted) return;
