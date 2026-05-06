@@ -8,7 +8,7 @@ import { initSound, isMuted, subscribeMute, toggleMuted } from "@/lib/sound";
 // Compact mute pill — mirrors LangToggle styling. Sits left of LangToggle.
 export function SoundToggle({ z = 70 }: { z?: number }) {
   const ui = useUi();
-  const [muted, setMutedState] = useState(true);
+  const [muted, setMutedState] = useState(false);
 
   useEffect(() => {
     initSound();

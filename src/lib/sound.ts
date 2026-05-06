@@ -6,7 +6,7 @@ const STORAGE_KEY = "sound:muted";
 
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
-let muted = true; // default OFF until user opts in (autoplay friendly)
+let muted = false; // default ON for impact; AudioContext only fires after first user gesture (intro dismiss) which keeps autoplay policies happy
 const listeners = new Set<(m: boolean) => void>();
 
 // Eruption ambience nodes (kept around so we can stop/start cleanly)
@@ -34,8 +34,9 @@ function getCtx(): AudioContext | null {
 export function initSound() {
   if (typeof window === "undefined") return;
   const stored = localStorage.getItem(STORAGE_KEY);
-  // Default: muted ON (sound off) until user opts in
-  muted = stored === null ? true : stored === "1";
+  // Default: sound ON for impact on first visit; respect the user's persisted
+  // choice on subsequent visits.
+  muted = stored === null ? false : stored === "1";
 }
 
 export function isMuted(): boolean {
