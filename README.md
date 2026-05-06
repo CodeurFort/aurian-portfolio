@@ -1,9 +1,14 @@
 # aurian-portfolio
 
+> ### → Live demo: **https://codeurfort.github.io/aurian-portfolio**
+
 Personal portfolio — an interactive 3D universe of planets, stars and projects.
 Built as a static Next.js 16 export, deployed to GitHub Pages.
 
-Live: https://codeurfort.github.io/aurian-portfolio
+[![Live site](https://img.shields.io/badge/live-codeurfort.github.io%2Faurian--portfolio-A4F5C8?style=for-the-badge)](https://codeurfort.github.io/aurian-portfolio)
+[![Built with Next.js 16](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev)
+[![Three.js](https://img.shields.io/badge/Three.js-R3F-000?style=for-the-badge&logo=three.js)](https://threejs.org)
 
 ## Stack
 

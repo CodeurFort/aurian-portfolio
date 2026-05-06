@@ -121,49 +121,69 @@ export function playWhoosh() {
   o.stop(t0 + 0.32);
 }
 
-// Quiet "breathing" pad for the eruption planet — sober, ambient, no noise.
-// Two sine layers with very slow gain pulsing; sits just under the threshold
-// of attention rather than dominating the soundstage.
+// One-shot "arrival" swell for the eruption planet — fades in on landing,
+// holds briefly, then fades out completely. Plays once per planet entry so
+// the soundstage stays calm afterwards (no looping drone).
+//   Timeline (seconds): 0 ─ swell 1.2 ─ hold 1.2 ─ tail 3.0 ─ done
+const ERUPT_SWELL = 1.2;
+const ERUPT_HOLD = 1.2;
+const ERUPT_TAIL = 3.0;
+const ERUPT_PEAK = 0.022;
+
 export function startEruptionRumble() {
   if (muted) return;
   const c = getCtx();
   if (!c || !masterGain) return;
-  if (eruptionGain) return; // already running
+  if (eruptionGain) return; // already running, don't retrigger
   const t0 = c.currentTime;
 
   eruptionGain = c.createGain();
   eruptionGain.gain.setValueAtTime(0, t0);
-  eruptionGain.gain.linearRampToValueAtTime(0.018, t0 + 2.0); // very low ceiling
+  eruptionGain.gain.linearRampToValueAtTime(ERUPT_PEAK, t0 + ERUPT_SWELL);
+  eruptionGain.gain.setValueAtTime(ERUPT_PEAK, t0 + ERUPT_SWELL + ERUPT_HOLD);
+  eruptionGain.gain.linearRampToValueAtTime(
+    0,
+    t0 + ERUPT_SWELL + ERUPT_HOLD + ERUPT_TAIL,
+  );
   eruptionGain.connect(masterGain);
 
-  // Soft low sine — no sawtooth grit
+  // Soft low sine — calm volcanic body, no grit
   eruptionLowOsc = c.createOscillator();
   eruptionLowOsc.type = "sine";
   eruptionLowOsc.frequency.value = 110;
   eruptionLowOsc.connect(eruptionGain);
   eruptionLowOsc.start(t0);
 
-  // Slow gain LFO on the master eruption gain — gentle breathing, ~12s cycle
-  const breath = c.createOscillator();
-  breath.type = "sine";
-  breath.frequency.value = 0.08;
-  const breathDepth = c.createGain();
-  breathDepth.gain.value = 0.008;
-  breath.connect(breathDepth).connect(eruptionGain.gain);
-  breath.start(t0);
+  const lowOsc = eruptionLowOsc;
+  const gain = eruptionGain;
+  // Auto-cleanup once the tail has finished
+  window.setTimeout(() => {
+    try {
+      lowOsc.stop();
+      gain.disconnect();
+    } catch {
+      // ignore if already stopped via stopEruptionRumble
+    }
+    if (eruptionGain === gain) {
+      eruptionLowOsc = null;
+      eruptionGain = null;
+    }
+  }, (ERUPT_SWELL + ERUPT_HOLD + ERUPT_TAIL + 0.2) * 1000);
 
-  eruptionBreath = breath;
+  // breath slot kept null — no continuous LFO needed for a one-shot
+  eruptionBreath = null;
 }
 
+// Cuts the swell early if the user leaves planet 4 mid-play. Safe to call
+// after the natural fade-out has already completed.
 export function stopEruptionRumble() {
   const c = getCtx();
   if (!c || !eruptionGain) return;
   const t = c.currentTime;
   eruptionGain.gain.cancelScheduledValues(t);
   eruptionGain.gain.setValueAtTime(eruptionGain.gain.value, t);
-  eruptionGain.gain.linearRampToValueAtTime(0, t + 0.8);
+  eruptionGain.gain.linearRampToValueAtTime(0, t + 0.4);
   const lowOsc = eruptionLowOsc;
-  const breath = eruptionBreath;
   const gain = eruptionGain;
   eruptionLowOsc = null;
   eruptionBreath = null;
@@ -171,10 +191,9 @@ export function stopEruptionRumble() {
   window.setTimeout(() => {
     try {
       lowOsc?.stop();
-      breath?.stop();
       gain.disconnect();
     } catch {
       // ignore double-stop errors
     }
-  }, 900);
+  }, 500);
 }

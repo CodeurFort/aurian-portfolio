@@ -2,6 +2,12 @@
   "name": "aurian-portfolio",
   "version": "0.1.0",
   "private": true,
+  "description": "Personal portfolio — an interactive 3D universe of planets, stars and projects. Next.js 16 static export.",
+  "homepage": "https://codeurfort.github.io/aurian-portfolio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CodeurFort/aurian-portfolio.git"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
