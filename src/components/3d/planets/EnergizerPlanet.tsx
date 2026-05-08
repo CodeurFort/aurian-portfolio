@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Line } from "@react-three/drei";
+import { Line, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import { buildEnergizerShellMaterial } from "./EnergizerShader";
 
@@ -275,6 +275,17 @@ export function EnergizerPlanet({
           toneMapped={false}
         />
       </mesh>
+
+      {/* Data flow particles around the wireframe */}
+      <Sparkles
+        count={12}
+        scale={[2.6, 2.6, 2.6]}
+        size={2.5}
+        speed={0.4}
+        opacity={0.9}
+        color="#A0F0FF"
+        noise={1.2}
+      />
 
       {/* 5 pipeline rings (one per audit step) */}
       {[0, 1, 2, 3, 4].map((i) => {
