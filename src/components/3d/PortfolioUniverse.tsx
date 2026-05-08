@@ -22,6 +22,7 @@ import { TechPill } from "@/components/ui/TechPill";
 import { Chatbot } from "@/components/Chatbot";
 import { PlanetTransition, pickVariant } from "@/components/PlanetTransition";
 import { PlanetAmbient } from "@/components/PlanetAmbient";
+import { EnergizerPlanet } from "./planets/EnergizerPlanet";
 
 // ---------------------------------------------------------------------------
 // Color mapping
@@ -1661,16 +1662,28 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
     <group>
       <PlanetConnector />
 
-      {projects.map((p, i) => (
-        <PlanetMesh
-          key={p.slug}
-          project={p}
-          posX={i * 6 - 12}
-          isFocused={i === index}
-          onSelectStar={onSelectStar}
-          onSelectPlanet={() => onSelectPlanet(p)}
-        />
-      ))}
+      {projects.map((p, i) => {
+        if (p.slug === "energizer") {
+          return (
+            <EnergizerPlanet
+              key={p.slug}
+              posX={i * 6 - 12}
+              isFocused={i === index}
+              onSelectPlanet={() => onSelectPlanet(p)}
+            />
+          );
+        }
+        return (
+          <PlanetMesh
+            key={p.slug}
+            project={p}
+            posX={i * 6 - 12}
+            isFocused={i === index}
+            onSelectStar={onSelectStar}
+            onSelectPlanet={() => onSelectPlanet(p)}
+          />
+        );
+      })}
 
       <IdentityStar
         cameraX={cameraX}
