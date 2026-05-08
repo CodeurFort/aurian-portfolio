@@ -119,6 +119,13 @@ export function EnergizerPlanet({
       const beat = 1.0 + Math.sin(t * 2 * Math.PI * 1.2) * 0.04;
       coreRef.current.scale.setScalar(beat);
     }
+
+    // Scoring pulse: every 3s, an active phase of 1.2s during which uPulse goes 0→1.
+    const pulsePeriod = 3.0;
+    const pulseDuration = 1.2;
+    const elapsed = state.clock.elapsedTime;
+    const phase = (elapsed % pulsePeriod) / pulseDuration;
+    SHELL_MATERIAL.uniforms.uPulse.value = phase <= 1.0 ? phase : -1.0;
   });
 
   return (
