@@ -1,24 +1,26 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Line, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import { buildEnergizerShellMaterial } from "./EnergizerShader";
+import { buildGlobeWireframe } from "./EnergizerGlobe";
 import { playBlip, playWhoosh, startEruptionRumble } from "@/lib/sound";
 import { usePerformanceTier } from "@/lib/usePerformanceTier";
 
 // ---------------------------------------------------------------------------
 // Static geometries — built once at module level, shared across instances.
 // ---------------------------------------------------------------------------
-const _icoBase = new THREE.IcosahedronGeometry(1.2, 2);
-const WIREFRAME_GEOM = new THREE.EdgesGeometry(_icoBase);
-_icoBase.dispose();
+const GLOBE_RADIUS = 1.2;
+// 16 meridians × 8 parallels — clean continuous wireframe globe (longitude
+// + latitude lines), like a sci-fi flight tracker / data scanner globe.
+const WIREFRAME_GEOM = buildGlobeWireframe(GLOBE_RADIUS, 16, 8, 64);
 
 const CORE_GEOM = new THREE.IcosahedronGeometry(0.18, 1);
 
 // ShaderMaterial for the wireframe — built once, shared across instances.
-const SHELL_MATERIAL = buildEnergizerShellMaterial();
+const SHELL_MATERIAL = buildEnergizerShellMaterial(GLOBE_RADIUS);
 
 // ---------------------------------------------------------------------------
 // Random point on a sphere (uniform distribution).
@@ -81,50 +83,6 @@ function spawnArc(slot: ArcSlot) {
 }
 
 // ---------------------------------------------------------------------------
-// Pipeline ring — single dashed orbit ring, tilted and rotating independently.
-// ---------------------------------------------------------------------------
-interface PipelineRingProps {
-  inclination: number; // radians, tilt around X axis
-  speed: number;       // rad/s rotation around Y axis
-  radius: number;
-}
-
-function PipelineRing({ inclination, speed, radius }: PipelineRingProps) {
-  const ringRef = useRef<THREE.Group>(null);
-
-  const points = useMemo(() => {
-    const pts: [number, number, number][] = [];
-    const SEG = 64;
-    for (let i = 0; i <= SEG; i++) {
-      const a = (i / SEG) * Math.PI * 2;
-      pts.push([Math.cos(a) * radius, 0, Math.sin(a) * radius]);
-    }
-    return pts;
-  }, [radius]);
-
-  useFrame((_, dt) => {
-    if (ringRef.current) {
-      ringRef.current.rotation.y += dt * speed;
-    }
-  });
-
-  return (
-    <group ref={ringRef} rotation={[inclination, 0, 0]}>
-      <Line
-        points={points}
-        color="#7FE3FF"
-        lineWidth={1}
-        transparent
-        opacity={0.7}
-        dashed
-        dashSize={0.04}
-        gapSize={0.06}
-      />
-    </group>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Electric arc — single drei <Line> rendered when its slot is active.
 // ---------------------------------------------------------------------------
 interface ElectricArcProps {
@@ -155,8 +113,8 @@ interface EnergizerPlanetProps {
 }
 
 /**
- * Energizer — réacteur vecteur sci-fi.
- * Étape 1 : icosaèdre wireframe + cœur émissif. Sans shader, sans anneaux, sans arcs.
+ * Energizer — globe filaire vecteur (méridiens + parallèles continus, gradient
+ * cyan→violet, scoring scan band, cœur émissif, arcs électriques, sparkles).
  */
 export function EnergizerPlanet({
   posX,
@@ -310,7 +268,7 @@ export function EnergizerPlanet({
 
   return (
     <group ref={groupRef} position={[posX, 0, 0]}>
-      {/* Outer wireframe icosahedron */}
+      {/* Globe filaire (méridiens + parallèles continus) */}
       <lineSegments
         ref={wireframeRef}
         geometry={WIREFRAME_GEOM}
@@ -353,20 +311,6 @@ export function EnergizerPlanet({
           noise={1.2}
         />
       )}
-
-      {/* 5 pipeline rings (one per audit step) */}
-      {[0, 1, 2, 3, 4].map((i) => {
-        const inclination = (i * Math.PI) / 5; // 0°, 36°, 72°, 108°, 144°
-        const speeds = [0.12, 0.28, 0.18, 0.36, 0.22];
-        return (
-          <PipelineRing
-            key={i}
-            inclination={inclination}
-            speed={speeds[i]}
-            radius={1.32}
-          />
-        );
-      })}
 
       {/* Electric arcs (show-off) */}
       {!isLow && arcsRef.current.map((slot, i) => (

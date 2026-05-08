@@ -8,7 +8,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import * as THREE from "three";
 import { type Project } from "@/lib/content";
 import { useContent, useUi, useLang } from "@/lib/i18n";
-import { usePerformanceTier } from "@/lib/usePerformanceTier";
 import { LangToggle } from "@/components/LangToggle";
 import { SocialDock } from "@/components/SocialDock";
 import { SoundToggle } from "@/components/SoundToggle";
@@ -2353,9 +2352,6 @@ function StarLegend({ onSelect, eruption = false }: { onSelect: (id: string) => 
 // Main exported component
 // ---------------------------------------------------------------------------
 export function PortfolioUniverse() {
-  const tier = usePerformanceTier();
-  const bloomIntensity = tier === "low" ? 0.8 : 1.6;
-
   const ui = useUi();
   const { lang } = useLang();
   const { projects } = useContent();
@@ -2544,12 +2540,11 @@ export function PortfolioUniverse() {
           />
         )}
 
-        <EffectComposer multisampling={0}>
+        <EffectComposer multisampling={4}>
           <Bloom
-            intensity={bloomIntensity}
-            luminanceThreshold={0.18}
-            luminanceSmoothing={0.9}
-            mipmapBlur
+            intensity={1.2}
+            luminanceThreshold={0.55}
+            luminanceSmoothing={0.7}
           />
         </EffectComposer>
       </Canvas>
