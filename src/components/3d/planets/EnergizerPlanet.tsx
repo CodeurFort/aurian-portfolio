@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { buildEnergizerShellMaterial } from "./EnergizerShader";
 
 // ---------------------------------------------------------------------------
 // Static geometries — built once at module level, shared across instances.
@@ -12,6 +13,9 @@ const WIREFRAME_GEOM = new THREE.EdgesGeometry(_icoBase);
 _icoBase.dispose();
 
 const CORE_GEOM = new THREE.IcosahedronGeometry(0.18, 1);
+
+// ShaderMaterial for the wireframe — built once, shared across instances.
+const SHELL_MATERIAL = buildEnergizerShellMaterial();
 
 // ---------------------------------------------------------------------------
 
@@ -78,6 +82,7 @@ export function EnergizerPlanet({
       <lineSegments
         ref={wireframeRef}
         geometry={WIREFRAME_GEOM}
+        material={SHELL_MATERIAL}
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
@@ -87,9 +92,7 @@ export function EnergizerPlanet({
           e.stopPropagation();
           if (isFocused) onSelectPlanet();
         }}
-      >
-        <lineBasicMaterial color="#4DD8FF" transparent opacity={0.85} />
-      </lineSegments>
+      />
 
       {/* Emissive core */}
       <mesh ref={coreRef} geometry={CORE_GEOM}>
