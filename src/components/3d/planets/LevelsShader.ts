@@ -128,11 +128,11 @@ export function buildLevelsShellMaterial(): THREE.ShaderMaterial {
     vertexShader: levelsVertex,
     fragmentShader: levelsFragment,
     uniforms: {
-      uColorVeinBase: { value: new THREE.Color("#5C0A1E") }, // bordeaux profond
-      uColorVeinMid: { value: new THREE.Color("#FF6A1A") },  // orange ardent
-      uColorVeinTop: { value: new THREE.Color("#FFD24A") },  // or
-      uColorRim: { value: new THREE.Color("#FF8C2A") },      // halo orange
-      uVeinIntensity: { value: 1.6 },
+      uColorVeinBase: { value: new THREE.Color("#3A3A3F") }, // gris ardoise sombre
+      uColorVeinMid: { value: new THREE.Color("#8A8A92") },  // gris acier
+      uColorVeinTop: { value: new THREE.Color("#E8E8EC") },  // gris clair / argent
+      uColorRim: { value: new THREE.Color("#B8B8C0") },      // halo gris froid
+      uVeinIntensity: { value: 1.4 },
       uPulse: { value: -1.0 },
       uPulseWidth: { value: 0.10 },
       uTime: { value: 0.0 },

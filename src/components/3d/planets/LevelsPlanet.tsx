@@ -121,13 +121,13 @@ export function LevelsPlanet({
 
   return (
     <group ref={groupRef} position={[posX, 0, 0]}>
-      {/* Halo extérieur orange — atmosphère ardente */}
+      {/* Halo extérieur gris froid — atmosphère lunaire */}
       <mesh scale={1.18}>
         <sphereGeometry args={[PLANET_RADIUS, 32, 32]} />
         <meshBasicMaterial
-          color="#FF6A1A"
+          color="#9DA3AE"
           transparent
-          opacity={0.08}
+          opacity={0.07}
           side={THREE.BackSide}
           toneMapped={false}
         />
@@ -135,9 +135,9 @@ export function LevelsPlanet({
       <mesh scale={1.08}>
         <sphereGeometry args={[PLANET_RADIUS, 32, 32]} />
         <meshBasicMaterial
-          color="#FF8C2A"
+          color="#C8CCD3"
           transparent
-          opacity={0.14}
+          opacity={0.12}
           side={THREE.BackSide}
           toneMapped={false}
         />
@@ -164,15 +164,15 @@ export function LevelsPlanet({
         }}
       />
 
-      {/* Particules dorées qui flottent autour (braises) */}
+      {/* Particules grises argentées qui flottent autour (poussière) */}
       {!isLow && (
         <Sparkles
           count={32}
           scale={[3.0, 3.0, 3.0]}
           size={2.2}
           speed={0.5}
-          opacity={0.8}
-          color="#FFB870"
+          opacity={0.7}
+          color="#D8DCE2"
           noise={1.2}
         />
       )}
