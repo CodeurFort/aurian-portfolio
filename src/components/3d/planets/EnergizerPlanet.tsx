@@ -19,6 +19,66 @@ const CORE_GEOM = new THREE.IcosahedronGeometry(0.18, 1);
 const SHELL_MATERIAL = buildEnergizerShellMaterial();
 
 // ---------------------------------------------------------------------------
+// Random point on a sphere (uniform distribution).
+// ---------------------------------------------------------------------------
+function randomPointOnSphere(radius: number): THREE.Vector3 {
+  // Spherical coordinates with uniform area distribution:
+  //   u, v in [0,1) → theta in [0, 2π), phi in [0, π]
+  //   x = r * sin(phi) * cos(theta)
+  //   y = r * cos(phi)
+  //   z = r * sin(phi) * sin(theta)
+  const u = Math.random();
+  const v = Math.random();
+  const theta = 2 * Math.PI * u;
+  const phi = Math.acos(2 * v - 1);
+  const sinPhi = Math.sin(phi);
+  return new THREE.Vector3(
+    radius * sinPhi * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * sinPhi * Math.sin(theta),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Arc slot — allocated at module scope so the interface is visible to
+// spawnArc (also module-level) and to the component.
+// ---------------------------------------------------------------------------
+interface ArcSlot {
+  active: boolean;
+  points: THREE.Vector3[];
+  opacity: number;
+  ttl: number;
+}
+
+// Arc constants — module-level so spawnArc can reference them without
+// capturing component scope (avoids react-hooks/exhaustive-deps issues).
+const ARC_POOL_SIZE = 3;
+const ARC_DURATION = 0.25; // seconds
+
+function spawnArc(slot: ArcSlot) {
+  const r = 1.2;
+  const a = randomPointOnSphere(r);
+  const b = randomPointOnSphere(r);
+  const mid = new THREE.Vector3().lerpVectors(a, b, 0.5);
+  const m1 = new THREE.Vector3().lerpVectors(a, mid, 0.5);
+  const m2 = new THREE.Vector3().lerpVectors(mid, b, 0.5);
+  const jitter = (v: THREE.Vector3) =>
+    v
+      .clone()
+      .add(
+        new THREE.Vector3(
+          (Math.random() - 0.5) * 0.18,
+          (Math.random() - 0.5) * 0.18,
+          (Math.random() - 0.5) * 0.18,
+        ),
+      );
+  slot.points = [a, jitter(m1), jitter(mid), jitter(m2), b];
+  slot.opacity = 1;
+  slot.ttl = ARC_DURATION;
+  slot.active = true;
+}
+
+// ---------------------------------------------------------------------------
 // Pipeline ring — single dashed orbit ring, tilted and rotating independently.
 // ---------------------------------------------------------------------------
 interface PipelineRingProps {
@@ -63,6 +123,28 @@ function PipelineRing({ inclination, speed, radius }: PipelineRingProps) {
 }
 
 // ---------------------------------------------------------------------------
+// Electric arc — single drei <Line> rendered when its slot is active.
+// ---------------------------------------------------------------------------
+interface ElectricArcProps {
+  active: boolean;
+  points: THREE.Vector3[];
+  opacity: number;
+}
+
+function ElectricArc({ active, points, opacity }: ElectricArcProps) {
+  if (!active || points.length === 0) return null;
+  return (
+    <Line
+      points={points.map((v) => [v.x, v.y, v.z]) as [number, number, number][]}
+      color="#FFFFFF"
+      lineWidth={1.4}
+      transparent
+      opacity={opacity}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
 
 interface EnergizerPlanetProps {
   posX: number;
@@ -84,6 +166,18 @@ export function EnergizerPlanet({
   const coreRef = useRef<THREE.Mesh>(null);
   const initializedRef = useRef(false);
   const [hovered, setHovered] = useState(false);
+
+  // Electric arc pool
+  const arcsRef = useRef<ArcSlot[]>(
+    Array.from({ length: ARC_POOL_SIZE }, () => ({
+      active: false,
+      points: [],
+      opacity: 0,
+      ttl: 0,
+    }))
+  );
+  const nextArcCheckRef = useRef(0);
+  const [arcsTick, setArcsTick] = useState(0);
 
   useEffect(() => {
     document.body.style.cursor = hovered && isFocused ? "pointer" : "auto";
@@ -126,6 +220,32 @@ export function EnergizerPlanet({
     const elapsed = state.clock.elapsedTime;
     const phase = (elapsed % pulsePeriod) / pulseDuration;
     SHELL_MATERIAL.uniforms.uPulse.value = phase <= 1.0 ? phase : -1.0;
+
+    // Electric arcs lifecycle
+    let needsTick = false;
+    arcsRef.current.forEach((slot) => {
+      if (slot.active) {
+        slot.ttl -= dt;
+        if (slot.ttl <= 0) {
+          slot.active = false;
+          slot.opacity = 0;
+          needsTick = true;
+        } else {
+          slot.opacity = Math.max(0, slot.ttl / ARC_DURATION);
+        }
+      }
+    });
+
+    nextArcCheckRef.current -= dt;
+    if (nextArcCheckRef.current <= 0) {
+      nextArcCheckRef.current = 0.4 + Math.random() * 0.8;
+      const freeSlot = arcsRef.current.find((s) => !s.active);
+      if (freeSlot) {
+        spawnArc(freeSlot);
+        needsTick = true;
+      }
+    }
+    if (needsTick) setArcsTick((x) => x + 1);
   });
 
   return (
@@ -169,6 +289,16 @@ export function EnergizerPlanet({
           />
         );
       })}
+
+      {/* Electric arcs (show-off) */}
+      {arcsRef.current.map((slot, i) => (
+        <ElectricArc
+          key={`arc-${i}-${arcsTick}`}
+          active={slot.active}
+          points={slot.points}
+          opacity={slot.opacity}
+        />
+      ))}
     </group>
   );
 }
