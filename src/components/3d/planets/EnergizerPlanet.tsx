@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { Line, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import { buildEnergizerShellMaterial } from "./EnergizerShader";
+import { playBlip, playWhoosh, startEruptionRumble } from "@/lib/sound";
 
 // ---------------------------------------------------------------------------
 // Static geometries — built once at module level, shared across instances.
@@ -179,8 +180,19 @@ export function EnergizerPlanet({
   const nextArcCheckRef = useRef(0);
   const [arcsTick, setArcsTick] = useState(0);
 
+  // Hover boost and click animation refs
+  const arcSpawnMultiplierRef = useRef(1);
+  const clickPhaseRef = useRef<"idle" | "compress" | "explode">("idle");
+  const clickTimerRef = useRef(0);
+
   useEffect(() => {
     document.body.style.cursor = hovered && isFocused ? "pointer" : "auto";
+    if (hovered && isFocused) {
+      playBlip();
+      arcSpawnMultiplierRef.current = 2;
+    } else {
+      arcSpawnMultiplierRef.current = 1;
+    }
     return () => {
       document.body.style.cursor = "auto";
     };
@@ -189,15 +201,17 @@ export function EnergizerPlanet({
   useFrame((state, dt) => {
     if (!groupRef.current) return;
 
-    // Scale lerp on focus (parity with PlanetMesh)
-    const targetScale = isFocused ? 1.35 : 1.0;
-    if (!initializedRef.current) {
-      groupRef.current.scale.setScalar(targetScale);
-      initializedRef.current = true;
-    } else {
-      const cs = groupRef.current.scale.x;
-      const ns = cs + (targetScale - cs) * 0.06;
-      groupRef.current.scale.set(ns, ns, ns);
+    // Scale lerp on focus (parity with PlanetMesh) — skip during click animation
+    if (clickPhaseRef.current === "idle") {
+      const targetScale = isFocused ? 1.35 : 1.0;
+      if (!initializedRef.current) {
+        groupRef.current.scale.setScalar(targetScale);
+        initializedRef.current = true;
+      } else {
+        const cs = groupRef.current.scale.x;
+        const ns = cs + (targetScale - cs) * 0.06;
+        groupRef.current.scale.set(ns, ns, ns);
+      }
     }
 
     // Outer rotation (Y axis)
@@ -205,13 +219,16 @@ export function EnergizerPlanet({
       wireframeRef.current.rotation.y += dt * 0.05;
     }
 
-    // Core counter-rotation + heartbeat pulse
+    // Core counter-rotation + heartbeat pulse — skip during click animation
     if (coreRef.current) {
       coreRef.current.rotation.y -= dt * 0.08;
       coreRef.current.rotation.x += dt * 0.04;
-      const t = state.clock.elapsedTime;
-      const beat = 1.0 + Math.sin(t * 2 * Math.PI * 1.2) * 0.04;
-      coreRef.current.scale.setScalar(beat);
+      if (clickPhaseRef.current === "idle") {
+        const t = state.clock.elapsedTime;
+        const beat = 1.0 + Math.sin(t * 2 * Math.PI * 1.2) * 0.04;
+        const heartHoverBoost = hovered && isFocused ? 1.05 : 1.0;
+        coreRef.current.scale.setScalar(beat * heartHoverBoost);
+      }
     }
 
     // Scoring pulse: every 3s, an active phase of 1.2s during which uPulse goes 0→1.
@@ -220,6 +237,7 @@ export function EnergizerPlanet({
     const elapsed = state.clock.elapsedTime;
     const phase = (elapsed % pulsePeriod) / pulseDuration;
     SHELL_MATERIAL.uniforms.uPulse.value = phase <= 1.0 ? phase : -1.0;
+    SHELL_MATERIAL.uniforms.uPulseWidth.value = (hovered && isFocused) ? 0.16 : 0.12;
 
     // Electric arcs lifecycle
     let needsTick = false;
@@ -238,7 +256,7 @@ export function EnergizerPlanet({
 
     nextArcCheckRef.current -= dt;
     if (nextArcCheckRef.current <= 0) {
-      nextArcCheckRef.current = 0.4 + Math.random() * 0.8;
+      nextArcCheckRef.current = (0.4 + Math.random() * 0.8) / arcSpawnMultiplierRef.current;
       const freeSlot = arcsRef.current.find((s) => !s.active);
       if (freeSlot) {
         spawnArc(freeSlot);
@@ -246,6 +264,42 @@ export function EnergizerPlanet({
       }
     }
     if (needsTick) setArcsTick((x) => x + 1);
+
+    // Click animation: compress (200ms) → explode (300ms) → onSelectPlanet
+    if (clickPhaseRef.current !== "idle") {
+      clickTimerRef.current += dt;
+      if (clickPhaseRef.current === "compress") {
+        const p = Math.min(1, clickTimerRef.current / 0.2);
+        if (coreRef.current) {
+          const compressScale = 1.0 - 0.6 * p; // 1.0 → 0.4
+          coreRef.current.scale.setScalar(compressScale);
+        }
+        if (wireframeRef.current) {
+          wireframeRef.current.rotation.y += dt * 0.05 * 2; // extra ×2 on top of base ×1
+        }
+        if (clickTimerRef.current >= 0.2) {
+          clickPhaseRef.current = "explode";
+          clickTimerRef.current = 0;
+        }
+      } else if (clickPhaseRef.current === "explode") {
+        const p = Math.min(1, clickTimerRef.current / 0.3);
+        if (groupRef.current) {
+          const explodeScale = (isFocused ? 1.35 : 1.0) * (1.0 + 0.25 * p);
+          groupRef.current.scale.setScalar(explodeScale);
+        }
+        SHELL_MATERIAL.uniforms.uOpacity.value = 0.9 + 0.1 * (1 - p); // brief boost
+        if (clickTimerRef.current >= 0.3) {
+          // reset visual state
+          clickPhaseRef.current = "idle";
+          clickTimerRef.current = 0;
+          SHELL_MATERIAL.uniforms.uOpacity.value = 0.9;
+          if (groupRef.current) {
+            groupRef.current.scale.setScalar(isFocused ? 1.35 : 1.0);
+          }
+          onSelectPlanet();
+        }
+      }
+    }
   });
 
   return (
@@ -262,7 +316,12 @@ export function EnergizerPlanet({
         onPointerOut={() => setHovered(false)}
         onClick={(e) => {
           e.stopPropagation();
-          if (isFocused) onSelectPlanet();
+          if (!isFocused) return;
+          if (clickPhaseRef.current !== "idle") return;
+          clickPhaseRef.current = "compress";
+          clickTimerRef.current = 0;
+          playWhoosh();
+          startEruptionRumble();
         }}
       />
 
