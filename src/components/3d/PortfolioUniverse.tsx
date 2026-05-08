@@ -24,6 +24,7 @@ import { Chatbot } from "@/components/Chatbot";
 import { PlanetTransition, pickVariant } from "@/components/PlanetTransition";
 import { PlanetAmbient } from "@/components/PlanetAmbient";
 import { EnergizerPlanet } from "./planets/EnergizerPlanet";
+import { LevelsPlanet } from "./planets/LevelsPlanet";
 
 // ---------------------------------------------------------------------------
 // Color mapping
@@ -1667,6 +1668,16 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
         if (p.slug === "energizer") {
           return (
             <EnergizerPlanet
+              key={p.slug}
+              posX={i * 6 - 12}
+              isFocused={i === index}
+              onSelectPlanet={() => onSelectPlanet(p)}
+            />
+          );
+        }
+        if (p.slug === "levels") {
+          return (
+            <LevelsPlanet
               key={p.slug}
               posX={i * 6 - 12}
               isFocused={i === index}
