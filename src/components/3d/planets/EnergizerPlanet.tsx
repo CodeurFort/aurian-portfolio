@@ -6,6 +6,7 @@ import { Line, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import { buildEnergizerShellMaterial } from "./EnergizerShader";
 import { playBlip, playWhoosh, startEruptionRumble } from "@/lib/sound";
+import { usePerformanceTier } from "@/lib/usePerformanceTier";
 
 // ---------------------------------------------------------------------------
 // Static geometries — built once at module level, shared across instances.
@@ -162,6 +163,9 @@ export function EnergizerPlanet({
   isFocused,
   onSelectPlanet,
 }: EnergizerPlanetProps) {
+  const tier = usePerformanceTier();
+  const isLow = tier === "low";
+
   const groupRef = useRef<THREE.Group>(null);
   const wireframeRef = useRef<THREE.LineSegments>(null);
   const coreRef = useRef<THREE.Mesh>(null);
@@ -239,31 +243,33 @@ export function EnergizerPlanet({
     SHELL_MATERIAL.uniforms.uPulse.value = phase <= 1.0 ? phase : -1.0;
     SHELL_MATERIAL.uniforms.uPulseWidth.value = (hovered && isFocused) ? 0.16 : 0.12;
 
-    // Electric arcs lifecycle
-    let needsTick = false;
-    arcsRef.current.forEach((slot) => {
-      if (slot.active) {
-        slot.ttl -= dt;
-        if (slot.ttl <= 0) {
-          slot.active = false;
-          slot.opacity = 0;
+    // Electric arcs lifecycle (skipped on low-end devices)
+    if (!isLow) {
+      let needsTick = false;
+      arcsRef.current.forEach((slot) => {
+        if (slot.active) {
+          slot.ttl -= dt;
+          if (slot.ttl <= 0) {
+            slot.active = false;
+            slot.opacity = 0;
+            needsTick = true;
+          } else {
+            slot.opacity = Math.max(0, slot.ttl / ARC_DURATION);
+          }
+        }
+      });
+
+      nextArcCheckRef.current -= dt;
+      if (nextArcCheckRef.current <= 0) {
+        nextArcCheckRef.current = (0.4 + Math.random() * 0.8) / arcSpawnMultiplierRef.current;
+        const freeSlot = arcsRef.current.find((s) => !s.active);
+        if (freeSlot) {
+          spawnArc(freeSlot);
           needsTick = true;
-        } else {
-          slot.opacity = Math.max(0, slot.ttl / ARC_DURATION);
         }
       }
-    });
-
-    nextArcCheckRef.current -= dt;
-    if (nextArcCheckRef.current <= 0) {
-      nextArcCheckRef.current = (0.4 + Math.random() * 0.8) / arcSpawnMultiplierRef.current;
-      const freeSlot = arcsRef.current.find((s) => !s.active);
-      if (freeSlot) {
-        spawnArc(freeSlot);
-        needsTick = true;
-      }
+      if (needsTick) setArcsTick((x) => x + 1);
     }
-    if (needsTick) setArcsTick((x) => x + 1);
 
     // Click animation: compress (200ms) → explode (300ms) → onSelectPlanet
     if (clickPhaseRef.current !== "idle") {
@@ -336,15 +342,17 @@ export function EnergizerPlanet({
       </mesh>
 
       {/* Data flow particles around the wireframe */}
-      <Sparkles
-        count={12}
-        scale={[2.6, 2.6, 2.6]}
-        size={2.5}
-        speed={0.4}
-        opacity={0.9}
-        color="#A0F0FF"
-        noise={1.2}
-      />
+      {!isLow && (
+        <Sparkles
+          count={12}
+          scale={[2.6, 2.6, 2.6]}
+          size={2.5}
+          speed={0.4}
+          opacity={0.9}
+          color="#A0F0FF"
+          noise={1.2}
+        />
+      )}
 
       {/* 5 pipeline rings (one per audit step) */}
       {[0, 1, 2, 3, 4].map((i) => {
@@ -361,7 +369,7 @@ export function EnergizerPlanet({
       })}
 
       {/* Electric arcs (show-off) */}
-      {arcsRef.current.map((slot, i) => (
+      {!isLow && arcsRef.current.map((slot, i) => (
         <ElectricArc
           key={`arc-${i}-${arcsTick}`}
           active={slot.active}
