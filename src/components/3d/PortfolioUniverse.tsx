@@ -2,6 +2,7 @@
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Stars, Line, Sparkles, MeshDistortMaterial, Text, Html } from "@react-three/drei";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import * as THREE from "three";
@@ -2538,6 +2539,15 @@ export function PortfolioUniverse() {
             onSelectPlanet={handleSelectPlanet}
           />
         )}
+
+        <EffectComposer multisampling={0}>
+          <Bloom
+            intensity={1.6}
+            luminanceThreshold={0.18}
+            luminanceSmoothing={0.9}
+            mipmapBlur
+          />
+        </EffectComposer>
       </Canvas>
 
       {/* Header overlay */}
