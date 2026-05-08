@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Line } from "@react-three/drei";
 import * as THREE from "three";
 import { buildEnergizerShellMaterial } from "./EnergizerShader";
 
@@ -16,6 +17,50 @@ const CORE_GEOM = new THREE.IcosahedronGeometry(0.18, 1);
 
 // ShaderMaterial for the wireframe — built once, shared across instances.
 const SHELL_MATERIAL = buildEnergizerShellMaterial();
+
+// ---------------------------------------------------------------------------
+// Pipeline ring — single dashed orbit ring, tilted and rotating independently.
+// ---------------------------------------------------------------------------
+interface PipelineRingProps {
+  inclination: number; // radians, tilt around X axis
+  speed: number;       // rad/s rotation around Y axis
+  radius: number;
+}
+
+function PipelineRing({ inclination, speed, radius }: PipelineRingProps) {
+  const ringRef = useRef<THREE.Group>(null);
+
+  const points = useMemo(() => {
+    const pts: [number, number, number][] = [];
+    const SEG = 64;
+    for (let i = 0; i <= SEG; i++) {
+      const a = (i / SEG) * Math.PI * 2;
+      pts.push([Math.cos(a) * radius, 0, Math.sin(a) * radius]);
+    }
+    return pts;
+  }, [radius]);
+
+  useFrame((_, dt) => {
+    if (ringRef.current) {
+      ringRef.current.rotation.y += dt * speed;
+    }
+  });
+
+  return (
+    <group ref={ringRef} rotation={[inclination, 0, 0]}>
+      <Line
+        points={points}
+        color="#7FE3FF"
+        lineWidth={1}
+        transparent
+        opacity={0.7}
+        dashed
+        dashSize={0.04}
+        gapSize={0.06}
+      />
+    </group>
+  );
+}
 
 // ---------------------------------------------------------------------------
 
@@ -103,6 +148,20 @@ export function EnergizerPlanet({
           toneMapped={false}
         />
       </mesh>
+
+      {/* 5 pipeline rings (one per audit step) */}
+      {[0, 1, 2, 3, 4].map((i) => {
+        const inclination = (i * Math.PI) / 5; // 0°, 36°, 72°, 108°, 144°
+        const speeds = [0.12, 0.28, 0.18, 0.36, 0.22];
+        return (
+          <PipelineRing
+            key={i}
+            inclination={inclination}
+            speed={speeds[i]}
+            radius={1.32}
+          />
+        );
+      })}
     </group>
   );
 }
