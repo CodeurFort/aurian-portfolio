@@ -99,10 +99,10 @@ export const projects: Project[] = [
     status: "ongoing",
     visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png", "/visuals/levels-achievements.png"],
     pitch:
-      "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs avec historique journalier complet et planification multi-horizons : la semaine, le mois, l'année, la vie. L'utilisateur définit ses objectifs, valide au fil de la journée, consulte son historique passé et projette ses cibles sur tous les horizons. PWA single-file, synchronisation temps réel multi-appareils.",
+      "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs avec historique journalier complet et planification multi-horizons : la semaine, le mois, l'année, la vie. L'utilisateur définit ses objectifs, valide au fil de la journée, consulte son historique passé et projette ses cibles sur tous les horizons. PWA vanilla en trois fichiers, synchronisation temps réel multi-appareils.",
     achievements: [
       "Historique journalier complet et planification multi-horizons (semaine, mois, année, vie) : feature centrale.",
-      "Architecture single-file (HTML, CSS, JS dans un index.html) : zéro build, déploiement instantané.",
+      "Architecture PWA en trois fichiers vanilla (index.html, styles.css, app.js) : zéro build, déploiement instantané sur Firebase Hosting.",
       "Synchronisation Firestore temps réel multi-appareils avec session unique anti-conflit.",
       "Système de dates custom : grace period 0h, 2h pour préserver la régularité de l'utilisateur.",
       "PWA installable sur mobile, fonctionne offline grâce au service worker.",
@@ -113,7 +113,8 @@ export const projects: Project[] = [
   {
     slug: "energizer",
     chapter: "ii",
-    title: "Energizer SEO GEO AEO",
+    title: "Energizer",
+    subtitle: "(SEO, GEO, AEO)",
     paperColor: "paper-mint",
     status: "ongoing",
     pitch:
@@ -240,7 +241,7 @@ export const projectQualities: Record<string, ProjectQuality> = {
     qualities: ["Autonomie", "Pragmatisme"],
     phrase: "Trancher seul, viser l'usage.",
     context:
-      "Levels embarque sync Firestore temps réel multi-appareils, PWA installable, mode offline et un système de dates custom. Mais l'architecture, elle, est volontairement minimale (single-file HTML, zéro build) : choisir les bons compromis pour livrer un vrai produit, sans tomber dans l'over-engineering.",
+      "Levels embarque sync Firestore temps réel multi-appareils, PWA installable, mode offline et un système de dates custom. Mais l'architecture, elle, est volontairement minimale (trois fichiers vanilla, zéro build) : choisir les bons compromis pour livrer un vrai produit, sans tomber dans l'over-engineering.",
   },
   energizer: {
     label: "Analyse × Initiative",
@@ -279,7 +280,7 @@ export const softSkillBlocks: SoftSkillBlock[] = [
       "Capacités rédactionnelles",
       "Écoute active",
       "Aisance verbale",
-      "Prise de parole et pitch",
+      "Prise de parole",
       "Qualités relationnelles",
     ],
     context:
@@ -450,10 +451,10 @@ export const projectsEn: Project[] = [
     status: "ongoing",
     visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png", "/visuals/levels-achievements.png"],
     pitch:
-      "Discipline plays out in LEVELS: become the hero of your own story. A web app for goal tracking with full daily history and multi-horizon planning across the week, month, year and life. The user defines goals, validates them throughout the day, browses past history and projects targets onto every horizon. Single-file PWA, real-time sync across devices.",
+      "Discipline plays out in LEVELS: become the hero of your own story. A web app for goal tracking with full daily history and multi-horizon planning across the week, month, year and life. The user defines goals, validates them throughout the day, browses past history and projects targets onto every horizon. Three-file vanilla PWA, real-time sync across devices.",
     achievements: [
       "Full daily history and multi-horizon planning (week, month, year, lifetime): the core feature.",
-      "Single-file architecture (HTML, CSS, JS in one index.html): zero build, instant deploy.",
+      "Three-file vanilla architecture (index.html, styles.css, app.js): zero build, instant deploy on Firebase Hosting.",
       "Real-time multi-device Firestore sync with single-session anti-conflict logic.",
       "Custom date system with 0h-2h grace period to preserve user consistency.",
       "Installable PWA, works offline thanks to the service worker.",
@@ -464,7 +465,8 @@ export const projectsEn: Project[] = [
   {
     slug: "energizer",
     chapter: "ii",
-    title: "Energizer SEO GEO AEO",
+    title: "Energizer",
+    subtitle: "(SEO, GEO, AEO)",
     paperColor: "paper-mint",
     status: "ongoing",
     pitch:
@@ -591,7 +593,7 @@ export const projectQualitiesEn: Record<string, ProjectQuality> = {
     qualities: ["Autonomy", "Pragmatism"],
     phrase: "Decide alone, aim for usage.",
     context:
-      "Levels ships real-time multi-device Firestore sync, an installable PWA, offline mode and a custom date system. But the architecture itself is intentionally minimal (single-file HTML, zero build): picking the right trade-offs to ship a real product without over-engineering.",
+      "Levels ships real-time multi-device Firestore sync, an installable PWA, offline mode and a custom date system. But the architecture itself is intentionally minimal (three vanilla files, zero build): picking the right trade-offs to ship a real product without over-engineering.",
   },
   energizer: {
     label: "Analysis × Initiative",
@@ -630,7 +632,7 @@ export const softSkillBlocksEn: SoftSkillBlock[] = [
       "Writing skills",
       "Active listening",
       "Verbal fluency",
-      "Public speaking and pitching",
+      "Public speaking",
       "Interpersonal skills",
     ],
     context:

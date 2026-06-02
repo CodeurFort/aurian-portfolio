@@ -178,6 +178,18 @@ export function Chatbot() {
     setMenu(MENUS.root);
   }, [ui.botGreet]);
 
+  // Réinitialise la conversation quand on ferme le bot : pas d'accumulation
+  // d'historique d'une session à l'autre. Léger délai pour laisser l'exit
+  // animation du panel se dérouler proprement avant de vider les messages.
+  useEffect(() => {
+    if (open) return;
+    const t = window.setTimeout(() => {
+      setMessages([]);
+      setMenu(MENUS.root);
+    }, 360);
+    return () => window.clearTimeout(t);
+  }, [open]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -382,37 +394,123 @@ export function Chatbot() {
               </div>
             </div>
 
-            {/* Predefined menu (ALWAYS visible, no free input) */}
+            {/* Predefined menu (ALWAYS visible, no free input).
+                Style harmonisé : header avec glyphe "?" en mint, pills
+                arrondies avec point coloré en tête + label suffixé d'un
+                "?", halo mint au hover, fond légèrement teinté. */}
             <div
-              className="px-4 py-3 relative"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+              className="px-4 pt-3 pb-3.5 relative"
+              style={{
+                borderTop: "1px solid rgba(164,245,200,0.10)",
+                background:
+                  "linear-gradient(180deg, rgba(164,245,200,0.04) 0%, rgba(164,245,200,0) 60%)",
+              }}
             >
-              <p
-                className="mono uppercase tracking-[0.3em] text-[8px] mb-2"
-                style={{ color: "rgba(236,230,214,0.45)" }}
-              >
-                {ui.botMenuLabel}
-              </p>
+              {/* Header : glyphe "?" + label */}
+              <div className="flex items-center gap-2 mb-2.5">
+                <span
+                  aria-hidden
+                  className="grid place-items-center"
+                  style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 999,
+                    border: "1px solid rgba(164,245,200,0.32)",
+                    background: "rgba(164,245,200,0.06)",
+                    boxShadow: "0 0 8px rgba(164,245,200,0.18)",
+                  }}
+                >
+                  <span
+                    className="mono"
+                    style={{
+                      fontSize: 9,
+                      lineHeight: 1,
+                      color: "#A4F5C8",
+                      transform: "translateY(0.5px)",
+                    }}
+                  >
+                    ?
+                  </span>
+                </span>
+                <p
+                  className="mono uppercase tracking-[0.32em]"
+                  style={{
+                    fontSize: 8.5,
+                    color: "rgba(236,230,214,0.55)",
+                  }}
+                >
+                  {ui.botMenuLabel}
+                </p>
+              </div>
+
+              {/* Pills : point mint + label + "?" final */}
               <div className="flex flex-wrap gap-1.5">
                 {menu.map((t) => (
-                  <button
+                  <motion.button
                     key={t}
                     type="button"
                     onClick={() => ask(t)}
-                    className="mono transition-colors hover:bg-thread/10 hover:text-thread"
+                    className="mono group flex items-center gap-1.5 transition-colors"
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
                     style={{
-                      fontSize: 10,
-                      letterSpacing: "0.05em",
-                      padding: "5px 9px",
+                      fontSize: 10.5,
+                      letterSpacing: "0.06em",
+                      padding: "6px 11px 6px 10px",
                       borderRadius: 999,
-                      color: "rgba(236,230,214,0.7)",
-                      border: "1px solid rgba(164,245,200,0.18)",
-                      background: "transparent",
+                      color: "rgba(236,230,214,0.82)",
+                      border: "1px solid rgba(164,245,200,0.22)",
+                      background:
+                        "linear-gradient(180deg, rgba(164,245,200,0.05) 0%, rgba(164,245,200,0.02) 100%)",
+                      boxShadow:
+                        "inset 0 0 0 1px rgba(255,255,255,0.02), 0 1px 0 rgba(0,0,0,0.25)",
                       cursor: "pointer",
                     }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor =
+                        "rgba(164,245,200,0.55)";
+                      e.currentTarget.style.color = "#EAF6E8";
+                      e.currentTarget.style.background =
+                        "linear-gradient(180deg, rgba(164,245,200,0.14) 0%, rgba(164,245,200,0.05) 100%)";
+                      e.currentTarget.style.boxShadow =
+                        "inset 0 0 0 1px rgba(255,255,255,0.04), 0 0 14px rgba(164,245,200,0.22)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor =
+                        "rgba(164,245,200,0.22)";
+                      e.currentTarget.style.color = "rgba(236,230,214,0.82)";
+                      e.currentTarget.style.background =
+                        "linear-gradient(180deg, rgba(164,245,200,0.05) 0%, rgba(164,245,200,0.02) 100%)";
+                      e.currentTarget.style.boxShadow =
+                        "inset 0 0 0 1px rgba(255,255,255,0.02), 0 1px 0 rgba(0,0,0,0.25)";
+                    }}
                   >
-                    {labels[t]}
-                  </button>
+                    <span
+                      aria-hidden
+                      style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: 999,
+                        background: "#A4F5C8",
+                        boxShadow: "0 0 6px rgba(164,245,200,0.7)",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span>
+                      {labels[t]}
+                      <span
+                        aria-hidden
+                        style={{
+                          color: "#A4F5C8",
+                          marginLeft: 3,
+                          opacity: 0.85,
+                        }}
+                      >
+                        ?
+                      </span>
+                    </span>
+                  </motion.button>
                 ))}
               </div>
             </div>

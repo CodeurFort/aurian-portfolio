@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Stars, Line, Sparkles, MeshDistortMaterial, Text, Html } from "@react-three/drei";
+import { Stars, Line, Sparkles, MeshDistortMaterial, Html } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -16,15 +16,19 @@ import {
   playBlip,
   playTap,
   playWhoosh,
-  startEruptionRumble,
-  stopEruptionRumble,
 } from "@/lib/sound";
 import { TechPill } from "@/components/ui/TechPill";
 import { Chatbot } from "@/components/Chatbot";
+import { ChatbotArrowTip } from "@/components/ChatbotArrowTip";
+import { PlanetPresenter } from "@/components/PlanetPresenter";
 import { PlanetTransition, pickVariant } from "@/components/PlanetTransition";
 import { PlanetAmbient } from "@/components/PlanetAmbient";
 import { EnergizerPlanet } from "./planets/EnergizerPlanet";
 import { LevelsPlanet } from "./planets/LevelsPlanet";
+import { MiraklPlanet } from "./planets/MiraklPlanet";
+import { BeyondPlanet } from "./planets/BeyondPlanet";
+import { TheLookPlanet } from "./planets/TheLookPlanet";
+import { buildIdentityStarMaterial } from "./planets/IdentityStarShader";
 
 // ---------------------------------------------------------------------------
 // Color mapping
@@ -779,40 +783,8 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
 
       {infoId === "qualites" && (
         <div className="space-y-10">
-          <p className="serif-italic text-text-muted text-lg max-w-xl">
-            {ui.qualitiesIntro}
-          </p>
-          <div className="space-y-8">
-            {projects.map((p) => {
-              const q = projectQualities[p.slug];
-              if (!q) return null;
-              const [qa, qb] = q.qualities;
-              return (
-                <div
-                  key={p.slug}
-                  className="pb-7 border-b border-hairline last:border-0"
-                >
-                  <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-2">
-                    {getChapterLabel(p.slug, ui) || p.title} · {p.title}
-                  </p>
-                  <p
-                    className="serif-display text-text mb-3 flex flex-wrap items-baseline gap-x-3"
-                    style={{ fontSize: "26px" }}
-                  >
-                    <span>{qa}</span>
-                    <span className="text-thread serif-italic" style={{ fontSize: "0.75em" }}>×</span>
-                    <span>{qb}<span className="text-thread">.</span></span>
-                  </p>
-                  <p className="serif-italic text-text text-base leading-snug">
-                    {q.phrase}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Soft skills — cross-cutting families */}
-          <div className="pt-8 border-t border-hairline">
+          {/* Soft skills — cross-cutting families (primary) */}
+          <div>
             <p className="mono uppercase tracking-[0.3em] text-[11px] text-thread mb-2">
               {ui.softSkillsTitle}
             </p>
@@ -849,6 +821,41 @@ function InfoOverlayCard({ infoId, onClose }: { infoId: string; onClose: () => v
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Paires de qualités par planète (secondaire) */}
+          <div className="pt-8 border-t border-hairline">
+            <p className="serif-italic text-text-muted text-lg max-w-xl mb-6">
+              {ui.qualitiesIntro}
+            </p>
+            <div className="space-y-8">
+              {projects.map((p) => {
+                const q = projectQualities[p.slug];
+                if (!q) return null;
+                const [qa, qb] = q.qualities;
+                return (
+                  <div
+                    key={p.slug}
+                    className="pb-7 border-b border-hairline last:border-0"
+                  >
+                    <p className="mono uppercase tracking-[0.3em] text-[10px] text-text-muted mb-2">
+                      {getChapterLabel(p.slug, ui) || p.title} · {p.title}
+                    </p>
+                    <p
+                      className="serif-display text-text mb-3 flex flex-wrap items-baseline gap-x-3"
+                      style={{ fontSize: "26px" }}
+                    >
+                      <span>{qa}</span>
+                      <span className="text-thread serif-italic" style={{ fontSize: "0.75em" }}>×</span>
+                      <span>{qb}<span className="text-thread">.</span></span>
+                    </p>
+                    <p className="serif-italic text-text text-base leading-snug">
+                      {q.phrase}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -1417,26 +1424,57 @@ function PlanetMesh({
 }
 
 // ---------------------------------------------------------------------------
-// IdentityStar — dramatic polar star (Aurian), pinned to camera.x top-center
+// IdentityStar — calm polar star (Aurian), pinned to camera.x top-center
 // ---------------------------------------------------------------------------
 interface IdentityStarProps {
-  cameraX: number;
   onSelect: () => void;
-  eruption?: boolean;
 }
 
-function IdentityStar({ cameraX, onSelect, eruption = false }: IdentityStarProps) {
-  const { lang } = useLang();
+// Phases fixes des 8 flammes orbitales — réparties uniformément en angle
+// avec un léger jitter de rayon pour un effet organique.
+const FLAME_PHASES: { angle: number; rOff: number; sp: number }[] = Array.from(
+  { length: 8 },
+  (_, i) => ({
+    angle: (i / 8) * Math.PI * 2,
+    rOff: (i % 3) * 0.08,
+    sp: 0.6 + (i % 4) * 0.18,
+  }),
+);
+const FLAME_GEOM = new THREE.SphereGeometry(0.08, 10, 10);
+
+// Surface stellaire avec granulation plasma — partagée (instance unique).
+const IDENTITY_STAR_MATERIAL = buildIdentityStarMaterial();
+const IDENTITY_STAR_SURFACE_GEOM = new THREE.SphereGeometry(0.9, 96, 96);
+
+// Prominences (arcs de plasma) — 6 boucles partant et revenant à la
+// surface, signature d'un soleil actif. Chacune a son angle/rayon/vitesse.
+const PROMINENCE_PHASES: {
+  angle: number;
+  tilt: number;
+  speed: number;
+  scale: number;
+}[] = Array.from({ length: 6 }, (_, i) => ({
+  angle: (i / 6) * Math.PI * 2 + (i % 2) * 0.4,
+  tilt: ((i * 37) % 180) * (Math.PI / 180),
+  speed: 0.4 + (i % 3) * 0.18,
+  scale: 0.95 + (i % 4) * 0.1,
+}));
+const PROMINENCE_GEOM = new THREE.TorusGeometry(0.42, 0.018, 8, 64, Math.PI);
+
+function IdentityStar({ onSelect }: IdentityStarProps) {
+  const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const innerRef = useRef<THREE.Mesh>(null);
-  const innerMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const spikesRef = useRef<THREE.Group>(null);
+  const haloRef = useRef<THREE.Mesh>(null);
   const haloMatRef = useRef<THREE.MeshBasicMaterial>(null);
-  const lightRef = useRef<THREE.PointLight>(null);
-  const flame1Ref = useRef<THREE.Mesh>(null);
-  const flame2Ref = useRef<THREE.Mesh>(null);
-  const flame3Ref = useRef<THREE.Mesh>(null);
-  const flame4Ref = useRef<THREE.Mesh>(null);
+  // Couches corona supplémentaires pour la profondeur atmosphérique.
+  const corona2Ref = useRef<THREE.Mesh>(null);
+  const corona2MatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const corona3Ref = useRef<THREE.Mesh>(null);
+  const corona3MatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const flamesRef = useRef<THREE.Group>(null);
+  const prominencesRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
@@ -1447,120 +1485,151 @@ function IdentityStar({ cameraX, onSelect, eruption = false }: IdentityStarProps
   }, [hovered]);
 
   useFrame((state, dt) => {
+    const t = state.clock.elapsedTime;
+
     if (groupRef.current) {
-      // Track camera.x horizontally, stay pinned at top
+      const camX = (camera as THREE.PerspectiveCamera).position.x;
       groupRef.current.position.x +=
-        (cameraX - groupRef.current.position.x) * 0.08;
+        (camX - groupRef.current.position.x) * 0.08;
     }
+    // Rotation très lente de la surface — la granulation est animée par le
+    // shader (cellules qui dérivent), donc ici juste un drift discret pour
+    // ne pas figer la sphère.
     if (innerRef.current) {
-      innerRef.current.rotation.y += dt * (eruption ? 0.5 : 0.2);
-      innerRef.current.rotation.x += dt * (eruption ? 0.15 : 0.05);
+      innerRef.current.rotation.y += dt * 0.04;
+      innerRef.current.rotation.x += dt * 0.012;
     }
     if (spikesRef.current) {
-      spikesRef.current.rotation.z += dt * (eruption ? 0.18 : 0.05);
+      spikesRef.current.rotation.z += dt * 0.05;
     }
-    // Eruption: animate halo, light, core pulses
-    if (eruption) {
-      const t = state.clock.elapsedTime;
-      const pulse = 0.5 + 0.5 * Math.sin(t * 4);
-      if (haloMatRef.current) {
-        haloMatRef.current.opacity = 0.28 + 0.22 * pulse;
-      }
-      if (lightRef.current) {
-        lightRef.current.intensity = (hovered ? 4.5 : 3.2) + pulse * 1.6;
-      }
-      if (innerMatRef.current) {
-        innerMatRef.current.emissiveIntensity =
-          (hovered ? 2.4 : 1.8) + pulse * 0.9;
-      }
-      // Lava flame tongues — rise up then loop
-      const flames = [flame1Ref, flame2Ref, flame3Ref, flame4Ref];
-      flames.forEach((ref, i) => {
-        if (!ref.current) return;
-        const phase = (t * 1.8 + i * 0.6) % 1.6;
-        const climb = phase / 1.6;
-        ref.current.position.y = 0.5 + climb * 1.6;
-        const fade = climb < 0.2 ? climb / 0.2 : 1 - (climb - 0.2) / 0.8;
-        const mat = ref.current.material as THREE.MeshBasicMaterial;
-        mat.opacity = Math.max(0, fade) * 0.85;
-        const sc = 0.6 + climb * 0.4;
-        ref.current.scale.set(sc * (1 - climb * 0.3), sc, sc * (1 - climb * 0.3));
+
+    // Surface stellaire — uniforms du shader. Intensité plafonnée à 1.0
+    // pour ne jamais alimenter le bloom en shimmer (sortie shader clampée).
+    const slowU = 0.5 + 0.5 * Math.sin(t * 1.0);
+    IDENTITY_STAR_MATERIAL.uniforms.uTime.value = t;
+    IDENTITY_STAR_MATERIAL.uniforms.uIntensity.value =
+      (hovered ? 1.0 : 0.95) + slowU * 0.04;
+
+    // Corona 1 — scale animé, opacité quasi-stable (variation très douce
+    // pour ne pas faire clignoter le bloom).
+    if (haloRef.current && haloMatRef.current) {
+      const breathe = 0.5 + 0.5 * Math.sin(t * 1.0);
+      const sc = 1.32 + breathe * 0.08;
+      haloRef.current.scale.setScalar(sc);
+      haloMatRef.current.opacity = 0.34 + breathe * 0.04;
+    }
+    // Corona 2 (médiane) — scale doux, opacité presque fixe.
+    if (corona2Ref.current && corona2MatRef.current) {
+      const breathe2 = 0.5 + 0.5 * Math.sin(t * 0.8 + 1.2);
+      const sc = 1.65 + breathe2 * 0.10;
+      corona2Ref.current.scale.setScalar(sc);
+      corona2MatRef.current.opacity = 0.20 + breathe2 * 0.03;
+    }
+    // Corona 3 (lointaine) — quasi-statique en opacité, juste un drift
+    // de scale très lent.
+    if (corona3Ref.current && corona3MatRef.current) {
+      const breathe3 = 0.5 + 0.5 * Math.sin(t * 0.55 + 2.4);
+      const sc = 2.1 + breathe3 * 0.12;
+      corona3Ref.current.scale.setScalar(sc);
+      corona3MatRef.current.opacity = 0.09 + breathe3 * 0.02;
+    }
+
+    // Flammes orbitales — mouvement circulaire conservé, mais opacité
+    // lissée (plus de flick rapide qui déclenche le shimmer bloom).
+    if (flamesRef.current) {
+      flamesRef.current.rotation.z += dt * 0.25;
+      flamesRef.current.children.forEach((child, i) => {
+        const p = FLAME_PHASES[i];
+        if (!p) return;
+        const r = 1.15 + p.rOff + Math.sin(t * p.sp + p.angle * 2) * 0.12;
+        child.position.x = Math.cos(p.angle) * r;
+        child.position.y = Math.sin(p.angle) * r;
+        const mesh = child as THREE.Mesh;
+        const mat = mesh.material as THREE.MeshBasicMaterial;
+        if (mat) {
+          // Variation lente et faible amplitude.
+          const slow = 0.5 + 0.5 * Math.sin(t * (0.8 + p.sp * 0.3) + p.angle);
+          mat.opacity = 0.55 + slow * 0.20;
+        }
+      });
+    }
+
+    // Prominences (arcs de plasma) — scale qui respire doucement,
+    // opacité quasi-stable pour ne pas clignoter avec le bloom.
+    if (prominencesRef.current) {
+      prominencesRef.current.children.forEach((child, i) => {
+        const p = PROMINENCE_PHASES[i];
+        if (!p) return;
+        const arc = child as THREE.Mesh;
+        const breath = 0.5 + 0.5 * Math.sin(t * (p.speed * 0.6) + p.angle * 1.5);
+        const sc = p.scale * (0.92 + breath * 0.18);
+        arc.scale.setScalar(sc);
+        const mat = arc.material as THREE.MeshBasicMaterial;
+        if (mat) {
+          mat.opacity = 0.40 + breath * 0.10;
+        }
       });
     }
   });
 
-  // Eruption palette: lava-orange, deep red, gold flecks
-  const coreColor = eruption ? "#FFE0A0" : "#F5D6D0";
-  const emissiveColor = eruption ? "#FF5828" : "#E55B5B";
-  const haloColor = eruption ? "#FF6A2A" : "#E55B5B";
-  const labelColor = eruption ? "#FF8A2A" : "#E55B5B";
-  const sparkleColor = eruption ? "#FFB84A" : "#E55B5B";
-
-  const spikeMat = (
-    <meshStandardMaterial
-      color={eruption ? "#FFC07A" : "#F5D6D0"}
-      emissive={emissiveColor}
-      emissiveIntensity={eruption ? 2.6 : 1.5}
-      toneMapped={false}
-    />
-  );
-
   return (
-    <group ref={groupRef} position={[cameraX, 5, -2]}>
+    <group ref={groupRef} position={[-12, 5, -2]}>
       <pointLight
-        ref={lightRef}
-        color={emissiveColor}
-        intensity={eruption ? 3.5 : hovered ? 3.5 : 2}
-        distance={eruption ? 14 : 10}
+        color="#FF7A2E"
+        intensity={hovered ? 4.5 : 2.8}
+        distance={12}
         decay={2}
       />
 
-      {/* Outer atmosphere halo */}
-      <mesh scale={eruption ? 1.7 : 1.4}>
+      {/* Corona 3 — halo lointain très diffus, donne l'ampleur du soleil */}
+      <mesh ref={corona3Ref} scale={2.1}>
         <sphereGeometry args={[0.9, 32, 32]} />
         <meshBasicMaterial
-          ref={haloMatRef}
-          color={haloColor}
+          ref={corona3MatRef}
+          color="#FF7A2E"
           transparent
-          opacity={eruption ? 0.4 : 0.22}
+          opacity={0.08}
           side={THREE.BackSide}
+          depthWrite={false}
+          toneMapped={false}
         />
       </mesh>
 
-      {/* Sparkles */}
-      <Sparkles
-        count={eruption ? 80 : 40}
-        scale={eruption ? 4 : 3}
-        size={eruption ? 9 : 6}
-        speed={eruption ? 0.7 : 0.3}
-        color={sparkleColor}
-      />
+      {/* Corona 2 — couche médiane, transition entre proche et lointain */}
+      <mesh ref={corona2Ref} scale={1.65}>
+        <sphereGeometry args={[0.9, 32, 32]} />
+        <meshBasicMaterial
+          ref={corona2MatRef}
+          color="#FF8A3A"
+          transparent
+          opacity={0.18}
+          side={THREE.BackSide}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
 
-      {/* Eruption: rising flame tongues (lava droplets stretched into tear-drops) */}
-      {eruption && (
-        <>
-          <mesh ref={flame1Ref} position={[0, 0.5, 0]}>
-            <sphereGeometry args={[0.18, 12, 12]} />
-            <meshBasicMaterial color="#FF6A2A" transparent opacity={0} toneMapped={false} />
-          </mesh>
-          <mesh ref={flame2Ref} position={[0.4, 0.5, 0]}>
-            <sphereGeometry args={[0.14, 12, 12]} />
-            <meshBasicMaterial color="#FFB44A" transparent opacity={0} toneMapped={false} />
-          </mesh>
-          <mesh ref={flame3Ref} position={[-0.4, 0.5, 0]}>
-            <sphereGeometry args={[0.14, 12, 12]} />
-            <meshBasicMaterial color="#FF5828" transparent opacity={0} toneMapped={false} />
-          </mesh>
-          <mesh ref={flame4Ref} position={[0.15, 0.5, 0.3]}>
-            <sphereGeometry args={[0.12, 12, 12]} />
-            <meshBasicMaterial color="#FFE08A" transparent opacity={0} toneMapped={false} />
-          </mesh>
-        </>
-      )}
+      {/* Corona 1 — proche surface, respire avec le heartbeat principal */}
+      <mesh ref={haloRef} scale={1.32}>
+        <sphereGeometry args={[0.9, 32, 32]} />
+        <meshBasicMaterial
+          ref={haloMatRef}
+          color="#FFB070"
+          transparent
+          opacity={0.32}
+          side={THREE.BackSide}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
 
-      {/* Inner sphere */}
+      {/* Surface stellaire — shader granulation plasma (cellules de
+          convection Voronoi + flicker + limb glow). Réaliste type
+          photosphère solaire, palette inchangée. */}
       <mesh
         ref={innerRef}
+        geometry={IDENTITY_STAR_SURFACE_GEOM}
+        material={IDENTITY_STAR_MATERIAL}
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
@@ -1570,40 +1639,67 @@ function IdentityStar({ cameraX, onSelect, eruption = false }: IdentityStarProps
           e.stopPropagation();
           onSelect();
         }}
-      >
-        <sphereGeometry args={[0.9, 32, 32]} />
-        <meshStandardMaterial
-          ref={innerMatRef}
-          color={coreColor}
-          emissive={emissiveColor}
-          emissiveIntensity={eruption ? 2.2 : hovered ? 1.8 : 1.3}
-          toneMapped={false}
-          roughness={eruption ? 0.45 : 0.3}
-          metalness={0}
-        />
-      </mesh>
+      />
 
-      {/* Star spikes — 4 elongated boxes at 0/45/90/135 degrees */}
-      <group ref={spikesRef}>
-        {[0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4].map((rot, i) => (
-          <mesh key={i} rotation={[0, 0, rot]}>
-            <boxGeometry args={[eruption ? 0.07 : 0.05, eruption ? 2.6 : 2.2, eruption ? 0.07 : 0.05]} />
-            {spikeMat}
+      {/* Prominences (arcs de plasma) — boucles éjectées de la surface,
+          signature des éruptions solaires. Chacune avec son tilt 3D propre
+          pour éviter l'aspect plat. */}
+      <group ref={prominencesRef}>
+        {PROMINENCE_PHASES.map((p, i) => (
+          <mesh
+            key={`prom-${i}`}
+            geometry={PROMINENCE_GEOM}
+            position={[
+              Math.cos(p.angle) * 0.92,
+              Math.sin(p.angle) * 0.92,
+              0,
+            ]}
+            rotation={[p.tilt, p.angle, p.angle + Math.PI / 2]}
+          >
+            <meshBasicMaterial
+              color={i % 2 === 0 ? "#FFB070" : "#FF8A3A"}
+              transparent
+              opacity={0.4}
+              toneMapped={false}
+              depthWrite={false}
+            />
           </mesh>
         ))}
       </group>
 
-      {/* Label */}
-      <Text
-        position={[0, -1.45, 0]}
-        fontSize={0.32}
-        color={labelColor}
-        anchorX="center"
-        anchorY="top"
-        letterSpacing={0.05}
-      >
-        {lang === "fr" ? "Moi" : "Me"}
-      </Text>
+      {/* Flammes orbitales — petits points de plasma qui circulent */}
+      <group ref={flamesRef}>
+        {FLAME_PHASES.map((_, i) => (
+          <mesh key={i} geometry={FLAME_GEOM}>
+            <meshBasicMaterial
+              color={i % 2 === 0 ? "#FFB070" : "#FF7A2E"}
+              transparent
+              opacity={0.7}
+              toneMapped={false}
+              depthWrite={false}
+            />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Star spikes — 4 rayons fins tapered (cylindres effilés) au lieu
+          de boxes carrées : les pointes deviennent plus organiques
+          (lens-flare-like) et raccord avec le look solaire réaliste. */}
+      <group ref={spikesRef}>
+        {[0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4].map((rot, i) => (
+          <mesh key={i} rotation={[0, 0, rot]}>
+            <cylinderGeometry args={[0.002, 0.05, 2.4, 8, 1, false]} />
+            <meshBasicMaterial
+              color="#FFE6CC"
+              transparent
+              opacity={0.7}
+              toneMapped={false}
+              depthWrite={false}
+            />
+          </mesh>
+        ))}
+      </group>
+
     </group>
   );
 }
@@ -1640,24 +1736,17 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
   const { camera } = useThree();
   const camTarget = useRef(new THREE.Vector3(0, 0, 6));
   const lookTarget = useRef(new THREE.Vector3(0, 0, 0));
-  const [cameraX, setCameraX] = useState(-12);
 
   useFrame(() => {
     const tx = index * 6 - 12;
     camTarget.current.set(tx, 0, 6);
     lookTarget.current.set(tx, 0, 0);
-
-    // Adaptive lerp : fast for long-distance wraparound (5 -> 1 etc.),
-    // smooth for adjacent-planet transitions.
     const distance = Math.abs(
       (camera as THREE.PerspectiveCamera).position.x - tx
     );
     const lerpFactor = distance > 12 ? 0.18 : 0.06;
-
     (camera as THREE.PerspectiveCamera).position.lerp(camTarget.current, lerpFactor);
     camera.lookAt(lookTarget.current);
-
-    setCameraX((camera as THREE.PerspectiveCamera).position.x);
   });
 
   return (
@@ -1685,6 +1774,36 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
             />
           );
         }
+        if (p.slug === "mirakl") {
+          return (
+            <MiraklPlanet
+              key={p.slug}
+              posX={i * 6 - 12}
+              isFocused={i === index}
+              onSelectPlanet={() => onSelectPlanet(p)}
+            />
+          );
+        }
+        if (p.slug === "music-agency") {
+          return (
+            <BeyondPlanet
+              key={p.slug}
+              posX={i * 6 - 12}
+              isFocused={i === index}
+              onSelectPlanet={() => onSelectPlanet(p)}
+            />
+          );
+        }
+        if (p.slug === "thelook") {
+          return (
+            <TheLookPlanet
+              key={p.slug}
+              posX={i * 6 - 12}
+              isFocused={i === index}
+              onSelectPlanet={() => onSelectPlanet(p)}
+            />
+          );
+        }
         return (
           <PlanetMesh
             key={p.slug}
@@ -1697,11 +1816,7 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
         );
       })}
 
-      <IdentityStar
-        cameraX={cameraX}
-        onSelect={() => onSelectStar("identity")}
-        eruption={index === 3}
-      />
+      <IdentityStar onSelect={() => onSelectStar("identity")} />
     </group>
   );
 }
@@ -1869,10 +1984,12 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
 
   return (
     <>
-      {/* Top half */}
+      {/* Top half — initial opacity: 1 pour couvrir instantanément le
+          portfolio à la première frame (pas de flash de l'univers
+          derrière qui casserait l'effet de surprise au chargement). */}
       <motion.div
         key="intro-top"
-        initial={{ opacity: 0, y: 0, rotate: 0 }}
+        initial={{ opacity: 1, y: 0, rotate: 0 }}
         animate={{
           opacity: 1,
           y: isExiting ? "-110vh" : 0,
@@ -1882,7 +1999,7 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
         transition={
           isExiting
             ? { duration: 0.85, ease: [0.65, 0, 0.35, 1] }
-            : { duration: 1.2, ease: "easeOut" }
+            : { duration: 0 }
         }
         className={halfClass}
         style={{
@@ -1895,10 +2012,10 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
         {renderInner}
       </motion.div>
 
-      {/* Bottom half */}
+      {/* Bottom half — idem, opacité 1 dès le mount */}
       <motion.div
         key="intro-bottom"
-        initial={{ opacity: 0, y: 0, rotate: 0 }}
+        initial={{ opacity: 1, y: 0, rotate: 0 }}
         animate={{
           opacity: 1,
           y: isExiting ? "110vh" : 0,
@@ -1908,7 +2025,7 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
         transition={
           isExiting
             ? { duration: 0.85, ease: [0.65, 0, 0.35, 1] }
-            : { duration: 1.2, ease: "easeOut" }
+            : { duration: 0 }
         }
         className={halfClass}
         style={{
@@ -2459,15 +2576,6 @@ export function PortfolioUniverse() {
     }
   }, [introDismissed]);
 
-  // Volcanic rumble while the eruption (planet 4) is active
-  useEffect(() => {
-    if (introDismissed && index === 3) {
-      startEruptionRumble();
-      return () => stopEruptionRumble();
-    }
-    stopEruptionRumble();
-  }, [introDismissed, index]);
-
   // Keyboard + wheel navigation
   useEffect(() => {
     if (!introDismissed) return;
@@ -2584,10 +2692,19 @@ export function PortfolioUniverse() {
       </AnimatePresence>
 
       {/* Star legend (top right, pokemon-badge style) — clickable for global details */}
-      {introDismissed && <StarLegend onSelect={handleLegendSelect} eruption={index === 3} />}
+      {introDismissed && <StarLegend onSelect={handleLegendSelect} />}
 
       {/* Chatbot guide (top-center, opens dropdown panel) */}
       {introDismissed && <Chatbot />}
+
+      {/* Pop up "astuce flèches" depuis le bot normal, une fois par session */}
+      {introDismissed && <ChatbotArrowTip />}
+
+      {/* Présentateur galactique (bottom-right, indépendant du Chatbot) :
+          bulle teaser à l'arrivée + bouton "Visite guidée" + panel narratif */}
+      {introDismissed && (
+        <PlanetPresenter slug={projects[index].slug} />
+      )}
 
       {/* Legend FX overlay (convergence / expansion) */}
       <AnimatePresence>

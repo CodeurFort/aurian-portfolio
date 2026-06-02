@@ -164,14 +164,16 @@ export function LevelsPlanet({
         }}
       />
 
-      {/* Particules grises argentées qui flottent autour (poussière) */}
+      {/* Particules grises argentées qui flottent autour (poussière) —
+          density et vitesse boostées pour qu'elles soient présentes
+          immédiatement à l'arrivée sur la planète. */}
       {!isLow && (
         <Sparkles
-          count={32}
+          count={48}
           scale={[3.0, 3.0, 3.0]}
-          size={2.2}
-          speed={0.5}
-          opacity={0.7}
+          size={2.4}
+          speed={0.9}
+          opacity={0.85}
           color="#D8DCE2"
           noise={1.2}
         />
