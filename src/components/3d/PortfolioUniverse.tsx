@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Stars, Line, Sparkles, MeshDistortMaterial, Html } from "@react-three/drei";
+import { Stars, Line, Sparkles, Html } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -42,57 +42,6 @@ const PAPER_HEX: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Planet visual variant config
-// ---------------------------------------------------------------------------
-interface PlanetVariant {
-  distort: number;
-  speed: number;
-  emissiveColor: string;
-  emissiveIntensity: number;
-  hasRing?: boolean;
-  breathe?: boolean;
-  angularDistort?: boolean;
-  hasMoon?: boolean;
-}
-
-const PLANET_VARIANTS: Record<string, PlanetVariant> = {
-  levels: {
-    distort: 0.08,
-    speed: 0.3,
-    emissiveColor: "#A4F5C8",
-    emissiveIntensity: 0.04,
-  },
-  energizer: {
-    distort: 0.22,
-    speed: 0.8,
-    emissiveColor: "#A4F5C8",
-    emissiveIntensity: 0.08,
-  },
-  mirakl: {
-    distort: 0.12,
-    speed: 0.4,
-    emissiveColor: "#A4F5C8",
-    emissiveIntensity: 0.05,
-    hasRing: true,
-  },
-  "music-agency": {
-    distort: 0.15,
-    speed: 0.5,
-    emissiveColor: "#E5A1B9",
-    emissiveIntensity: 0.18,
-    breathe: true,
-    hasMoon: true,
-  },
-  thelook: {
-    distort: 0.25,
-    speed: 0.15,
-    emissiveColor: "#A4F5C8",
-    emissiveIntensity: 0.05,
-    angularDistort: true,
-  },
-};
-
-// ---------------------------------------------------------------------------
 // Open card type discriminator
 // ---------------------------------------------------------------------------
 type OpenCard =
@@ -103,21 +52,9 @@ type OpenCard =
   | { type: "identity" };
 
 // ---------------------------------------------------------------------------
-// Star definitions per planet
+// Shared types
 // ---------------------------------------------------------------------------
 type UiText = ReturnType<typeof useUi>;
-
-function getInfoStars(ui: UiText) {
-  return [
-    { id: "cv", label: ui.starParcours, icon: "▲" },
-    { id: "stack", label: ui.starStack, icon: "◆" },
-    { id: "qualites", label: ui.starQualites, icon: "✦" },
-    { id: "languages", label: ui.starLangues, icon: "✧" },
-    { id: "hobbies", label: ui.starOrbites, icon: "○" },
-    { id: "certs", label: ui.starCerts, icon: "⬡" },
-    { id: "contact", label: ui.starContact, icon: "@" },
-  ];
-}
 
 function getChapterLabel(slug: string, ui: UiText): string {
   const map: Record<string, string> = {
@@ -130,31 +67,7 @@ function getChapterLabel(slug: string, ui: UiText): string {
   return map[slug] ?? "";
 }
 
-const PLANET_NUMERAL: Record<string, string> = {
-  levels: "I",
-  energizer: "II",
-  mirakl: "III",
-  "music-agency": "?",
-  thelook: "V",
-};
-
-const PLANET_INFO: Record<string, string[]> = {
-  levels: ["cv", "stack", "qualites"],
-  energizer: ["stack", "qualites", "languages"],
-  mirakl: ["cv", "qualites", "contact"],
-  "music-agency": ["hobbies", "qualites", "cv"],
-  thelook: ["stack", "qualites", "languages"],
-};
-
 type StarShape = "cone" | "octa" | "spike" | "tetra" | "sphere" | "box" | "hex";
-
-interface StarDef {
-  id: string;
-  label: string;
-  icon: string;
-  shape: StarShape;
-  color: string;
-}
 
 const STAR_SHAPES: Record<string, StarShape> = {
   cv: "cone",
@@ -187,25 +100,6 @@ function getCategoryLabels(ui: UiText): Record<string, string> {
     certs: ui.infoCerts,
     contact: ui.infoContact,
   };
-}
-
-function getStarsForPlanet(slug: string, ui: UiText): StarDef[] {
-  const infoIds = PLANET_INFO[slug] ?? ["cv", "stack", "qualites"];
-  const stars = getInfoStars(ui);
-  return infoIds.map((iid) => {
-    const def = stars.find((s) => s.id === iid) ?? stars[0];
-    let id: string;
-    if (iid === "qualites") id = `quality:${slug}`;
-    else if (iid === "stack") id = `stack:${slug}`;
-    else id = `info:${iid}`;
-    return {
-      id,
-      label: def.label,
-      icon: def.icon,
-      shape: STAR_SHAPES[iid] ?? "octa",
-      color: STAR_COLORS[iid] ?? "#ECE6D6",
-    };
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1089,341 +983,6 @@ function CardOverlay({
 }
 
 // ---------------------------------------------------------------------------
-// Individual satellite star mesh
-// ---------------------------------------------------------------------------
-interface SatStarProps {
-  position: [number, number, number];
-  starId: string;
-  shape: StarShape;
-  color: string;
-  onSelect: (id: string) => void;
-}
-
-function SatStar({ position, starId, shape, color, onSelect }: SatStarProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-
-  useEffect(() => {
-    document.body.style.cursor = hovered ? "pointer" : "auto";
-    return () => {
-      document.body.style.cursor = "auto";
-    };
-  }, [hovered]);
-
-  useFrame((_, dt) => {
-    if (meshRef.current) {
-      // Each shape spins on its own axis for character
-      const r = meshRef.current.rotation;
-      switch (shape) {
-        case "cone":
-          r.y += dt * 0.05;
-          break;
-        case "octa":
-          r.y += dt * 0.08;
-          r.x += dt * 0.02;
-          break;
-        case "spike":
-          r.y += dt * 0.12;
-          r.z += dt * 0.04;
-          break;
-        case "tetra":
-          r.x += dt * 0.05;
-          r.y += dt * 0.04;
-          break;
-        case "sphere":
-          r.y += dt * 0.02;
-          break;
-        case "box":
-          r.x += dt * 0.03;
-          r.y += dt * 0.05;
-          break;
-        case "hex":
-          r.y += dt * 0.06;
-          break;
-      }
-
-      const targetScale = hovered ? 1.4 : 1.0;
-      meshRef.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.1
-      );
-    }
-  });
-
-  // Geometry per category — smaller and singular
-  const geometry = (() => {
-    switch (shape) {
-      case "cone":
-        return <coneGeometry args={[0.085, 0.18, 4]} />; // pyramid for cv
-      case "octa":
-        return <octahedronGeometry args={[0.11, 0]} />; // diamond for stack
-      case "spike":
-        return <icosahedronGeometry args={[0.10, 0]} />; // crystal for qualités
-      case "tetra":
-        return <tetrahedronGeometry args={[0.12, 0]} />; // sharp triangle for languages
-      case "sphere":
-        return <sphereGeometry args={[0.085, 12, 12]} />; // tiny moon for hobbies
-      case "box":
-        return <boxGeometry args={[0.14, 0.14, 0.14]} />; // cube for contact
-      case "hex":
-        return <cylinderGeometry args={[0.10, 0.10, 0.08, 6]} />; // hex prism for certs
-    }
-  })();
-
-  return (
-    <group position={position}>
-      <mesh
-        ref={meshRef}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={() => setHovered(false)}
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect(starId);
-        }}
-      >
-        {geometry}
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={hovered ? 1.6 : 0.85}
-          roughness={0.3}
-          metalness={0.2}
-          flatShading
-        />
-      </mesh>
-    </group>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ExoMoon — visual signature for music-agency exoplanet
-// ---------------------------------------------------------------------------
-function ExoMoon() {
-  const { lang } = useLang();
-  const groupRef = useRef<THREE.Group>(null);
-  const moonRef = useRef<THREE.Mesh>(null);
-
-  useFrame((_, dt) => {
-    if (groupRef.current) groupRef.current.rotation.y += dt * 0.45;
-    if (moonRef.current) moonRef.current.rotation.y += dt * 0.6;
-  });
-
-  return (
-    <group ref={groupRef} rotation={[0.4, 0, 0.2]}>
-      <mesh ref={moonRef} position={[1.85, 0.2, 0]}>
-        <sphereGeometry args={[0.18, 24, 24]} />
-        <meshStandardMaterial
-          color="#E5A1B9"
-          emissive="#E5A1B9"
-          emissiveIntensity={0.45}
-          roughness={0.6}
-          metalness={0.1}
-        />
-      </mesh>
-      {/* Joke annotation that orbits with the moon */}
-      <Html
-        position={[1.85, 0.55, 0]}
-        center
-        zIndexRange={[15, 0]}
-        style={{ pointerEvents: "none", userSelect: "none" }}
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-serif), Georgia, serif",
-            fontStyle: "italic",
-            fontWeight: 400,
-            fontSize: "11px",
-            color: "#E5A1B9",
-            whiteSpace: "nowrap",
-            opacity: 0.85,
-            textShadow: "0 0 12px rgba(229,161,185,0.35)",
-          }}
-        >
-          {lang === "fr"
-            ? "« Bonus track. Juste parce que j\u2019aime cette planète. »"
-            : "\u201CBonus track. Just because I love this planet.\u201D"}
-        </span>
-      </Html>
-    </group>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Planet mesh — variant-driven with MeshDistortMaterial + atmosphere
-// ---------------------------------------------------------------------------
-interface PlanetMeshProps {
-  project: Project;
-  posX: number;
-  isFocused: boolean;
-  onSelectStar: (id: string) => void;
-  onSelectPlanet: () => void;
-}
-
-function PlanetMesh({
-  project,
-  posX,
-  isFocused,
-  onSelectStar,
-  onSelectPlanet,
-}: PlanetMeshProps) {
-  const groupRef = useRef<THREE.Group>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
-  const atmosphereRef = useRef<THREE.Mesh>(null);
-  const orbitRef = useRef<THREE.Group>(null);
-  const initializedRef = useRef(false);
-  const [hovered, setHovered] = useState(false);
-
-  const ui = useUi();
-  const variant = PLANET_VARIANTS[project.slug] ?? PLANET_VARIANTS.levels;
-  const stars = getStarsForPlanet(project.slug, ui);
-  const N = stars.length;
-  const ORBIT_R = 2.5;
-  const color = PAPER_HEX[project.paperColor] ?? "#ECE6D6";
-
-  useEffect(() => {
-    document.body.style.cursor = hovered && isFocused ? "pointer" : "auto";
-    return () => {
-      document.body.style.cursor = "auto";
-    };
-  }, [hovered, isFocused]);
-
-  useFrame((state, dt) => {
-    if (!groupRef.current || !meshRef.current) return;
-
-    // Scale lerp (focus) — snap to target on first frame to avoid intro zoom
-    const targetScale = isFocused ? 1.35 : 1.0;
-    if (!initializedRef.current) {
-      groupRef.current.scale.setScalar(targetScale);
-      initializedRef.current = true;
-    } else {
-      const cs = groupRef.current.scale.x;
-      const ns = cs + (targetScale - cs) * 0.06;
-      groupRef.current.scale.set(ns, ns, ns);
-    }
-
-    // Planet self-rotation
-    meshRef.current.rotation.y += dt * 0.15;
-
-    // Breathing scale for music-agency
-    if (variant.breathe && meshRef.current) {
-      const breath = 1 + Math.sin(state.clock.elapsedTime * 0.5) * 0.04;
-      meshRef.current.scale.setScalar(breath);
-    }
-
-    // Orbit rotation (slowed to 0.06)
-    if (orbitRef.current && isFocused) {
-      orbitRef.current.rotation.y += dt * 0.06;
-    }
-  });
-
-  return (
-    <group ref={groupRef} position={[posX, 0, 0]}>
-      {/* Atmosphere shell */}
-      <mesh ref={atmosphereRef} scale={1.08}>
-        <sphereGeometry args={[1.2, 32, 32]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={0.12}
-          side={THREE.BackSide}
-        />
-      </mesh>
-
-      {/* Main planet sphere with MeshDistortMaterial */}
-      <mesh
-        ref={meshRef}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={() => setHovered(false)}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (isFocused) onSelectPlanet();
-        }}
-      >
-        <sphereGeometry args={[1.2, 96, 96]} />
-        <MeshDistortMaterial
-          color={color}
-          roughness={0.85}
-          metalness={0}
-          distort={variant.distort}
-          speed={variant.speed}
-          emissive={variant.emissiveColor}
-          emissiveIntensity={isFocused ? variant.emissiveIntensity * 2 : variant.emissiveIntensity}
-        />
-      </mesh>
-
-      {/* Exoplanet moon for Music Agency */}
-      {variant.hasMoon && <ExoMoon />}
-
-      {/* Saturn ring for Mirakl */}
-      {variant.hasRing && (
-        <mesh rotation={[Math.PI / 2.2, 0, 0.2]}>
-          <ringGeometry args={[1.5, 1.9, 64]} />
-          <meshBasicMaterial
-            color={PAPER_HEX["paper-cream"]}
-            opacity={0.25}
-            transparent
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      )}
-
-      {/* Roman numeral under planet, serif font via Html overlay */}
-      <Html
-        position={[0, -1.95, 0]}
-        center
-        zIndexRange={[20, 0]}
-        style={{ pointerEvents: "none", userSelect: "none" }}
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-serif), Georgia, serif",
-            fontWeight: 500,
-            fontStyle: "italic",
-            fontSize: isFocused ? "44px" : "26px",
-            letterSpacing: "0.04em",
-            color: isFocused ? "#ECE6D6" : "#3A3D38",
-            opacity: isFocused ? 1 : 0.55,
-            transition: "all 0.4s ease",
-            whiteSpace: "nowrap",
-            textShadow: isFocused ? "0 0 24px rgba(164,245,200,0.15)" : "none",
-          }}
-        >
-          {PLANET_NUMERAL[project.slug] ?? project.chapter.toUpperCase()}
-        </span>
-      </Html>
-
-      {/* Satellite stars orbit group */}
-      {isFocused && (
-        <group ref={orbitRef}>
-          {stars.map((star, i) => {
-            const angle = (i / N) * Math.PI * 2;
-            const sx = Math.cos(angle) * ORBIT_R;
-            const sy = Math.sin(angle) * 0.3;
-            const sz = Math.sin(angle) * ORBIT_R;
-            return (
-              <SatStar
-                key={star.id}
-                position={[sx, sy, sz]}
-                starId={star.id}
-                shape={star.shape}
-                color={star.color}
-                onSelect={onSelectStar}
-              />
-            );
-          })}
-        </group>
-      )}
-    </group>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // IdentityStar — calm polar star (Aurian), pinned to camera.x top-center
 // ---------------------------------------------------------------------------
 interface IdentityStarProps {
@@ -1804,16 +1363,7 @@ function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
             />
           );
         }
-        return (
-          <PlanetMesh
-            key={p.slug}
-            project={p}
-            posX={i * 6 - 12}
-            isFocused={i === index}
-            onSelectStar={onSelectStar}
-            onSelectPlanet={() => onSelectPlanet(p)}
-          />
-        );
+        return null;
       })}
 
       <IdentityStar onSelect={() => onSelectStar("identity")} />
