@@ -22,6 +22,7 @@ import { Chatbot } from "@/components/Chatbot";
 import { ChatbotArrowTip } from "@/components/ChatbotArrowTip";
 import { PlanetPresenter } from "@/components/PlanetPresenter";
 import { PlanetTransition, pickVariant } from "@/components/PlanetTransition";
+import { PlanetWarp } from "@/components/PlanetWarp";
 import { PlanetAmbient } from "@/components/PlanetAmbient";
 import { EnergizerPlanet } from "./planets/EnergizerPlanet";
 import { LevelsPlanet } from "./planets/LevelsPlanet";
@@ -2093,6 +2094,8 @@ export function PortfolioUniverse() {
     next: OpenCard;
   } | null>(null);
   const [warpTick, setWarpTick] = useState(0);
+  // Boarding warp: planet click → cinematic transit → modal opens at the end.
+  const [warpTarget, setWarpTarget] = useState<Project | null>(null);
 
   const closeCard = useCallback(() => setOpenCard(null), []);
 
@@ -2135,7 +2138,15 @@ export function PortfolioUniverse() {
 
   const handleSelectPlanet = useCallback((project: Project) => {
     playTap();
-    setOpenCard({ type: "planet", project });
+    // Kick off the cinematic boarding sequence; modal opens on completion.
+    setWarpTarget(project);
+  }, []);
+
+  const handleWarpComplete = useCallback(() => {
+    setWarpTarget((current) => {
+      if (current) setOpenCard({ type: "planet", project: current });
+      return null;
+    });
   }, []);
 
   const goTo = useCallback(
@@ -2286,6 +2297,18 @@ export function PortfolioUniverse() {
           <PlanetTransition
             tickKey={warpTick}
             variant={pickVariant(warpTick)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Boarding warp overlay — cinematic transit played when a planet is
+          clicked, before the PlanetPresenter modal opens. */}
+      <AnimatePresence>
+        {warpTarget && (
+          <PlanetWarp
+            key={`warp-${warpTarget.slug}`}
+            slug={warpTarget.slug}
+            onComplete={handleWarpComplete}
           />
         )}
       </AnimatePresence>
