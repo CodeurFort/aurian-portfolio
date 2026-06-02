@@ -1472,7 +1472,9 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
         }}
       />
 
-      {/* "Aurian." — letter opacity reveals (no width shift) */}
+      {/* "Aurian." — letter opacity reveals (no width shift) + curseur
+          clignotant en bout de ligne pendant la frappe (terminal-classic,
+          square-wave, pas de glow néon pour rester dans le ton serif). */}
       <p
         className="serif-italic mb-8 relative"
         style={{
@@ -1487,9 +1489,34 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
           </span>
         ))}
         <span style={{ opacity: introDone ? 1 : 0, transition: "opacity 0.18s linear" }}>.</span>
+        {/* Curseur visible jusqu'à ce que la frappe du titre démarre */}
+        {title.length === 0 && (
+          <motion.span
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [1, 1, 0, 0] }}
+            transition={{
+              duration: 0.9,
+              repeat: Infinity,
+              ease: "linear",
+              times: [0, 0.5, 0.5, 1],
+            }}
+            style={{
+              display: "inline-block",
+              width: "0.06em",
+              height: "0.95em",
+              background: "rgba(236,230,214,0.7)",
+              marginLeft: "0.18em",
+              verticalAlign: "baseline",
+              transform: "translateY(0.08em)",
+            }}
+          />
+        )}
       </p>
 
-      {/* "Univers." */}
+      {/* "Univers." — curseur plus marqué (taille du headline), même
+          clignotement, disparaît à l'amorce de l'exit pour laisser la
+          place à l'apparition d'"entrer". */}
       <h1
         className="serif-display text-center relative"
         style={{
@@ -1505,6 +1532,28 @@ function IntroOverlay({ onDismiss }: { onDismiss: () => void }) {
           </span>
         ))}
         <span style={{ opacity: titleDone ? 1 : 0, transition: "opacity 0.18s linear" }}>.</span>
+        {title.length > 0 && !isExiting && (
+          <motion.span
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [1, 1, 0, 0] }}
+            transition={{
+              duration: 0.9,
+              repeat: Infinity,
+              ease: "linear",
+              times: [0, 0.5, 0.5, 1],
+            }}
+            style={{
+              display: "inline-block",
+              width: "0.05em",
+              height: "0.85em",
+              background: "rgba(236,230,214,0.85)",
+              marginLeft: "0.08em",
+              verticalAlign: "baseline",
+              transform: "translateY(0.02em)",
+            }}
+          />
+        )}
       </h1>
 
       {/* Hint slot */}

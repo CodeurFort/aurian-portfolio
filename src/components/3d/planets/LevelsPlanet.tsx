@@ -17,15 +17,16 @@ const SHELL_MATERIAL = buildLevelsShellMaterial();
 
 // ---------------------------------------------------------------------------
 // Levels logo bracket — BoxGeometries with per-vertex brightness gradient,
-// reproducing the CSS .landingLogo mark (90% → 45% opacity from corner to end).
-// Built once at module scope (geometries are shared across instances).
+// reproducing the CSS .landingLogo mark (90% → 45% from corner to end).
+// Tonalité alignée sur la palette de la planète (silver veins) pour rester
+// homogène avec le shader, en additive doux (pas de blanc néon).
 // ---------------------------------------------------------------------------
-const BRACKET_BAR_LENGTH = 0.48;
-const BRACKET_BAR_THICK = 0.055;
+const BRACKET_BAR_LENGTH = 0.5;
+const BRACKET_BAR_THICK = 0.05;
 const BRACKET_BAR_DEPTH = 0.012;
-// CSS values: rgba(255,255,255,.9)  →  rgba(255,255,255,.45)
-const BRACKET_BRIGHT = 0.95;
-const BRACKET_DIM = 0.45;
+// On garde le ratio CSS .9 → .45, mais ramené en intensité plus discrète
+const BRACKET_BRIGHT = 0.85;
+const BRACKET_DIM = 0.30;
 
 function buildGradientBar(axis: "x" | "y") {
   const w = axis === "x" ? BRACKET_BAR_LENGTH : BRACKET_BAR_THICK;
@@ -54,8 +55,6 @@ function buildGradientBar(axis: "x" | "y") {
 
 const BRACKET_H_GEOM = buildGradientBar("x");
 const BRACKET_V_GEOM = buildGradientBar("y");
-// Tiny disc geom for the corner ignition spark
-const BRACKET_CORNER_GEOM = new THREE.CircleGeometry(0.07, 24);
 
 // ---------------------------------------------------------------------------
 // Levels planet — sphère noire avec veines incandescentes (bordeaux→or),
@@ -79,8 +78,7 @@ export function LevelsPlanet({
   const planetRef = useRef<THREE.Mesh>(null);
   const bracketRef = useRef<THREE.Group>(null);
   const bracketBarsMatRef = useRef<THREE.MeshBasicMaterial>(null);
-  const bracketCornerMatRef = useRef<THREE.MeshBasicMaterial>(null);
-  const bracketHaloMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const bracketBarsMatRef2 = useRef<THREE.MeshBasicMaterial>(null);
   const initializedRef = useRef(false);
   const [hovered, setHovered] = useState(false);
 
@@ -147,23 +145,17 @@ export function LevelsPlanet({
     SHELL_MATERIAL.uniforms.uPulseWidth.value =
       hovered && isFocused ? 0.14 : 0.10;
 
-    // Bracket pulse: gentle breathing + boost when planet's scan band fires.
-    // Bars opacity follows the same 0→1 phase as the planet pulse, attenuated.
-    if (
-      bracketBarsMatRef.current &&
-      bracketCornerMatRef.current &&
-      bracketHaloMatRef.current
-    ) {
-      const breathing = 0.5 + 0.5 * Math.sin(t * 1.2);
-      // Boost during the planet pulse window (phase in [0,1])
+    // Bracket pulse: discret breathing + boost quand le scan band passe.
+    // On reste sur des opacités basses pour que le mark se fonde dans
+    // la même incandescence que les veines (silver, pas de blanc néon).
+    if (bracketBarsMatRef.current && bracketBarsMatRef2.current) {
+      // Flicker identique aux veines (sin(t * 1.7)) pour homogénéité
+      const flicker = 0.85 + 0.15 * Math.sin(t * 1.7);
       const pulseBoost = phase <= 1.0 ? Math.sin(phase * Math.PI) : 0;
-      const focusBoost = hovered && isFocused ? 0.18 : isFocused ? 0.08 : 0;
-      bracketBarsMatRef.current.opacity =
-        0.85 + 0.08 * breathing + 0.25 * pulseBoost + focusBoost;
-      bracketCornerMatRef.current.opacity =
-        0.7 + 0.15 * breathing + 0.35 * pulseBoost + focusBoost;
-      bracketHaloMatRef.current.opacity =
-        0.18 + 0.07 * breathing + 0.25 * pulseBoost + focusBoost * 0.5;
+      const focusBoost = hovered && isFocused ? 0.12 : isFocused ? 0.05 : 0;
+      const op = 0.38 * flicker + 0.18 * pulseBoost + focusBoost;
+      bracketBarsMatRef.current.opacity = op;
+      bracketBarsMatRef2.current.opacity = op;
     }
 
     // Click animation: compress (200ms) → explode (300ms) → onSelectPlanet
@@ -246,30 +238,16 @@ export function LevelsPlanet({
         }}
       />
 
-      {/* Logo Levels — bracket "L" : reprise fidèle du mark CSS du landing
-          (.landingLogo ::before + ::after) en version 3D émissive.
-          Gradient blanc→gris par vertex colors (90% → 45% de luminosité du
-          coin vers l'extrémité), additive blending pour effet "scellé en
-          incandescence" sur la surface noire. Le coin porte une petite
-          étincelle (disc) et un halo doux pour ancrer le logo. */}
+      {/* Logo Levels — bracket "L" gravé sur la surface, palette silver
+          alignée sur les veines du shader (uColorVeinTop #E8E8EC,
+          uColorRim #B8B8C0). Additive doux + flicker shared avec les veines
+          → le mark vibre au même rythme que la planète et se lit comme une
+          gravure incandescente, pas comme un sticker. */}
       <group ref={bracketRef}>
         {/* corner offset so the L's visual bbox is centered on origin.
             Corner sits at local (0, 0) of this inner group ; bars extend
             +X (right) and -Y (down). */}
         <group position={[-BRACKET_BAR_LENGTH / 2, BRACKET_BAR_LENGTH / 2, 0]}>
-          {/* halo doux derrière l'angle pour ancrer le logo */}
-          <mesh position={[BRACKET_BAR_LENGTH / 2, -BRACKET_BAR_LENGTH / 2, -0.004]}>
-            <circleGeometry args={[BRACKET_BAR_LENGTH * 0.72, 32]} />
-            <meshBasicMaterial
-              ref={bracketHaloMatRef}
-              color="#C8CCD3"
-              transparent
-              opacity={0.22}
-              toneMapped={false}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
           {/* barre horizontale (haut) — corner at -X local, far end at +X */}
           <mesh
             geometry={BRACKET_H_GEOM}
@@ -277,10 +255,10 @@ export function LevelsPlanet({
           >
             <meshBasicMaterial
               ref={bracketBarsMatRef}
-              color="#EEF2F7"
+              color="#D8DCE2"
               vertexColors
               transparent
-              opacity={0.92}
+              opacity={0.4}
               toneMapped={false}
               depthWrite={false}
               blending={THREE.AdditiveBlending}
@@ -292,25 +270,11 @@ export function LevelsPlanet({
             position={[BRACKET_BAR_THICK / 2, -BRACKET_BAR_LENGTH / 2, 0]}
           >
             <meshBasicMaterial
-              color="#EEF2F7"
+              ref={bracketBarsMatRef2}
+              color="#D8DCE2"
               vertexColors
               transparent
-              opacity={0.92}
-              toneMapped={false}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
-          {/* étincelle au coin (intersection des deux barres) */}
-          <mesh
-            geometry={BRACKET_CORNER_GEOM}
-            position={[BRACKET_BAR_THICK / 2, -BRACKET_BAR_THICK / 2, 0.002]}
-          >
-            <meshBasicMaterial
-              ref={bracketCornerMatRef}
-              color="#FFFFFF"
-              transparent
-              opacity={0.85}
+              opacity={0.4}
               toneMapped={false}
               depthWrite={false}
               blending={THREE.AdditiveBlending}
