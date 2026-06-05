@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLang } from "@/lib/i18n";
+import { useIsTouch } from "@/lib/useIsTouch";
 
 // Pop up indépendante du panel Chatbot : émane visuellement du bouton bot
 // (top-left), rappelle à l'utilisateur les commandes de navigation entre
@@ -32,23 +33,45 @@ interface TipText {
   closeAria: string;
 }
 
-const FR_TEXT: TipText = {
+const FR_TEXT_DESK: TipText = {
   badge: "Aurian · Bot",
   title: "Astuce navigation",
   body: "Tu peux utiliser les flèches du clavier ou les boutons latéraux pour passer d'une planète à l'autre.",
   closeAria: "Fermer l'astuce",
 };
 
-const EN_TEXT: TipText = {
+const FR_TEXT_TOUCH: TipText = {
+  badge: "Aurian · Bot",
+  title: "Astuce navigation",
+  body: "Touche les boutons latéraux ou glisse l'écran pour passer d'une planète à l'autre.",
+  closeAria: "Fermer l'astuce",
+};
+
+const EN_TEXT_DESK: TipText = {
   badge: "Aurian · Bot",
   title: "Navigation tip",
   body: "Use the keyboard arrows or the side buttons to move between planets.",
   closeAria: "Dismiss tip",
 };
 
+const EN_TEXT_TOUCH: TipText = {
+  badge: "Aurian · Bot",
+  title: "Navigation tip",
+  body: "Tap the side buttons or swipe to move between planets.",
+  closeAria: "Dismiss tip",
+};
+
 export function ChatbotArrowTip() {
   const { lang } = useLang();
-  const t = lang === "fr" ? FR_TEXT : EN_TEXT;
+  const isTouch = useIsTouch();
+  const t =
+    lang === "fr"
+      ? isTouch
+        ? FR_TEXT_TOUCH
+        : FR_TEXT_DESK
+      : isTouch
+        ? EN_TEXT_TOUCH
+        : EN_TEXT_DESK;
 
   const [visible, setVisible] = useState(false);
   const showTimerRef = useRef<number | null>(null);

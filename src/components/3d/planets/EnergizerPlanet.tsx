@@ -160,6 +160,24 @@ export function EnergizerPlanet({
     };
   }, [hovered, isFocused]);
 
+  // Patch raycast du wireframe : le default Line.threshold = 1 inflate
+  // chaque trait en cylindre de rayon 1 → hitbox effective ~2.2 (vs 1.2
+  // pour les autres planètes en sphereGeometry). On force un threshold
+  // serré uniquement sur cet objet, sans toucher au raycaster global.
+  useEffect(() => {
+    const obj = wireframeRef.current;
+    if (!obj) return;
+    const original = obj.raycast.bind(obj);
+    obj.raycast = (raycaster, intersects) => {
+      const saved = raycaster.params.Line?.threshold;
+      if (raycaster.params.Line) raycaster.params.Line.threshold = 0.05;
+      original(raycaster, intersects);
+      if (raycaster.params.Line && saved !== undefined) {
+        raycaster.params.Line.threshold = saved;
+      }
+    };
+  }, []);
+
   useFrame((state, dt) => {
     if (!groupRef.current) return;
 
@@ -281,11 +299,9 @@ export function EnergizerPlanet({
         onClick={(e) => {
           e.stopPropagation();
           if (!isFocused) return;
-          if (clickPhaseRef.current !== "idle") return;
-          clickPhaseRef.current = "compress";
-          clickTimerRef.current = 0;
           playWhoosh();
           startEruptionRumble();
+          onSelectPlanet();
         }}
       />
 

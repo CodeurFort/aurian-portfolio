@@ -1,11 +1,19 @@
 import * as THREE from "three";
 
 /**
- * Levels planet — black sphere with glowing molten veins (bordeaux→or),
- * fresnel rim light, ascending level-up pulse.
+ * Levels planet — globe cartographique hand-drawn (océans bleu-ardoise
+ * aquarellés, continents sage-olive, contours encrés au fusain), parcouru
+ * par un tracé incandescent montant.
  *
- * Vertex: pass world-space position (for noise), local position (for pulse
- * along Y), and view-space normal/view direction (for fresnel).
+ * IMPORTANT (root cause identifié par bissection) : le fresnel rim
+ * `pow(1 - ndv, 2.6+)` produit un shimmer sur base claire parce que la
+ * non-linéarité amplifie le bruit d'interpolation des normales par
+ * fragment. Sur base sombre (HEAD vein design) c'est invisible. Sur
+ * base claire (carto) ça devient un clignotement perçu sur tout le rim.
+ *
+ * Solution : fresnel LINÉAIRE (1 - ndv, sans pow) en mix-darken vers
+ * l'ink. Donne quand même le volume — silhouette plus sombre = perspective
+ * de globe vu en perspective, look carto cohérent.
  */
 export const levelsVertex = /* glsl */ `
   varying vec3 vLocalPos;
@@ -21,19 +29,14 @@ export const levelsVertex = /* glsl */ `
   }
 `;
 
-/**
- * Fragment: cheap 3D simplex-ish noise via hash → fbm → vein mask. Veins are
- * narrow regions where the noise crosses zero, lit with a vertical gradient
- * (bordeaux at south pole → orange → or at north pole). Adds a fresnel rim
- * light and an ascending scan band (level-up).
- */
 export const levelsFragment = /* glsl */ `
-  uniform vec3 uColorVeinBase;
-  uniform vec3 uColorVeinMid;
-  uniform vec3 uColorVeinTop;
+  uniform vec3 uColorOcean;
+  uniform vec3 uColorLand;
+  uniform vec3 uColorInk;
+  uniform vec3 uColorTrace;
   uniform vec3 uColorRim;
   uniform float uVeinIntensity;
-  uniform float uPulse;       // 0..1 active; outside = inactive
+  uniform float uPulse;
   uniform float uPulseWidth;
   uniform float uTime;
 
@@ -41,7 +44,6 @@ export const levelsFragment = /* glsl */ `
   varying vec3 vNormalView;
   varying vec3 vViewDir;
 
-  // Hash-based 3D value noise.
   float hash(vec3 p) {
     p = fract(p * vec3(0.1031, 0.1030, 0.0973));
     p += dot(p, p.yzx + 33.33);
@@ -79,45 +81,54 @@ export const levelsFragment = /* glsl */ `
   }
 
   void main() {
-    // h: 0 at south pole, 1 at north pole (radius is 1.2 so divide accordingly).
     float h = clamp((vLocalPos.y + 1.2) / 2.4, 0.0, 1.0);
 
-    // Vein mask: narrow regions where fbm is near a target value.
-    // Using two octaves at different scales for organic crack feel.
-    vec3 p = vLocalPos * 1.4;
-    float n = fbm(p);
-    float n2 = fbm(p * 2.6 + vec3(11.3, 7.7, 4.1));
-    float crack = abs(n - 0.5) * 2.0;       // 0 on the ridge, 1 far away
-    float crack2 = abs(n2 - 0.5) * 2.0;
-    float vein = smoothstep(0.18, 0.0, crack) + smoothstep(0.10, 0.0, crack2) * 0.6;
-    vein = clamp(vein, 0.0, 1.4);
+    // CONTINENTS — fbm basse fréquence.
+    vec3 p = vLocalPos * 1.05;
+    float n  = fbm(p);
+    float n2 = fbm(p * 2.3 + vec3(7.7, 3.3, 11.1));
+    float continent = n * 0.7 + n2 * 0.3;
+    float landSoft = smoothstep(0.46, 0.55, continent);
 
-    // Vertical color: bordeaux base → orange mid → or top.
-    vec3 veinCol;
-    if (h < 0.55) {
-      veinCol = mix(uColorVeinBase, uColorVeinMid, smoothstep(0.0, 0.55, h));
-    } else {
-      veinCol = mix(uColorVeinMid, uColorVeinTop, smoothstep(0.55, 1.0, h));
-    }
+    // CÔTE — bande large pour absorber l'aliasing rotation.
+    float edgeDist = abs(continent - 0.50);
+    float coast = smoothstep(0.06, 0.0, edgeDist);
 
-    // Subtle vein flicker with time (very slow).
-    float flicker = 0.85 + 0.15 * sin(uTime * 1.7 + n * 6.28);
+    // HATCHING aquarelle, statique (pas d'uTime).
+    float hatch = fbm(p * 5.2) - 0.5;
+    float hatchLines = smoothstep(0.06, 0.0, abs(hatch)) * (1.0 - landSoft) * 0.14;
 
-    // Level-up scan: bright golden band travelling base→apex.
+    // Grain interne aux continents.
+    float landGrain = fbm(p * 4.0) * 0.08;
+
+    // BASE — océan / terres / fusain.
+    vec3 base = mix(uColorOcean, uColorLand, landSoft);
+    base += vec3(landGrain) * landSoft;
+    base -= vec3(hatchLines);
+    base = mix(base, uColorInk, coast * 0.55);
+
+    // SCAN BAND level-up + ROUTE qui s'embrase sur la côte.
     float band = smoothstep(uPulseWidth, 0.0, abs(h - uPulse));
     float gate = step(0.0, uPulse) * step(uPulse, 1.0);
     band *= gate;
+    float route = coast * band * 2.0;
 
-    // Fresnel rim — strong on silhouette, dim on flat-facing.
+    vec3 col = base;
+    col += uColorTrace * route * uVeinIntensity;
+    col += uColorTrace * band * 0.30;
+
+    // FRESNEL — LINÉAIRE (PAS DE POW) en mix-darken vers ink.
+    // Identifié par bissection : pow(1-ndv, k>1) avec base claire = shimmer
+    // sur le rim. Linéaire = pas d'amplification, plus de flicker, donne
+    // quand même la profondeur perspective d'un globe.
     float ndv = max(dot(vNormalView, vViewDir), 0.0);
-    float fres = pow(1.0 - ndv, 3.0);
+    float fres = 1.0 - ndv;
+    col = mix(col, uColorInk, fres * 0.30);
 
-    // Final color: black base + emissive veins + scan band + rim.
-    vec3 black = vec3(0.012, 0.008, 0.012);
-    vec3 col = black;
-    col += veinCol * vein * uVeinIntensity * flicker;
-    col += uColorVeinTop * band * 1.2;
-    col += uColorRim * fres * 0.55;
+    // VIGNETTE pôles — invariante par rotation Y (utilise vLocalPos.y),
+    // donc pas de flicker.
+    float poleFalloff = 1.0 - smoothstep(0.75, 1.0, abs(vLocalPos.y) / 1.2);
+    col *= mix(0.82, 1.0, poleFalloff);
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -128,10 +139,11 @@ export function buildLevelsShellMaterial(): THREE.ShaderMaterial {
     vertexShader: levelsVertex,
     fragmentShader: levelsFragment,
     uniforms: {
-      uColorVeinBase: { value: new THREE.Color("#3A3A3F") }, // gris ardoise sombre
-      uColorVeinMid: { value: new THREE.Color("#8A8A92") },  // gris acier
-      uColorVeinTop: { value: new THREE.Color("#E8E8EC") },  // gris clair / argent
-      uColorRim: { value: new THREE.Color("#B8B8C0") },      // halo gris froid
+      uColorOcean: { value: new THREE.Color("#B7C5CE") },
+      uColorLand:  { value: new THREE.Color("#7A9275") },
+      uColorInk:   { value: new THREE.Color("#1B1E25") },
+      uColorTrace: { value: new THREE.Color("#EFE8D8") },
+      uColorRim:   { value: new THREE.Color("#BCC7C0") },
       uVeinIntensity: { value: 1.4 },
       uPulse: { value: -1.0 },
       uPulseWidth: { value: 0.10 },

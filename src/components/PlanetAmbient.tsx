@@ -316,6 +316,30 @@ function TheLookAmbient() {
   );
 }
 
+// Voile métallique : blur 2.5px + voile gris perle léger (12% au centre)
+// au-dessus de l'ambient et du canvas. Assez perceptible pour adoucir
+// les arêtes vives (étoiles, wireframe) sans flouter le contenu utile.
+function LightMetallicVeil() {
+  return (
+    <motion.div
+      key="planet-light-veil"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      aria-hidden
+      className="fixed inset-0 pointer-events-none"
+      style={{
+        zIndex: 9,
+        background:
+          "radial-gradient(ellipse 90% 80% at 50% 55%, rgba(226,229,235,0.12) 0%, rgba(226,229,235,0.05) 60%, transparent 100%)",
+        backdropFilter: "blur(2.5px)",
+        WebkitBackdropFilter: "blur(2.5px)",
+      }}
+    />
+  );
+}
+
 export function PlanetAmbient({ slug }: { slug: string }) {
   let node: React.ReactNode = null;
   if (slug === "levels") node = <LevelsAmbient />;
@@ -324,5 +348,12 @@ export function PlanetAmbient({ slug }: { slug: string }) {
   else if (slug === "music-agency") node = <BeyondAmbient />;
   else if (slug === "thelook") node = <TheLookAmbient />;
 
-  return <AnimatePresence mode="wait">{node}</AnimatePresence>;
+  if (!node) return null;
+
+  return (
+    <>
+      <AnimatePresence mode="wait">{node}</AnimatePresence>
+      <LightMetallicVeil />
+    </>
+  );
 }

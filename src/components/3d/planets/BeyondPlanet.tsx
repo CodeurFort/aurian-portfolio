@@ -253,15 +253,13 @@ export function BeyondPlanet({
         onClick={(e) => {
           e.stopPropagation();
           if (!isFocused) return;
-          if (clickPhaseRef.current !== "idle") return;
-          clickPhaseRef.current = "compress";
-          clickTimerRef.current = 0;
           playWhoosh();
           startEruptionRumble();
+          onSelectPlanet();
         }}
       />
 
-      {/* 5 agents satellites — chacun avec sa couleur blush et son rythme */}
+      {/* 5 agents satellites — chacun avec sa couleur blush et son rythme. */}
       {AGENT_CONFIGS.map((cfg, i) => (
         <mesh
           key={`agent-${i}`}

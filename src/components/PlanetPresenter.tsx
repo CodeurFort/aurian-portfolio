@@ -18,6 +18,17 @@ interface PlanetPresenterProps {
 const ACCENT = "#E8C77A"; // or chaud, distinct du #A4F5C8 mint du Chatbot
 const ACCENT_SOFT = "#D8B88E";
 
+// Palette claire du panel lecture (gris perle métallisé) — contraste fort
+// pour la lisibilité tout en gardant l'esprit de l'app via la petite touche
+// or conservée sur le badge/dot narration.
+const PANEL_BG_TOP = "#F4F6F9";
+const PANEL_BG_BOT = "#DDE1E7";
+const PANEL_TEXT = "#1B1E25";
+const PANEL_TEXT_DIM = "rgba(20,22,28,0.55)";
+const PANEL_TEXT_FAINT = "rgba(20,22,28,0.28)";
+const PANEL_BORDER = "rgba(20,22,28,0.12)";
+const PANEL_DIVIDER = "rgba(20,22,28,0.08)";
+
 // Icône bot, miroir de celle du Chatbot normal mais en palette or : même
 // silhouette (antenne, tête, deux yeux, bouche) pour signaler que c'est
 // la même famille, couleur or pour distinguer le SuperBot du bot mint.
@@ -94,8 +105,8 @@ function NarrationText({ text }: { text: string }) {
         }}
       />
       <p
-        className="serif-italic text-text leading-relaxed"
-        style={{ fontSize: 14 }}
+        className="serif-italic leading-relaxed"
+        style={{ fontSize: 14, color: PANEL_TEXT }}
       >
         {typed}
         <span
@@ -103,7 +114,7 @@ function NarrationText({ text }: { text: string }) {
           style={{
             width: 6,
             height: 12,
-            background: ACCENT,
+            background: PANEL_TEXT,
             opacity: typed.length < text.length ? 0.85 : 0,
             transform: "translateY(1px)",
           }}
@@ -434,32 +445,29 @@ export function PlanetPresenter({ slug }: PlanetPresenterProps) {
               width: "min(380px, calc(100vw - 48px))",
               maxHeight: "min(420px, calc(100vh - 120px))",
               borderRadius: 16,
-              background:
-                "linear-gradient(180deg, rgba(20,18,14,0.94) 0%, rgba(8,7,6,0.97) 100%)",
-              border: `1px solid ${ACCENT}33`,
-              boxShadow: `0 20px 50px rgba(0,0,0,0.65), 0 0 28px ${ACCENT}1c`,
-              backdropFilter: "blur(8px)",
+              background: `linear-gradient(180deg, ${PANEL_BG_TOP} 0%, ${PANEL_BG_BOT} 100%)`,
+              border: `1px solid ${PANEL_BORDER}`,
+              boxShadow:
+                "0 24px 60px rgba(8,10,16,0.55), 0 1px 0 rgba(255,255,255,0.75) inset, 0 -1px 0 rgba(20,22,28,0.06) inset",
               overflow: "hidden",
             }}
           >
-            {/* Étoiles décoratives en fond : palette chaude */}
+            {/* Sheen métallique discret en haut-gauche pour signifier la
+                surface "brushed metal" plutôt qu'une carte plate. */}
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none"
               style={{
-                opacity: 0.32,
-                backgroundImage:
-                  "radial-gradient(1px 1px at 22% 16%, rgba(232,199,122,0.7), transparent 60%), \
-                   radial-gradient(1px 1px at 78% 24%, rgba(216,184,142,0.55), transparent 60%), \
-                   radial-gradient(1px 1px at 60% 76%, rgba(232,199,122,0.5), transparent 60%), \
-                   radial-gradient(1px 1px at 20% 84%, rgba(216,184,142,0.45), transparent 60%)",
+                background:
+                  "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 28%), \
+                   linear-gradient(315deg, rgba(20,22,28,0.05) 0%, transparent 35%)",
               }}
             />
 
             {/* Header */}
             <div
               className="px-5 pt-4 pb-3 relative flex items-baseline justify-between gap-2"
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ borderBottom: `1px solid ${PANEL_DIVIDER}` }}
             >
               <div>
                 <p
@@ -469,8 +477,8 @@ export function PlanetPresenter({ slug }: PlanetPresenterProps) {
                   {uiText.badge}
                 </p>
                 <p
-                  className="serif-italic text-text mt-1"
-                  style={{ fontSize: 16 }}
+                  className="serif-italic mt-1"
+                  style={{ fontSize: 16, color: PANEL_TEXT }}
                 >
                   {uiText.panelTitle(planetTitle)}
                 </p>
@@ -482,7 +490,7 @@ export function PlanetPresenter({ slug }: PlanetPresenterProps) {
                 style={{
                   fontSize: 18,
                   lineHeight: 1,
-                  color: "rgba(236,230,214,0.55)",
+                  color: PANEL_TEXT_DIM,
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
@@ -497,7 +505,7 @@ export function PlanetPresenter({ slug }: PlanetPresenterProps) {
             <div className="flex-1 overflow-y-auto px-5 py-4 relative">
               <p
                 className="mono uppercase tracking-[0.3em] mb-3"
-                style={{ fontSize: 9, color: "rgba(236,230,214,0.45)" }}
+                style={{ fontSize: 9, color: PANEL_TEXT_DIM }}
               >
                 {uiText.stepCounter(stepIndex + 1, totalSteps)}
               </p>
@@ -510,7 +518,7 @@ export function PlanetPresenter({ slug }: PlanetPresenterProps) {
             {/* Footer nav */}
             <div
               className="px-4 py-3 relative flex items-center justify-between gap-2"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ borderTop: `1px solid ${PANEL_DIVIDER}` }}
             >
               <button
                 type="button"
@@ -522,12 +530,11 @@ export function PlanetPresenter({ slug }: PlanetPresenterProps) {
                   letterSpacing: "0.12em",
                   padding: "5px 10px",
                   borderRadius: 999,
-                  color:
-                    stepIndex === 0
-                      ? "rgba(236,230,214,0.25)"
-                      : "rgba(236,230,214,0.7)",
+                  color: stepIndex === 0 ? PANEL_TEXT_FAINT : PANEL_TEXT,
                   border: `1px solid ${
-                    stepIndex === 0 ? "rgba(236,230,214,0.1)" : `${ACCENT}30`
+                    stepIndex === 0
+                      ? "rgba(20,22,28,0.08)"
+                      : "rgba(20,22,28,0.22)"
                   }`,
                   background: "transparent",
                   cursor: stepIndex === 0 ? "default" : "pointer",
@@ -548,10 +555,10 @@ export function PlanetPresenter({ slug }: PlanetPresenterProps) {
                       borderRadius: 999,
                       background:
                         i === stepIndex
-                          ? ACCENT
+                          ? PANEL_TEXT
                           : i < stepIndex
-                            ? `${ACCENT}66`
-                            : "rgba(236,230,214,0.18)",
+                            ? "rgba(20,22,28,0.45)"
+                            : "rgba(20,22,28,0.18)",
                       transition: "all 0.3s ease",
                     }}
                   />
@@ -567,9 +574,9 @@ export function PlanetPresenter({ slug }: PlanetPresenterProps) {
                   letterSpacing: "0.12em",
                   padding: "5px 12px",
                   borderRadius: 999,
-                  color: "rgba(20,18,14,0.95)",
-                  border: `1px solid ${ACCENT}`,
-                  background: ACCENT,
+                  color: PANEL_BG_TOP,
+                  border: `1px solid ${PANEL_TEXT}`,
+                  background: PANEL_TEXT,
                   cursor: "pointer",
                   fontWeight: 600,
                 }}

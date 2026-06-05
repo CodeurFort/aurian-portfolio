@@ -11,6 +11,19 @@ import { useUi } from "@/lib/i18n";
 // Strict rule: no em dashes ("—"). No free chat (predefined menu only).
 // Bilingual: all visible strings come from useUi() (FR/EN switch).
 
+// Palette claire du panel chat (gris perle métallisé) — même esprit que le
+// panel 2.0 du PlanetPresenter pour cohérence visuelle. On garde le mint
+// comme accent décoratif (dot bot, glyphe "?" des pills) mais on sort le
+// mint des TEXTES qui deviendraient illisibles sur fond clair.
+const PANEL_BG_TOP = "#F4F6F9";
+const PANEL_BG_BOT = "#DDE1E7";
+const PANEL_TEXT = "#1B1E25";
+const PANEL_TEXT_DIM = "rgba(20,22,28,0.55)";
+const PANEL_BORDER = "rgba(20,22,28,0.12)";
+const PANEL_DIVIDER = "rgba(20,22,28,0.08)";
+const MINT = "#A4F5C8"; // accent décoratif (dots, glyphe ?)
+const MINT_DEEP = "#1F7A53"; // mint foncé pour les TEXTES sur fond clair
+
 interface Msg {
   id: string;
   from: "bot" | "user";
@@ -130,8 +143,8 @@ function BotMessage({ text }: { text: string }) {
         }}
       />
       <p
-        className="serif-italic text-text leading-snug"
-        style={{ fontSize: 14 }}
+        className="serif-italic leading-snug"
+        style={{ fontSize: 14, color: PANEL_TEXT }}
       >
         {typed}
         <span
@@ -139,7 +152,7 @@ function BotMessage({ text }: { text: string }) {
           style={{
             width: 6,
             height: 12,
-            background: "#A4F5C8",
+            background: PANEL_TEXT,
             opacity: typed.length < text.length ? 0.85 : 0,
             transform: "translateY(1px)",
           }}
@@ -328,36 +341,39 @@ export function Chatbot() {
               width: "min(360px, calc(100vw - 24px))",
               height: "min(440px, calc(100vh - 80px))",
               borderRadius: 16,
-              background:
-                "linear-gradient(180deg, rgba(14,15,18,0.92) 0%, rgba(7,8,10,0.95) 100%)",
-              border: "1px solid rgba(164,245,200,0.18)",
+              background: `linear-gradient(180deg, ${PANEL_BG_TOP} 0%, ${PANEL_BG_BOT} 100%)`,
+              border: `1px solid ${PANEL_BORDER}`,
               boxShadow:
-                "0 18px 48px rgba(0,0,0,0.65), 0 0 28px rgba(164,245,200,0.08)",
+                "0 18px 48px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(20,22,28,0.08)",
               backdropFilter: "blur(8px)",
               overflow: "hidden",
             }}
           >
+            {/* Sheen overlay — léger reflet métallisé sur le panel */}
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none"
               style={{
-                opacity: 0.35,
-                backgroundImage:
-                  "radial-gradient(1px 1px at 18% 14%, rgba(236,230,214,0.6), transparent 60%), \
-                   radial-gradient(1px 1px at 82% 22%, rgba(236,230,214,0.45), transparent 60%), \
-                   radial-gradient(1px 1px at 64% 78%, rgba(236,230,214,0.5), transparent 60%), \
-                   radial-gradient(1px 1px at 24% 86%, rgba(236,230,214,0.4), transparent 60%)",
+                background:
+                  "linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 35%), linear-gradient(315deg, rgba(20,22,28,0.06) 0%, rgba(20,22,28,0) 40%)",
+                mixBlendMode: "soft-light",
               }}
             />
 
             <div
               className="px-5 pt-4 pb-3 relative"
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ borderBottom: `1px solid ${PANEL_DIVIDER}` }}
             >
-              <p className="mono uppercase tracking-[0.4em] text-[9px] text-thread">
+              <p
+                className="mono uppercase tracking-[0.4em] text-[9px]"
+                style={{ color: MINT_DEEP }}
+              >
                 {ui.botBadge}
               </p>
-              <p className="serif-italic text-text mt-1" style={{ fontSize: 18 }}>
+              <p
+                className="serif-italic mt-1"
+                style={{ fontSize: 18, color: PANEL_TEXT }}
+              >
                 {ui.botPrompt}
               </p>
             </div>
@@ -378,11 +394,11 @@ export function Chatbot() {
                         style={{
                           fontSize: 11,
                           letterSpacing: "0.05em",
-                          color: "rgba(236,230,214,0.7)",
+                          color: PANEL_TEXT_DIM,
                           padding: "6px 10px",
                           borderRadius: 10,
-                          background: "rgba(236,230,214,0.06)",
-                          border: "1px solid rgba(236,230,214,0.08)",
+                          background: "rgba(20,22,28,0.05)",
+                          border: `1px solid ${PANEL_BORDER}`,
                           maxWidth: "75%",
                         }}
                       >
@@ -401,9 +417,9 @@ export function Chatbot() {
             <div
               className="px-4 pt-3 pb-3.5 relative"
               style={{
-                borderTop: "1px solid rgba(164,245,200,0.10)",
+                borderTop: `1px solid ${PANEL_DIVIDER}`,
                 background:
-                  "linear-gradient(180deg, rgba(164,245,200,0.04) 0%, rgba(164,245,200,0) 60%)",
+                  "linear-gradient(180deg, rgba(164,245,200,0.10) 0%, rgba(164,245,200,0) 60%)",
               }}
             >
               {/* Header : glyphe "?" + label */}
@@ -415,9 +431,9 @@ export function Chatbot() {
                     width: 16,
                     height: 16,
                     borderRadius: 999,
-                    border: "1px solid rgba(164,245,200,0.32)",
-                    background: "rgba(164,245,200,0.06)",
-                    boxShadow: "0 0 8px rgba(164,245,200,0.18)",
+                    border: `1px solid ${MINT_DEEP}55`,
+                    background: "rgba(164,245,200,0.14)",
+                    boxShadow: "0 0 6px rgba(31,122,83,0.18)",
                   }}
                 >
                   <span
@@ -425,7 +441,7 @@ export function Chatbot() {
                     style={{
                       fontSize: 9,
                       lineHeight: 1,
-                      color: "#A4F5C8",
+                      color: MINT_DEEP,
                       transform: "translateY(0.5px)",
                     }}
                   >
@@ -436,7 +452,7 @@ export function Chatbot() {
                   className="mono uppercase tracking-[0.32em]"
                   style={{
                     fontSize: 8.5,
-                    color: "rgba(236,230,214,0.55)",
+                    color: PANEL_TEXT_DIM,
                   }}
                 >
                   {ui.botMenuLabel}
@@ -459,31 +475,29 @@ export function Chatbot() {
                       letterSpacing: "0.06em",
                       padding: "6px 11px 6px 10px",
                       borderRadius: 999,
-                      color: "rgba(236,230,214,0.82)",
-                      border: "1px solid rgba(164,245,200,0.22)",
+                      color: PANEL_TEXT,
+                      border: `1px solid ${MINT_DEEP}44`,
                       background:
-                        "linear-gradient(180deg, rgba(164,245,200,0.05) 0%, rgba(164,245,200,0.02) 100%)",
+                        "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.35) 100%)",
                       boxShadow:
-                        "inset 0 0 0 1px rgba(255,255,255,0.02), 0 1px 0 rgba(0,0,0,0.25)",
+                        "inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(20,22,28,0.08)",
                       cursor: "pointer",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor =
-                        "rgba(164,245,200,0.55)";
-                      e.currentTarget.style.color = "#EAF6E8";
+                      e.currentTarget.style.borderColor = `${MINT_DEEP}88`;
+                      e.currentTarget.style.color = MINT_DEEP;
                       e.currentTarget.style.background =
-                        "linear-gradient(180deg, rgba(164,245,200,0.14) 0%, rgba(164,245,200,0.05) 100%)";
+                        "linear-gradient(180deg, rgba(164,245,200,0.35) 0%, rgba(164,245,200,0.15) 100%)";
                       e.currentTarget.style.boxShadow =
-                        "inset 0 0 0 1px rgba(255,255,255,0.04), 0 0 14px rgba(164,245,200,0.22)";
+                        "inset 0 1px 0 rgba(255,255,255,0.9), 0 0 10px rgba(31,122,83,0.25)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor =
-                        "rgba(164,245,200,0.22)";
-                      e.currentTarget.style.color = "rgba(236,230,214,0.82)";
+                      e.currentTarget.style.borderColor = `${MINT_DEEP}44`;
+                      e.currentTarget.style.color = PANEL_TEXT;
                       e.currentTarget.style.background =
-                        "linear-gradient(180deg, rgba(164,245,200,0.05) 0%, rgba(164,245,200,0.02) 100%)";
+                        "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.35) 100%)";
                       e.currentTarget.style.boxShadow =
-                        "inset 0 0 0 1px rgba(255,255,255,0.02), 0 1px 0 rgba(0,0,0,0.25)";
+                        "inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(20,22,28,0.08)";
                     }}
                   >
                     <span
@@ -492,8 +506,8 @@ export function Chatbot() {
                         width: 5,
                         height: 5,
                         borderRadius: 999,
-                        background: "#A4F5C8",
-                        boxShadow: "0 0 6px rgba(164,245,200,0.7)",
+                        background: MINT_DEEP,
+                        boxShadow: "0 0 6px rgba(31,122,83,0.4)",
                         flexShrink: 0,
                       }}
                     />
@@ -502,9 +516,9 @@ export function Chatbot() {
                       <span
                         aria-hidden
                         style={{
-                          color: "#A4F5C8",
+                          color: MINT_DEEP,
                           marginLeft: 3,
-                          opacity: 0.85,
+                          opacity: 0.9,
                         }}
                       >
                         ?

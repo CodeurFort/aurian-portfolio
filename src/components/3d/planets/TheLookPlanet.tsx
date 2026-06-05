@@ -165,11 +165,9 @@ export function TheLookPlanet({
         onClick={(e) => {
           e.stopPropagation();
           if (!isFocused) return;
-          if (clickPhaseRef.current !== "idle") return;
-          clickPhaseRef.current = "compress";
-          clickTimerRef.current = 0;
           playWhoosh();
           startEruptionRumble();
+          onSelectPlanet();
         }}
       />
 

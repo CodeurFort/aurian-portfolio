@@ -154,6 +154,7 @@ const UI_TEXT = {
     stackLabel: "Stack",
     moonsLabel: "Agents en orbite",
     visualsLabel: "Aperçu",
+    inFewWords: "En quelques mots…",
     seeLive: "Voir live →",
     seeGithub: "Github →",
     closeLabel: "Fermer ✕",
@@ -200,9 +201,9 @@ const UI_TEXT = {
     botGreet: "Salut. Je suis Aurian, version bot. Pose-moi une question.",
     botRoot: "Que veux-tu savoir ? Je te dirai où regarder.",
     botIdentity:
-      "Pour me découvrir vraiment, clique sur l'étoile volcanique (rouge, en bas de la légende en haut à droite). Tu y trouveras ma signature.",
+      "Pour me découvrir vraiment, ouvre Parcours dans la légende en haut à droite (l'étoile orange). Tu y trouveras mon histoire et ma signature.",
     botProjects:
-      "Cinq planètes orbitent autour de toi. Utilise les flèches gauche / droite (ou les touches du clavier) pour les visiter, et clique sur une planète pour ouvrir son dossier.",
+      "Cinq planètes orbitent autour de toi. Utilise les flèches latérales pour passer de l'une à l'autre, et clique (ou touche) une planète pour ouvrir son dossier.",
     botProject:
       "Chaque planète a son ambiance et son dossier. Clique directement dessus dans le système, ou ouvre la fiche depuis la flèche en bas. Cinq destinations t'attendent.",
     botStack:
@@ -265,6 +266,7 @@ const UI_TEXT = {
     stackLabel: "Stack",
     moonsLabel: "Agents in orbit",
     visualsLabel: "Preview",
+    inFewWords: "In a few words…",
     seeLive: "Live demo →",
     seeGithub: "Github →",
     closeLabel: "Close ✕",
@@ -304,9 +306,9 @@ const UI_TEXT = {
     botGreet: "Hi. I am Aurian, bot version. Ask me anything.",
     botRoot: "What do you want to know? I will tell you where to look.",
     botIdentity:
-      "To really get to know me, click the volcanic star (red, at the bottom of the legend top-right). My signature is there.",
+      "To really get to know me, open Background in the top-right legend (the orange star). My story and signature are there.",
     botProjects:
-      "Five planets orbit around you. Use the left / right arrows (or the keyboard) to visit them, and click a planet to open its file.",
+      "Five planets orbit around you. Use the side arrows to move between them, and click (or tap) a planet to open its file.",
     botProject:
       "Every planet has its own atmosphere and file. Click it directly in the system, or open the card from the arrow at the bottom. Five destinations await.",
     botStack:

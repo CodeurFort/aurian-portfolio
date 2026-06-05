@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dev artifacts (Playwright MCP captures + ad-hoc design screenshots)
+.playwright-mcp/
+/levels-*.png

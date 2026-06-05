@@ -97,7 +97,7 @@ export const projects: Project[] = [
     paperColor: "paper-cream",
     role: "conception, dev, design solo",
     status: "ongoing",
-    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png", "/visuals/levels-achievements.png"],
+    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png"],
     pitch:
       "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs avec historique journalier complet et planification multi-horizons : la semaine, le mois, l'année, la vie. L'utilisateur définit ses objectifs, valide au fil de la journée, consulte son historique passé et projette ses cibles sur tous les horizons. PWA vanilla en trois fichiers, synchronisation temps réel multi-appareils.",
     achievements: [
@@ -120,7 +120,13 @@ export const projects: Project[] = [
     pitch:
       "Application web qui aide les entreprises à briller dans les moteurs traditionnels et génératifs. Energizer audite le site, définit un plan d'actions, et propose comme feature phare la création de blogs personnalisés : rédaction alimentée par les meilleurs mots-clés issus d'un scrapping dense et du scoring du diagnostic. Architecture multi-tenant, agent IA orchestré en cinq étapes (stratégie, veille, concurrence, critique, scoring), pipeline Blog Redactor v2 qui s'auto-révise tant que le score cible sur 100 (SEO, GEO, E-E-A-T, pertinence) n'est pas atteint.",
     role: "conception, architecture, dev solo",
-    visuals: ["/visuals/energizer-pipeline.svg"],
+    visuals: [
+      "/visuals/energizer-saas-1.png",
+      "/visuals/energizer-saas-2.png",
+      "/visuals/energizer-saas-3.png",
+      "/visuals/energizer-saas-4.png",
+      "/visuals/energizer-pipeline.svg",
+    ],
     achievements: [
       "Pipeline 5 étapes diagnostic + Blog Redactor avec auto-révision.",
       "Architecture multi-tenant (entreprise = contexte agent).",
@@ -449,7 +455,7 @@ export const projectsEn: Project[] = [
     paperColor: "paper-cream",
     role: "concept, dev, design (solo)",
     status: "ongoing",
-    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png", "/visuals/levels-achievements.png"],
+    visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png"],
     pitch:
       "Discipline plays out in LEVELS: become the hero of your own story. A web app for goal tracking with full daily history and multi-horizon planning across the week, month, year and life. The user defines goals, validates them throughout the day, browses past history and projects targets onto every horizon. Three-file vanilla PWA, real-time sync across devices.",
     achievements: [
@@ -472,7 +478,13 @@ export const projectsEn: Project[] = [
     pitch:
       "Web app helping companies shine in both traditional and generative search engines. Energizer audits the site, builds an action plan, and offers as flagship feature personalized blog generation: copy fueled by the best keywords from a dense scrape and the diagnostic scoring. Multi-tenant architecture, AI agent orchestrated in five steps (strategy, watch, competition, critique, scoring), Blog Redactor v2 pipeline that self-revises until the target score (out of 100, on SEO, GEO, E-E-A-T and relevance) is reached.",
     role: "concept, architecture, dev (solo)",
-    visuals: ["/visuals/energizer-pipeline.svg"],
+    visuals: [
+      "/visuals/energizer-saas-1.png",
+      "/visuals/energizer-saas-2.png",
+      "/visuals/energizer-saas-3.png",
+      "/visuals/energizer-saas-4.png",
+      "/visuals/energizer-pipeline.svg",
+    ],
     achievements: [
       "5-step diagnostic pipeline + self-revising Blog Redactor.",
       "Multi-tenant architecture (company = agent context).",
