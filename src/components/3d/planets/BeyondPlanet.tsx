@@ -304,29 +304,30 @@ interface CoordinationLineProps {
 }
 
 function CoordinationLine({ lineRef }: CoordinationLineProps) {
-  // BufferGeometry à 2 sommets, créée une fois, mutable.
-  const geom = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute(
+  // THREE.Line natif (pas drei <Line>) pour pouvoir updater la géométrie
+  // sans re-render React. On contourne le conflit JSX <line> (SVG) via
+  // <primitive>.
+  const lineObject = useMemo(() => {
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute(
       "position",
       new THREE.BufferAttribute(new Float32Array(6), 3),
     );
-    return g;
+    const mat = new THREE.LineBasicMaterial({
+      color: "#E8A8B0",
+      transparent: true,
+      opacity: 0.22,
+      toneMapped: false,
+    });
+    return new THREE.Line(geom, mat);
   }, []);
 
-  return (
-    <line
-      ref={(el) => {
-        lineRef.current = el as unknown as THREE.Line;
-      }}
-      geometry={geom}
-    >
-      <lineBasicMaterial
-        color="#E8A8B0"
-        transparent
-        opacity={0.22}
-        toneMapped={false}
-      />
-    </line>
-  );
+  useEffect(() => {
+    lineRef.current = lineObject;
+    return () => {
+      lineRef.current = null;
+    };
+  }, [lineObject, lineRef]);
+
+  return <primitive object={lineObject} />;
 }
