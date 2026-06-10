@@ -2919,6 +2919,26 @@ function IdentityStar({ onSelect }: IdentityStarProps) {
         }}
       />
 
+      {/* Hitbox invisible élargie — sur mobile, la sphère 0.9 est trop
+          petite pour un doigt. On étend la zone tactile jusqu'à la corona
+          médiane (~1.6) avec un mesh transparent (visible: false →
+          aucun coût render, juste le raycaster en profite). */}
+      <mesh
+        visible={false}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+        }}
+        onPointerOut={() => setHovered(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
+      >
+        <sphereGeometry args={[1.6, 16, 16]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
       {/* Prominences (arcs de plasma) — boucles éjectées de la surface,
           signature des éruptions solaires. Chacune avec son tilt 3D propre
           pour éviter l'aspect plat. */}
@@ -2980,6 +3000,31 @@ function IdentityStar({ onSelect }: IdentityStarProps) {
 
     </group>
   );
+}
+
+// ---------------------------------------------------------------------------
+// ResponsiveCamera — ajuste le FOV selon l'aspect ratio du viewport.
+// Sur portrait étroit (téléphone), un FOV fixe de 55 rend les planètes
+// trop grosses car la dimension dominante devient la hauteur. On élargit
+// progressivement le FOV pour reculer la perception et rendre les
+// planètes proportionnées.
+// ---------------------------------------------------------------------------
+function ResponsiveCamera() {
+  const { camera, size } = useThree();
+  useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    const aspect = size.width / Math.max(1, size.height);
+    let fov: number;
+    if (aspect < 0.6) fov = 78;           // portrait étroit (téléphones standards)
+    else if (aspect < 0.85) fov = 68;     // portrait large / petite tablette
+    else if (aspect < 1.2) fov = 60;      // ~square / landscape mobile
+    else fov = 55;                         // desktop / tablette landscape
+    if (Math.abs(cam.fov - fov) > 0.1) {
+      cam.fov = fov;
+      cam.updateProjectionMatrix();
+    }
+  }, [camera, size.width, size.height]);
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -4269,6 +4314,7 @@ export function PortfolioUniverse() {
         camera={{ position: [-12, 0, 6], fov: 55 }}
         gl={{ antialias: true }}
       >
+        <ResponsiveCamera />
         <color attach="background" args={["#07080A"]} />
         <fog attach="fog" args={["#07080A", 12, 28]} />
 
