@@ -4358,14 +4358,17 @@ export function PortfolioUniverse() {
           visibles à travers la cinématique). */}
       {introDismissed && !warpTarget && <Chatbot />}
 
-      {/* Pop up "astuce flèches" depuis le bot normal, une fois par session */}
-      {introDismissed && !warpTarget && <ChatbotArrowTip />}
-
       {/* Présentateur galactique (bottom-right, indépendant du Chatbot) :
-          bulle teaser à l'arrivée + bouton "Visite guidée" + panel narratif */}
+          bulle teaser à l'arrivée + bouton "Visite guidée" + panel narratif.
+          IMPORTANT : monté AVANT ChatbotArrowTip pour que son listener
+          "arrowtip:start" soit attaché avant le dispatch — sinon la bulle
+          teaser apparaît en même temps que l'astuce (overlap mobile). */}
       {introDismissed && !warpTarget && (
         <PlanetPresenter slug={projects[index].slug} />
       )}
+
+      {/* Pop up "astuce flèches" depuis le bot normal, une fois par session */}
+      {introDismissed && !warpTarget && <ChatbotArrowTip />}
 
       {/* Legend FX overlay (convergence / expansion) */}
       <AnimatePresence>
