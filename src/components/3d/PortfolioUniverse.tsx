@@ -3003,31 +3003,6 @@ function IdentityStar({ onSelect }: IdentityStarProps) {
 }
 
 // ---------------------------------------------------------------------------
-// ResponsiveCamera — ajuste le FOV selon l'aspect ratio du viewport.
-// Sur portrait étroit (téléphone), un FOV fixe de 55 rend les planètes
-// trop grosses car la dimension dominante devient la hauteur. On élargit
-// progressivement le FOV pour reculer la perception et rendre les
-// planètes proportionnées.
-// ---------------------------------------------------------------------------
-function ResponsiveCamera() {
-  const { camera, size } = useThree();
-  useEffect(() => {
-    const cam = camera as THREE.PerspectiveCamera;
-    const aspect = size.width / Math.max(1, size.height);
-    let fov: number;
-    if (aspect < 0.6) fov = 78;           // portrait étroit (téléphones standards)
-    else if (aspect < 0.85) fov = 68;     // portrait large / petite tablette
-    else if (aspect < 1.2) fov = 60;      // ~square / landscape mobile
-    else fov = 55;                         // desktop / tablette landscape
-    if (Math.abs(cam.fov - fov) > 0.1) {
-      cam.fov = fov;
-      cam.updateProjectionMatrix();
-    }
-  }, [camera, size.width, size.height]);
-  return null;
-}
-
-// ---------------------------------------------------------------------------
 // Connecting thread line between planets
 // ---------------------------------------------------------------------------
 function PlanetConnector() {
@@ -4314,7 +4289,6 @@ export function PortfolioUniverse() {
         camera={{ position: [-12, 0, 6], fov: 55 }}
         gl={{ antialias: true }}
       >
-        <ResponsiveCamera />
         <color attach="background" args={["#07080A"]} />
         <fog attach="fog" args={["#07080A", 12, 28]} />
 
