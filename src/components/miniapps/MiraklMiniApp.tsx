@@ -7,10 +7,10 @@ import type { Lang } from "@/lib/i18n";
 
 // Mini-app Mirakl Prospector — démo fidèle au vrai flux de l'app
 // (cf. Desktop/Business Case/mirakl-prospector) :
-//   1. SCORING   : un seller est scoré contre les marketplaces via 8 critères
-//                  pondérés (Catégorie 22 %, Géo 16 %, Prix 12 %, Client 12 %,
-//                  Catalogue 12 %, Distribution 10 %, Saisonnalité 8 %, Taille 8 %),
-//                  chacun avec un score ET une raison.
+//   1. SCORING   : un seller est scoré contre les marketplaces via 6 critères
+//                  pondérés (Catégorie 25 %, Géo 18 %, Prix 15 %, Client 15 %,
+//                  Saisonnalité 12 %, Signaux marketplace 15 %), chacun avec
+//                  un score ET une raison — cf. achievement dans content.ts.
 //   2. STRATÉGIE : le moteur recommande méthode / angle / saisonnalité
 //                  (+ rôle à cibler) — l'utilisateur peut tout ajuster.
 //   3. EMAILS    : séquence 3 temps (J0 / J+5 / J+12) dont le contenu est
@@ -45,10 +45,8 @@ type CriterionKey =
   | "geography"
   | "price"
   | "customer"
-  | "catalogue"
-  | "distribution"
   | "seasonality"
-  | "companySize";
+  | "signals";
 
 type AngleKey =
   | "market_fit"
@@ -100,36 +98,21 @@ interface SellerProfile {
 // ---------- RÉFÉRENTIELS (identiques à la vraie app) ----------
 
 const WEIGHTS: Record<CriterionKey, number> = {
-  category: 22,
-  geography: 16,
-  price: 12,
-  customer: 12,
-  catalogue: 12,
-  distribution: 10,
-  seasonality: 8,
-  companySize: 8,
+  category: 25,
+  geography: 18,
+  price: 15,
+  customer: 15,
+  seasonality: 12,
+  signals: 15,
 };
-
-const CRITERIA_ORDER: CriterionKey[] = [
-  "category",
-  "geography",
-  "price",
-  "customer",
-  "catalogue",
-  "distribution",
-  "seasonality",
-  "companySize",
-];
 
 const CRITERION_LABELS: Record<CriterionKey, L> = {
   category: { fr: "Catégorie", en: "Category" },
   geography: { fr: "Géographie", en: "Geography" },
   price: { fr: "Positionnement prix", en: "Price positioning" },
   customer: { fr: "Profil client", en: "Customer profile" },
-  catalogue: { fr: "Profondeur catalogue", en: "Catalog depth" },
-  distribution: { fr: "Distribution", en: "Distribution" },
   seasonality: { fr: "Saisonnalité", en: "Seasonality" },
-  companySize: { fr: "Taille entreprise", en: "Company size" },
+  signals: { fr: "Signaux marketplace", en: "Marketplace signals" },
 };
 
 const METHOD_OPTIONS: Array<{ value: MethodKey; label: L }> = [
@@ -214,22 +197,6 @@ const SELLERS: SellerProfile[] = [
         },
       },
       {
-        key: "catalogue",
-        score: 75,
-        reason: {
-          fr: "Catalogue moyen (100-500 réf.) — suffisant mais pas large",
-          en: "Medium catalog (100-500 SKUs) — sufficient but not deep",
-        },
-      },
-      {
-        key: "distribution",
-        score: 85,
-        reason: {
-          fr: "DTC mono-marque, aucun conflit revendeur détecté",
-          en: "Mono-brand DTC, no reseller conflict detected",
-        },
-      },
-      {
         key: "seasonality",
         score: 92,
         reason: {
@@ -238,11 +205,11 @@ const SELLERS: SellerProfile[] = [
         },
       },
       {
-        key: "companySize",
-        score: 80,
+        key: "signals",
+        score: 84,
         reason: {
-          fr: "≈ 40 employés : structurée, onboarding rapide possible",
-          en: "≈ 40 employees: structured, fast onboarding possible",
+          fr: "Domaine enrichissable + présence Amazon détectée : maturité e-commerce prouvée",
+          en: "Enrichable domain + Amazon presence detected: proven e-commerce maturity",
         },
       },
     ],
@@ -302,22 +269,6 @@ const SELLERS: SellerProfile[] = [
         },
       },
       {
-        key: "catalogue",
-        score: 96,
-        reason: {
-          fr: "Catalogue large (600+ réf.) avec variantes tailles complètes",
-          en: "Deep catalog (600+ SKUs) with full size variants",
-        },
-      },
-      {
-        key: "distribution",
-        score: 80,
-        reason: {
-          fr: "DTC + 2 revendeurs nordiques — risque de conflit faible",
-          en: "DTC + 2 Nordic resellers — low conflict risk",
-        },
-      },
-      {
         key: "seasonality",
         score: 88,
         reason: {
@@ -326,11 +277,11 @@ const SELLERS: SellerProfile[] = [
         },
       },
       {
-        key: "companySize",
-        score: 70,
+        key: "signals",
+        score: 85,
         reason: {
-          fr: "≈ 15 employés : agile mais bande passante onboarding limitée",
-          en: "≈ 15 employees: agile but limited onboarding bandwidth",
+          fr: "Déjà actif sur Amazon DE (600+ produits) : opérations marketplace rodées",
+          en: "Already live on Amazon DE (600+ products): proven marketplace operations",
         },
       },
     ],
@@ -359,7 +310,7 @@ const SELLERS: SellerProfile[] = [
     criteria: [
       {
         key: "category",
-        score: 90,
+        score: 84,
         reason: {
           fr: "Mode enfant = catégorie en développement actif chez l'opérateur",
           en: "Kidswear = actively growing category for the operator",
@@ -367,7 +318,7 @@ const SELLERS: SellerProfile[] = [
       },
       {
         key: "geography",
-        score: 92,
+        score: 88,
         reason: {
           fr: "France : marché domestique de la marketplace",
           en: "France: the marketplace's home market",
@@ -383,26 +334,10 @@ const SELLERS: SellerProfile[] = [
       },
       {
         key: "customer",
-        score: 84,
+        score: 80,
         reason: {
           fr: "Familles sensibles à l'éco-conception : segment porteur",
           en: "Eco-minded families: growing segment",
-        },
-      },
-      {
-        key: "catalogue",
-        score: 55,
-        reason: {
-          fr: "Petit catalogue (10-100 réf.) — frein au volume",
-          en: "Small catalog (10-100 SKUs) — limits volume",
-        },
-      },
-      {
-        key: "distribution",
-        score: 75,
-        reason: {
-          fr: "DTC pur, déjà présent sur 1 marketplace concurrente",
-          en: "Pure DTC, already on 1 competing marketplace",
         },
       },
       {
@@ -414,11 +349,11 @@ const SELLERS: SellerProfile[] = [
         },
       },
       {
-        key: "companySize",
-        score: 50,
+        key: "signals",
+        score: 42,
         reason: {
-          fr: "< 10 employés : décision rapide mais ops à accompagner",
-          en: "< 10 employees: fast decision but ops need support",
+          fr: "Peu de signaux externes : pas de présence Amazon, enrichissement requis",
+          en: "Few external signals: no Amazon presence, enrichment required",
         },
       },
     ],
@@ -560,8 +495,8 @@ function buildSequence(
         "",
         tr(
           lang,
-          `Pour donner de la matière à mon précédent message : ${pick(lang, s.roi)}. Le score de ${s.totalScore}/100 repose sur 8 critères pondérés — les deux plus forts pour vous : ${pick(lang, CRITERION_LABELS[topTwo(s)[0]])} et ${pick(lang, CRITERION_LABELS[topTwo(s)[1]])}.`,
-          `To back up my previous note: ${pick(lang, s.roi)}. The ${s.totalScore}/100 score is built on 8 weighted criteria — your two strongest: ${pick(lang, CRITERION_LABELS[topTwo(s)[0]])} and ${pick(lang, CRITERION_LABELS[topTwo(s)[1]])}.`,
+          `Pour donner de la matière à mon précédent message : ${pick(lang, s.roi)}. Le score de ${s.totalScore}/100 repose sur 6 critères pondérés — les deux plus forts pour vous : ${pick(lang, CRITERION_LABELS[topTwo(s)[0]])} et ${pick(lang, CRITERION_LABELS[topTwo(s)[1]])}.`,
+          `To back up my previous note: ${pick(lang, s.roi)}. The ${s.totalScore}/100 score is built on 6 weighted criteria — your two strongest: ${pick(lang, CRITERION_LABELS[topTwo(s)[0]])} and ${pick(lang, CRITERION_LABELS[topTwo(s)[1]])}.`,
         ),
         "",
         tr(
@@ -945,10 +880,10 @@ export function MiraklMiniApp() {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
-              {/* § 01 — Scoring : 8 critères pondérés */}
+              {/* § 01 — Scoring : 6 critères pondérés */}
               <div>
                 <SectionTitle index="01">
-                  {tr(lang, "Scoring · 8 critères pondérés", "Scoring · 8 weighted criteria")}
+                  {tr(lang, "Scoring · 6 critères pondérés", "Scoring · 6 weighted criteria")}
                 </SectionTitle>
                 <div
                   className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3"
