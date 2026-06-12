@@ -464,6 +464,116 @@ function EnergizerArchitecture({ compact = false }: { compact?: boolean }) {
   );
 }
 
+function LevelsArchitecture({ compact = false }: { compact?: boolean }) {
+  // Archi réelle (cf CLAUDE.md du repo Desktop/levels:) :
+  // PWA 3 fichiers vanilla (index.html · styles.css · app.js, zéro build),
+  // moteur gamification in-app, persistance double localStorage + sw.js,
+  // Firestore (cloudSave debounce 1,4s, 1 doc/user) + onSnapshot temps réel
+  // multi-appareils. Firebase Auth session unique, Hosting deploy instantané.
+  const { lang } = useLang();
+  return (
+    <BlueprintCanvas compact={compact}>
+      <div className="flex flex-col items-center gap-0">
+        {/* CLIENT — PWA VANILLA */}
+        <p
+          className="mono uppercase tracking-[0.3em] mb-3"
+          style={{ fontSize: 9, color: BP_GOLD }}
+        >
+          ▸ {tr(lang, "Client · PWA vanilla (zéro build)", "Client · vanilla PWA (zero build)")}
+        </p>
+        <BlueprintBox
+          id={tr(lang, "3 fichiers", "3 files")}
+          title="index.html · styles.css · app.js"
+          sub={tr(
+            lang,
+            "≈14 000 lignes · Web Audio · fonds WebGL",
+            "≈14,000 lines · Web Audio · WebGL backgrounds",
+          )}
+          compact={compact}
+        />
+        <VBar />
+        <BlueprintBox
+          id="Engine"
+          title={tr(lang, "Moteur gamification", "Gamification engine")}
+          sub={tr(
+            lang,
+            "XP · streak · 29 succès · adversaire · Vision",
+            "XP · streak · 29 achievements · adversary · Vision",
+          )}
+          compact={compact}
+        />
+        <VBar />
+        <div
+          style={{
+            background: "rgba(255,255,255,0.55)",
+            border: `1px dashed ${BP_HAIR}`,
+            borderRadius: 4,
+            padding: compact ? 12 : 18,
+          }}
+        >
+          <p
+            className="mono uppercase tracking-widest text-center mb-3"
+            style={{ fontSize: 9, color: BP_GOLD }}
+          >
+            ║ offline-first
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <BlueprintBox
+              title="localStorage"
+              sub={tr(lang, "données · écriture instantanée", "data · instant write")}
+              compact
+            />
+            <BlueprintBox
+              title="Service worker"
+              sub={tr(lang, "assets · cache PWA installable", "assets · installable PWA cache")}
+              compact
+            />
+          </div>
+        </div>
+        <VBar height={32} />
+        {/* CLOUD — FIREBASE */}
+        <p
+          className="mono uppercase tracking-[0.3em] mb-3 mt-2"
+          style={{ fontSize: 9, color: BP_GOLD }}
+        >
+          ▸ Cloud · Firebase
+        </p>
+        <BlueprintBox
+          title="Firestore"
+          sub={tr(
+            lang,
+            "1 document/user · cloudSave debounce 1,4 s",
+            "1 document/user · cloudSave 1.4s debounce",
+          )}
+          accent
+          compact={compact}
+        />
+        <VBar />
+        <BlueprintBox
+          id="onSnapshot"
+          title={tr(lang, "Sync temps réel", "Real-time sync")}
+          sub={tr(
+            lang,
+            "multi-appareils · lastWriter ≠ session",
+            "multi-device · lastWriter ≠ session",
+          )}
+          compact={compact}
+        />
+      </div>
+      <p
+        className="mono uppercase tracking-[0.3em] text-center mt-6"
+        style={{ fontSize: 9, color: BP_DIM }}
+      >
+        {tr(
+          lang,
+          "Auth · session unique — Hosting · deploy instantané",
+          "Auth · single session — Hosting · instant deploy",
+        )}
+      </p>
+    </BlueprintCanvas>
+  );
+}
+
 function MiraklArchitecture({ compact = false }: { compact?: boolean }) {
   // Archi réelle vérifiée :
   // - src/lib/scoring.ts (continuousListScore + 6 scorers + priorityFromScore)
@@ -1125,6 +1235,8 @@ function ProjectArchitecture({
   compact?: boolean;
 }) {
   switch (slug) {
+    case "levels":
+      return <LevelsArchitecture compact={compact} />;
     case "energizer":
       return <EnergizerArchitecture compact={compact} />;
     case "mirakl":
@@ -1538,7 +1650,10 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
 
   // Progressive disclosure : tabs pour densifier sans colonnes désynchronisées.
   // Visuals (mosaïque polaroïds + schémas archi) & PDF s'ouvrent inline.
-  const [activeTab, setActiveTab] = useState<ProjectTabKey>("overview");
+  // L'Aperçu (photos) est l'entrée par défaut : plus attrayant à l'arrivée.
+  const [activeTab, setActiveTab] = useState<ProjectTabKey>(
+    project.visuals && project.visuals.length > 0 ? "visuals" : "overview",
+  );
   const [pdfOpen, setPdfOpen] = useState(false);
   // Lightbox : zoom photo (par src) ou zoom architecture (par slug).
   const [zoom, setZoom] = useState<
@@ -1558,10 +1673,10 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
     project.slug === "mirakl";
 
   const tabs: Array<{ key: ProjectTabKey; label: string }> = [
+    ...(hasVisuals ? [{ key: "visuals" as ProjectTabKey, label: ui.visualsLabel }] : []),
     { key: "overview", label: ui.accomplishments },
     ...(hasDemo ? [{ key: "demo" as ProjectTabKey, label: "Demo" }] : []),
     { key: "stack", label: ui.stackLabel },
-    ...(hasVisuals ? [{ key: "visuals" as ProjectTabKey, label: ui.visualsLabel }] : []),
     ...(hasMoons ? [{ key: "moons" as ProjectTabKey, label: ui.moonsLabel }] : []),
     ...(hasSql ? [{ key: "sql" as ProjectTabKey, label: "SQL" }] : []),
   ];
@@ -1894,6 +2009,7 @@ function ProjectOverlayCard({ project, onClose }: { project: Project; onClose: (
                     (v) => !v.toLowerCase().endsWith(".svg"),
                   );
                   const hasArchi =
+                    project.slug === "levels" ||
                     project.slug === "energizer" ||
                     project.slug === "mirakl" ||
                     project.slug === "thelook";

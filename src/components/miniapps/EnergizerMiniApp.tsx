@@ -907,8 +907,10 @@ function AuditPanel({ company }: { company: CompanyKey }) {
             transition={{ duration: 0.3 }}
             className="space-y-4"
           >
+            {/* Mobile : score et jauges empilés (3 colonnes trop étroites
+                côte à côte → labels qui se chevauchent). */}
             <div
-              className="rounded-xl p-4 flex items-center justify-between gap-4"
+              className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               style={{
                 background: PALETTE.surface,
                 border: `1px solid ${PALETTE.border}`,
@@ -971,7 +973,7 @@ function AuditPanel({ company }: { company: CompanyKey }) {
                     </span>
                     <div className="flex-1 min-w-0">
                       <p
-                        className="font-semibold text-[13px]"
+                        className="font-semibold text-[13px] break-words"
                         style={{ color: PALETTE.text }}
                       >
                         {a.title}
@@ -1344,9 +1346,10 @@ export function EnergizerMiniApp() {
         color: PALETTE.text,
       }}
     >
-      {/* Topbar */}
+      {/* Topbar — flex-wrap : sur mobile les onglets passent sous le brand
+          au lieu d'être tronqués à droite par l'overflow-hidden du parent. */}
       <div
-        className="flex items-center justify-between px-5 py-3"
+        className="flex flex-wrap items-center justify-between gap-y-2 px-5 py-3"
         style={{ borderBottom: `1px solid ${PALETTE.border}` }}
       >
         <div className="flex items-center gap-2">
@@ -1374,7 +1377,7 @@ export function EnergizerMiniApp() {
             {tr(lang, "démo", "demo")}
           </span>
         </div>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
           {tabs.map((t) => {
             const active = tab === t.key;
             return (

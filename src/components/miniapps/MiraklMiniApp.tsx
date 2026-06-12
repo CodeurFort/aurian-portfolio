@@ -5,11 +5,17 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLang, tr } from "@/lib/i18n";
 import type { Lang } from "@/lib/i18n";
 
-// Mini-app Mirakl — démo visuelle d'un moteur de matching sellers ↔ marketplaces.
-// L'utilisateur choisit une marketplace parmi 5 ; on lui sort les 3 meilleurs
-// matchs (vendeurs mockés) avec un score global + 3 critères qui varient
-// par marketplace, et on génère à la demande un email BDR personnalisé pour
-// chaque cas. 100% mock — pas de clé API, simulation d'un faux délai.
+// Mini-app Mirakl Prospector — démo fidèle au vrai flux de l'app
+// (cf. Desktop/Business Case/mirakl-prospector) :
+//   1. SCORING   : un seller est scoré contre les marketplaces via 8 critères
+//                  pondérés (Catégorie 22 %, Géo 16 %, Prix 12 %, Client 12 %,
+//                  Catalogue 12 %, Distribution 10 %, Saisonnalité 8 %, Taille 8 %),
+//                  chacun avec un score ET une raison.
+//   2. STRATÉGIE : le moteur recommande méthode / angle / saisonnalité
+//                  (+ rôle à cibler) — l'utilisateur peut tout ajuster.
+//   3. EMAILS    : séquence 3 temps (J0 / J+5 / J+12) dont le contenu est
+//                  RÉÉCRIT selon la stratégie choisie — la feature phare.
+// 100 % mock — pas de clé API, faux délais pour le rythme.
 
 const PALETTE = {
   bg: "#0C0D11",
@@ -26,963 +32,736 @@ const PALETTE = {
   coral: "#E07A6B",
 };
 
-type MarketplaceKey =
-  | "cdiscount"
-  | "manomano"
-  | "decathlon"
-  | "maisons"
-  | "galeries";
-
-type Criteria = { cat: number; logi: number; marge: number };
-
-type Vendor = {
-  name: string;
-  pitch: string;
-  score: number;
-  criteria: Criteria;
-  why: string;
-  email: { subject: string; body: string };
-};
-
-type Marketplace = {
-  label: string;
-  vertical: string;
-  audience: string;
-  bdr: string;
-  matches: [Vendor, Vendor, Vendor];
-};
-
 const scoreColor = (v: number) =>
   v >= 85 ? PALETTE.teal : v >= 70 ? PALETTE.gold : PALETTE.coral;
 
-// ---------- MOCK DATASETS ----------
-// 5 marketplaces, top-3 vendeurs par marketplace. Les mêmes vendeurs peuvent
-// apparaître ailleurs avec des scores différents — c'est l'effet recherché :
-// un même catalogue se positionne différemment selon le contexte.
-
-const MARKETPLACES_FR: Record<MarketplaceKey, Marketplace> = {
-  cdiscount: {
-    label: "Cdiscount Pro",
-    vertical: "Généraliste B2C",
-    audience: "Mass-market FR · 23M visiteurs/mois",
-    bdr: "Camille Roux",
-    matches: [
-      {
-        name: "KitchenWise",
-        pitch: "Petit électroménager design accessible",
-        score: 91,
-        criteria: { cat: 94, logi: 92, marge: 86 },
-        why: "Catalogue prêt à scaler · prix sweet-spot 39-89€ · flux EDI déjà OK.",
-        email: {
-          subject:
-            "KitchenWise × Cdiscount : 18M de foyers attendent vos blenders",
-          body: `Bonjour Sébastien,
-
-Je suis Camille Roux, BDR partenariats Cdiscount Pro. J'ai analysé votre catalogue KitchenWise et il coche les trois cases qui font qu'on vend bien chez nous : ticket moyen 49€, ratio fiche produit / images excellent, et une logistique déjà industrialisée.
-
-Concrètement, sur votre catégorie petit électro, on tourne à 18M de sessions/mois avec un panier moyen de 62€. Vos 4 best-sellers (blender, hachoir, friteuse à air) sont sur des requêtes où Cdiscount capte 31% du trafic FR — donc forte visibilité dès l'onboarding.
-
-Je peux vous bloquer 20 min cette semaine pour vous montrer un projection volumétrique sur vos 12 prochains mois sur la plateforme. Mardi 14h ou jeudi 10h ?
-
-Camille Roux
-Business Developer · Cdiscount Pro`,
-        },
-      },
-      {
-        name: "ToolMaster",
-        pitch: "Outillage électroportatif semi-pro",
-        score: 84,
-        criteria: { cat: 88, logi: 82, marge: 81 },
-        why: "Volume FR colossal sur outillage · risque retours élevé à arbitrer.",
-        email: {
-          subject:
-            "ToolMaster : 2.1M de recherches outillage sur Cdiscount en T1",
-          body: `Bonjour Mathieu,
-
-Camille Roux côté Cdiscount Pro. Votre positionnement « semi-pro à prix grand public » est exactement ce que cherchent les bricoleurs avancés qui composent 38% de notre audience outillage.
-
-Sur le dernier trimestre, 2.1M de requêtes sur les catégories perceuses / visseuses / meuleuses, avec un taux de conversion 22% au-dessus de la moyenne marketplace. Vos références ToolMaster T-Series rentreraient direct dans le top 15.
-
-On peut aborder ensemble la question des retours (point bloquant historique sur la catégorie) avec notre offre logistique mutualisée. 20 min pour vous projeter ?
-
-Camille Roux
-Business Developer · Cdiscount Pro`,
-        },
-      },
-      {
-        name: "Eco-Forge",
-        pitch: "Quincaillerie écoresponsable",
-        score: 72,
-        criteria: { cat: 79, logi: 68, marge: 71 },
-        why: "Belle marque mais positionnement vert moins rentable sur du mass-market.",
-        email: {
-          subject: "Eco-Forge : votre quincaillerie durable, notre audience RSE",
-          body: `Bonjour Léa,
-
-Camille Roux, Cdiscount Pro. Le segment éco-responsable explose chez nous : +47% YoY sur les requêtes intégrant « durable », « réparable » ou « français ». Eco-Forge a une crédibilité forte sur ces critères.
-
-Je suis honnête : votre positionnement premium va vous demander un travail de contenu produit plus poussé que la moyenne pour convertir. En contrepartie, on observe sur ces marques une fidélisation client x2.4 vs la moyenne.
-
-J'ai un cas comparable à vous partager (vendeur arrivé en septembre, déjà rentable). Un café visio 25 min ?
-
-Camille Roux
-Business Developer · Cdiscount Pro`,
-        },
-      },
-    ],
-  },
-
-  manomano: {
-    label: "ManoMano",
-    vertical: "Bricolage · jardin · DIY",
-    audience: "Bricoleurs · jardiniers FR/EU · 7M actifs",
-    bdr: "Yanis Belkacem",
-    matches: [
-      {
-        name: "ToolMaster",
-        pitch: "Outillage électroportatif semi-pro",
-        score: 96,
-        criteria: { cat: 98, logi: 94, marge: 95 },
-        why: "Match parfait : audience pro/avancée + catalogue cœur de cible.",
-        email: {
-          subject: "ToolMaster : ManoMano = vos 6 best-sellers en top 10",
-          body: `Bonjour Mathieu,
-
-Yanis Belkacem, BDR ManoMano. Je vais aller droit au but : sur les 6 références ToolMaster que j'ai analysées, 5 figureraient dans le top 10 de leur sous-catégorie chez nous au premier mois.
-
-Notre audience est à 64% pro / bricoleurs avancés, c'est exactement le profil qui achète du semi-pro. Notre panier moyen outillage = 138€, contre 47€ en moyenne marketplace généraliste — donc vous y gagnez en marge, pas seulement en volume.
-
-Notre offre logistique « ManoFulfillment » couvre le J+2 sur 92% du territoire. Je vous propose un kick-off d'onboarding accéléré : 30 jours, livré.
-
-Quand pouvons-nous caler 20 min ?
-
-Yanis Belkacem
-BDR Sellers · ManoMano`,
-        },
-      },
-      {
-        name: "Eco-Forge",
-        pitch: "Quincaillerie écoresponsable",
-        score: 89,
-        criteria: { cat: 91, logi: 84, marge: 92 },
-        why: "Tendance « bricolage durable » en pic · marge premium tenue.",
-        email: {
-          subject: "Eco-Forge × ManoMano : le bricolage durable cherche son champion",
-          body: `Bonjour Léa,
-
-Yanis Belkacem côté ManoMano. Je suis le segment « éco-responsable bricolage » depuis 18 mois et je peux vous le dire : Eco-Forge serait le 2ᵉ acteur structuré sur la catégorie chez nous, derrière un seul concurrent que vous battez sur la profondeur de gamme.
-
-Recherches « visserie inox française » : +63% YoY. Recherches « quincaillerie réparable » : +44%. Et le panier moyen de cette niche est de 78€ vs 41€ en non-engagé.
-
-J'ai préparé un mini-business plan : top 20 refs à prioriser + prévisions trimestrielles. 25 min cette semaine pour vous le présenter ?
-
-Yanis Belkacem
-BDR Sellers · ManoMano`,
-        },
-      },
-      {
-        name: "Maison Lupin",
-        pitch: "Luminaires artisanaux",
-        score: 73,
-        criteria: { cat: 76, logi: 71, marge: 72 },
-        why: "Marque belle mais luminaires hors-coeur jardinage / outillage.",
-        email: {
-          subject: "Maison Lupin : niche « lighting outdoor » en croissance",
-          body: `Bonjour Camille,
-
-Yanis Belkacem, ManoMano. Maison Lupin n'est pas un match évident à première vue — vos luminaires d'intérieur ne sont pas notre cœur. Mais votre ligne outdoor (appliques façade, suspensions terrasse) tape une catégorie où on a 1.4M de recherches/an mal couvertes.
-
-Si vous êtes prêts à scinder votre catalogue et à ne lister chez nous que la sous-collection extérieure, je pense qu'on peut faire quelque chose d'intéressant sans cannibaliser vos autres canaux.
-
-J'aimerais vous présenter le projet de niche. 20 min suffisent.
-
-Yanis Belkacem
-BDR Sellers · ManoMano`,
-        },
-      },
-    ],
-  },
-
-  decathlon: {
-    label: "Decathlon Marketplace",
-    vertical: "Sport · outdoor",
-    audience: "Sportifs amateurs + experts · 14M visiteurs FR/mois",
-    bdr: "Théo Vasseur",
-    matches: [
-      {
-        name: "Strider Outdoor",
-        pitch: "Équipement bivouac · trek montagne",
-        score: 94,
-        criteria: { cat: 96, logi: 89, marge: 93 },
-        why: "Audience trek/bivouac sous-servie · marge préservée sur technique.",
-        email: {
-          subject: "Strider × Decathlon : le trek technique cherche sa marque-référence",
-          body: `Bonjour Sarah,
-
-Théo Vasseur, Sellers Decathlon Marketplace. Decathlon est connu pour son entrée de gamme — mais sur le trek technique (tente 4 saisons, sac à dos 60L+, réchauds MSR-like), notre audience d'experts cherche des marques que nos MDD ne couvrent pas.
-
-Strider Outdoor entrerait sur 12 sous-catégories où on a actuellement zéro vendeur premium structuré. Pour vous : visibilité massive auprès d'une audience qualifiée. Pour nous : montée en gamme de l'offre.
-
-Notre programme « Marketplace Verified » garantit votre placement éditorial. Je vous propose un onboarding accompagné. 30 min cette semaine ?
-
-Théo Vasseur
-Senior BDR · Decathlon Marketplace`,
-        },
-      },
-      {
-        name: "ToolMaster",
-        pitch: "Outillage électroportatif semi-pro",
-        score: 67,
-        criteria: { cat: 62, logi: 78, marge: 60 },
-        why: "Catégorie marginale sur Decathlon · à n'envisager que sur outillage vélo.",
-        email: {
-          subject: "ToolMaster : pivot possible sur l'outillage vélo Decathlon ?",
-          body: `Bonjour Mathieu,
-
-Théo Vasseur, Decathlon Marketplace. Je ne vais pas vous vendre du rêve : votre catalogue généraliste outillage n'est pas alignée avec notre audience. Score de matching faible (67/100), je suis transparent.
-
-Cela dit, votre sous-gamme « outillage vélo » (clés couple, démonte-pneus, dérive-chaîne) pourrait fonctionner sur notre segment cycle qui pèse 1.2Md€ annuels. C'est niche, mais c'est défendable.
-
-Si vous voulez tester un scope réduit (15-20 refs), je peux vous monter un pilote 90 jours. 20 min pour cadrer ?
-
-Théo Vasseur
-Senior BDR · Decathlon Marketplace`,
-        },
-      },
-      {
-        name: "Arôme & Plant",
-        pitch: "Cosmétique bio premium",
-        score: 71,
-        criteria: { cat: 68, logi: 82, marge: 64 },
-        why: "Opportunité sur « après-sport » et soins runners à étudier.",
-        email: {
-          subject: "Arôme & Plant : la beauté du sportif, une catégorie à inventer",
-          body: `Bonjour Inès,
-
-Théo Vasseur, Decathlon Marketplace. À première vue Arôme & Plant n'a rien à faire chez Decathlon. À la réflexion, vos produits « régénération musculaire » et soin corps après-effort tapent une catégorie qu'on n'a encore jamais structurée.
-
-3.4M de nos visiteurs cherchent « huile massage récup » chaque année. Aucun de nos vendeurs ne traite ce besoin avec un positionnement premium et bio. Vous, oui.
-
-Je peux vous proposer un test sur 8 références. 25 min pour vous présenter la mécanique ?
-
-Théo Vasseur
-Senior BDR · Decathlon Marketplace`,
-        },
-      },
-    ],
-  },
-
-  maisons: {
-    label: "Maisons du Monde",
-    vertical: "Décoration · lifestyle",
-    audience: "30-50 ans CSP+ · décoration habitat · 9M visiteurs FR/mois",
-    bdr: "Élise Dauphin",
-    matches: [
-      {
-        name: "Solea Living",
-        pitch: "Déco méditerranéenne artisanale",
-        score: 93,
-        criteria: { cat: 95, logi: 88, marge: 94 },
-        why: "ADN parfaitement aligné · positionnement complémentaire à la MDD.",
-        email: {
-          subject:
-            "Solea Living × Maisons du Monde : la Méditerranée nous manquait",
-          body: `Bonjour Élena,
-
-Élise Dauphin, partenariats Maisons du Monde. Notre étude saisonnière S/S 2026 fait remonter l'esthétique méditerranéenne comme tendance #1, et notre MDD ne couvre que la partie « bord de mer scandinavo-européen ». Il nous manque le sud authentique : céramique terracotta, fibres végétales travaillées main, étoffes naturelles…
-
-Solea Living incarne ce manque. Vos collections coussins kilim et lampes en terre cuite seraient mises en avant dans notre lookbook printemps. Notre audience CSP+ paie le ticket moyen 119€ — votre positionnement tient.
-
-Je vous propose un point pour explorer une co-création de capsule exclusive. 30 min ?
-
-Élise Dauphin
-Senior Buyer · Maisons du Monde`,
-        },
-      },
-      {
-        name: "Maison Lupin",
-        pitch: "Luminaires artisanaux",
-        score: 88,
-        criteria: { cat: 92, logi: 81, marge: 90 },
-        why: "Pièces fortes pour merchandising · faible cannibalisation MDD.",
-        email: {
-          subject:
-            "Maison Lupin : vos luminaires, notre lookbook automne",
-          body: `Bonjour Camille,
-
-Élise Dauphin, Maisons du Monde. Vos suspensions « Lune » et « Halo » sont visuellement assez fortes pour porter une page univers entière dans notre catalogue automne. C'est rare. On a regardé en mood board, l'équipe création est unanime.
-
-Sur le merchandising, nos pièces signature MDD sont à 89-149€ — vous êtes positionnés 30% au-dessus, ce qui valorise votre statut artisan sans nous cannibaliser. Tout le monde y gagne.
-
-Je peux vous présenter notre offre vendeur premium + le projet de mise en avant. 25 min cette semaine ?
-
-Élise Dauphin
-Senior Buyer · Maisons du Monde`,
-        },
-      },
-      {
-        name: "Velour Atelier",
-        pitch: "Prêt-à-porter féminin haut de gamme",
-        score: 64,
-        criteria: { cat: 58, logi: 72, marge: 63 },
-        why: "Hors catégorie principale · à explorer uniquement via accessoires maison.",
-        email: {
-          subject:
-            "Velour Atelier : votre savoir-faire textile sur nos linges de maison ?",
-          body: `Bonjour Adrienne,
-
-Élise Dauphin, Maisons du Monde. Velour Atelier n'a aucune raison d'être listé chez nous sur du prêt-à-porter — ce n'est pas notre métier et l'audience ne suit pas. Score honnête : 64/100.
-
-Mais vos étoffes (le savoir-faire qui fait votre prêt-à-porter) appliquées à du linge de maison (housses de coussin, plaids, runners de table) seraient un excellent fit. C'est un canal nouveau pour vous, à moindre risque.
-
-Si l'idée vous parle, je vous propose un atelier de scoping 45 min avec mon équipe achats textile. Dispo ?
-
-Élise Dauphin
-Senior Buyer · Maisons du Monde`,
-        },
-      },
-    ],
-  },
-
-  galeries: {
-    label: "Galeries Lafayette",
-    vertical: "Premium fashion · beauté",
-    audience: "Urbain CSP++ · 6M visiteurs FR · forte audience tourisme",
-    bdr: "Anaïs Mercier",
-    matches: [
-      {
-        name: "Velour Atelier",
-        pitch: "Prêt-à-porter féminin haut de gamme",
-        score: 92,
-        criteria: { cat: 95, logi: 88, marge: 93 },
-        why: "Storytelling marque + qualité matière · cible idéale flagship Haussmann.",
-        email: {
-          subject:
-            "Velour Atelier : votre place est dans nos vitrines du 2ᵉ étage",
-          body: `Bonjour Adrienne,
-
-Anaïs Mercier, Buying Office Galeries Lafayette. J'ai découvert Velour Atelier via votre dernière collaboration éditoriale. La qualité de vos coupes et votre sourcing matières (Loro Piana, filatures italiennes premium) cochent toutes nos cases d'éligibilité « Marque Découverte ».
-
-Notre programme « Sélection Créateurs » retient 12 marques émergentes par saison pour un placement physique flagship Haussmann + e-commerce premium. Vous seriez ma proposition de cette session.
-
-C'est un partenariat exigeant — DA, packshot, supply réguliers — mais l'exposition est sans équivalent en France. 30 min pour vous présenter le programme ?
-
-Anaïs Mercier
-Senior Buyer · Galeries Lafayette`,
-        },
-      },
-      {
-        name: "Arôme & Plant",
-        pitch: "Cosmétique bio premium",
-        score: 87,
-        criteria: { cat: 89, logi: 85, marge: 86 },
-        why: "Catégorie clean beauty en pic · ticket moyen à valoriser.",
-        email: {
-          subject:
-            "Arôme & Plant × Galeries Lafayette : clean beauty premium recherchée",
-          body: `Bonjour Inès,
-
-Anaïs Mercier, Galeries Lafayette. Notre département beauté pilote depuis 18 mois une stratégie « clean beauty premium » — nous cherchons des marques < 5M€ CA, françaises, et avec une vraie histoire d'ingrédients. Vous cochez les trois.
-
-Notre clientèle beauté a un panier moyen de 138€ avec une récurrence d'achat de 4.2 visites/an. La marge marketplace s'ajuste à la hauteur du positionnement premium — votre P&L tient.
-
-On vise un test 6 mois sur 8 SKU clés (sérum, huile démaquillante, masque) avec corner physique. 25 min cette semaine ?
-
-Anaïs Mercier
-Senior Buyer · Galeries Lafayette`,
-        },
-      },
-      {
-        name: "Maison Lupin",
-        pitch: "Luminaires artisanaux",
-        score: 79,
-        criteria: { cat: 82, logi: 76, marge: 78 },
-        why: "Match esthétique fort · catégorie maison plus secondaire chez nous.",
-        email: {
-          subject:
-            "Maison Lupin : une niche éditoriale « Art de Vivre » nous attend",
-          body: `Bonjour Camille,
-
-Anaïs Mercier, Galeries Lafayette. La maison n'est pas notre cœur historique mais notre section « Art de Vivre » se renforce — et vos luminaires ont la singularité visuelle qui fonctionne sur notre clientèle.
-
-Score 79/100 : ce n'est pas un onboarding évident, il faudra adapter votre catalogue à notre univers et travailler les contenus avec notre studio. Mais le payoff potentiel (placement Haussmann + e-commerce + visibilité presse) est réel.
-
-Je vous propose un café de découverte 45 min, sans engagement, pour mesurer l'appétit mutuel.
-
-Anaïs Mercier
-Senior Buyer · Galeries Lafayette`,
-        },
-      },
-    ],
-  },
-};
-
-const MARKETPLACES_EN: Record<MarketplaceKey, Marketplace> = {
-  cdiscount: {
-    label: "Cdiscount Pro",
-    vertical: "B2C generalist",
-    audience: "FR mass-market · 23M visitors/month",
-    bdr: "Camille Roux",
-    matches: [
-      {
-        name: "KitchenWise",
-        pitch: "Accessible designer small appliances",
-        score: 91,
-        criteria: { cat: 94, logi: 92, marge: 86 },
-        why: "Catalog ready to scale · €39–89 sweet-spot pricing · EDI feed already in place.",
-        email: {
-          subject:
-            "KitchenWise × Cdiscount: 18M households are waiting for your blenders",
-          body: `Hi Sébastien,
-
-I'm Camille Roux, partnerships BDR at Cdiscount Pro. I've reviewed the KitchenWise catalog and it ticks the three boxes that drive sales on our platform: €49 average ticket, excellent product-sheet / imagery ratio, and an already industrialized logistics setup.
-
-Specifically, in your small-appliance category we run 18M sessions/month with an average cart of €62. Your 4 best-sellers (blender, chopper, air fryer) sit on queries where Cdiscount captures 31% of FR traffic — strong visibility from onboarding day one.
-
-I can hold 20 minutes this week to walk you through a 12-month volume projection on the platform. Tuesday 2pm or Thursday 10am?
-
-Camille Roux
-Business Developer · Cdiscount Pro`,
-        },
-      },
-      {
-        name: "ToolMaster",
-        pitch: "Semi-pro power tools",
-        score: 84,
-        criteria: { cat: 88, logi: 82, marge: 81 },
-        why: "Massive FR volume on tooling · returns risk to arbitrate.",
-        email: {
-          subject:
-            "ToolMaster: 2.1M tooling searches on Cdiscount in Q1",
-          body: `Hi Mathieu,
-
-Camille Roux at Cdiscount Pro. Your "semi-pro at consumer prices" positioning is exactly what the advanced DIY crowd — 38% of our tooling audience — is hunting for.
-
-Last quarter we logged 2.1M queries on drills / drivers / grinders, with a conversion rate 22% above the marketplace average. Your ToolMaster T-Series references would land straight into the top 15.
-
-We can also tackle returns together (the historical pain point on the category) via our pooled logistics offer. 20 minutes to project?
-
-Camille Roux
-Business Developer · Cdiscount Pro`,
-        },
-      },
-      {
-        name: "Eco-Forge",
-        pitch: "Eco-responsible hardware",
-        score: 72,
-        criteria: { cat: 79, logi: 68, marge: 71 },
-        why: "Beautiful brand but green positioning less profitable on mass-market.",
-        email: {
-          subject: "Eco-Forge: your sustainable hardware, our CSR audience",
-          body: `Hi Léa,
-
-Camille Roux, Cdiscount Pro. The eco-responsible segment is exploding on our side: +47% YoY on queries including "sustainable", "repairable" or "French-made". Eco-Forge has strong credibility on those criteria.
-
-Honest take: your premium positioning will demand more polished product content than average to convert. In return, we see ~2.4× higher customer retention on these brands vs. average.
-
-I have a comparable case to share (a seller who joined in September and is already profitable). A 25-minute video call?
-
-Camille Roux
-Business Developer · Cdiscount Pro`,
-        },
-      },
-    ],
-  },
-
-  manomano: {
-    label: "ManoMano",
-    vertical: "DIY · garden · home improvement",
-    audience: "DIYers · gardeners FR/EU · 7M active",
-    bdr: "Yanis Belkacem",
-    matches: [
-      {
-        name: "ToolMaster",
-        pitch: "Semi-pro power tools",
-        score: 96,
-        criteria: { cat: 98, logi: 94, marge: 95 },
-        why: "Perfect match: pro / advanced audience + core-target catalog.",
-        email: {
-          subject: "ToolMaster: ManoMano = your 6 best-sellers in the top 10",
-          body: `Hi Mathieu,
-
-Yanis Belkacem, BDR at ManoMano. I'll cut to the chase: out of the 6 ToolMaster references I analyzed, 5 would land in the top 10 of their sub-category on day one.
-
-Our audience is 64% pro / advanced DIYers — exactly the profile that buys semi-pro gear. Our average tooling cart is €138 vs. €47 on a generalist marketplace — so you gain in margin, not just in volume.
-
-Our "ManoFulfillment" offer covers next-day-+1 on 92% of the territory. I'm proposing an accelerated onboarding kickoff: 30 days, delivered.
-
-When can we lock 20 minutes?
-
-Yanis Belkacem
-Sellers BDR · ManoMano`,
-        },
-      },
-      {
-        name: "Eco-Forge",
-        pitch: "Eco-responsible hardware",
-        score: 89,
-        criteria: { cat: 91, logi: 84, marge: 92 },
-        why: "Sustainable DIY trend peaking · premium margin holding.",
-        email: {
-          subject: "Eco-Forge × ManoMano: sustainable DIY needs its champion",
-          body: `Hi Léa,
-
-Yanis Belkacem at ManoMano. I've been tracking the "eco-responsible DIY" segment for 18 months and I can tell you: Eco-Forge would be the 2nd structured player on the category on our side, behind a single competitor whom you outperform on range depth.
-
-Searches for "French stainless screws": +63% YoY. Searches for "repairable hardware": +44%. And the average cart for this niche is €78 vs. €41 on non-engaged products.
-
-I've prepared a mini business plan: top 20 SKUs to prioritize + quarterly forecasts. 25 minutes this week to walk through it?
-
-Yanis Belkacem
-Sellers BDR · ManoMano`,
-        },
-      },
-      {
-        name: "Maison Lupin",
-        pitch: "Artisan lighting",
-        score: 73,
-        criteria: { cat: 76, logi: 71, marge: 72 },
-        why: "Beautiful brand but lighting outside core gardening / tooling.",
-        email: {
-          subject: "Maison Lupin: growing 'outdoor lighting' niche",
-          body: `Hi Camille,
-
-Yanis Belkacem, ManoMano. Maison Lupin isn't an obvious match at first sight — your indoor lighting isn't our core. But your outdoor line (façade sconces, terrace pendants) hits a category where we have 1.4M poorly-served searches per year.
-
-If you're willing to split your catalog and only list the outdoor sub-collection with us, I think we can build something interesting without cannibalizing your other channels.
-
-I'd like to walk you through the niche project. 20 minutes will be enough.
-
-Yanis Belkacem
-Sellers BDR · ManoMano`,
-        },
-      },
-    ],
-  },
-
-  decathlon: {
-    label: "Decathlon Marketplace",
-    vertical: "Sport · outdoor",
-    audience: "Amateur + expert athletes · 14M FR visitors/month",
-    bdr: "Théo Vasseur",
-    matches: [
-      {
-        name: "Strider Outdoor",
-        pitch: "Bivouac gear · mountain trekking",
-        score: 94,
-        criteria: { cat: 96, logi: 89, marge: 93 },
-        why: "Underserved trek/bivouac audience · margin preserved on technical gear.",
-        email: {
-          subject: "Strider × Decathlon: technical trekking needs its reference brand",
-          body: `Hi Sarah,
-
-Théo Vasseur, Sellers at Decathlon Marketplace. Decathlon is known for entry-level gear — but on technical trekking (4-season tents, 60L+ packs, MSR-like stoves), our expert audience is looking for brands our private labels don't cover.
-
-Strider Outdoor would enter 12 sub-categories where we currently have zero structured premium seller. For you: massive exposure to a qualified audience. For us: upmarket move on the offering.
-
-Our "Marketplace Verified" program guarantees editorial placement. I'm proposing a guided onboarding. 30 minutes this week?
-
-Théo Vasseur
-Senior BDR · Decathlon Marketplace`,
-        },
-      },
-      {
-        name: "ToolMaster",
-        pitch: "Semi-pro power tools",
-        score: 67,
-        criteria: { cat: 62, logi: 78, marge: 60 },
-        why: "Marginal category on Decathlon · only worth it on bike tooling.",
-        email: {
-          subject: "ToolMaster: possible pivot on Decathlon bike tooling?",
-          body: `Hi Mathieu,
-
-Théo Vasseur, Decathlon Marketplace. I won't oversell: your general tooling catalog isn't aligned with our audience. Matching score is low (67/100), I'm being transparent.
-
-That said, your "bike tooling" sub-range (torque wrenches, tire levers, chain breakers) could work on our cycling segment, which represents €1.2bn annually. It's niche, but defensible.
-
-If you want to test a reduced scope (15–20 SKUs), I can set up a 90-day pilot. 20 minutes to frame it?
-
-Théo Vasseur
-Senior BDR · Decathlon Marketplace`,
-        },
-      },
-      {
-        name: "Arôme & Plant",
-        pitch: "Premium organic cosmetics",
-        score: 71,
-        criteria: { cat: 68, logi: 82, marge: 64 },
-        why: "Opportunity on 'after-sport' and runner skincare to explore.",
-        email: {
-          subject: "Arôme & Plant: athlete beauty, a category to invent",
-          body: `Hi Inès,
-
-Théo Vasseur, Decathlon Marketplace. At first glance Arôme & Plant has no business at Decathlon. On second thought, your "muscle recovery" and after-effort body care products hit a category we've never structured.
-
-3.4M of our visitors search "recovery massage oil" each year. None of our sellers cover this need with a premium organic positioning. You do.
-
-I can propose a test on 8 references. 25 minutes to walk through the mechanics?
-
-Théo Vasseur
-Senior BDR · Decathlon Marketplace`,
-        },
-      },
-    ],
-  },
-
-  maisons: {
-    label: "Maisons du Monde",
-    vertical: "Decoration · lifestyle",
-    audience: "30–50 y/o upper-middle class · home decor · 9M FR visitors/month",
-    bdr: "Élise Dauphin",
-    matches: [
-      {
-        name: "Solea Living",
-        pitch: "Artisan Mediterranean decor",
-        score: 93,
-        criteria: { cat: 95, logi: 88, marge: 94 },
-        why: "Perfectly aligned DNA · positioning complements the private label.",
-        email: {
-          subject:
-            "Solea Living × Maisons du Monde: the Mediterranean was missing",
-          body: `Hi Elena,
-
-Élise Dauphin, partnerships at Maisons du Monde. Our S/S 2026 seasonal study flags Mediterranean aesthetics as the #1 trend, and our private label only covers the "Nordic-European seaside" angle. We're missing the authentic south: terracotta ceramics, hand-worked plant fibers, natural textiles…
-
-Solea Living embodies that gap. Your kilim cushion collections and terracotta lamps would be highlighted in our spring lookbook. Our upper-middle audience pays a €119 average ticket — your positioning holds.
-
-I'd like to schedule a touchpoint to explore a co-created exclusive capsule. 30 minutes?
-
-Élise Dauphin
-Senior Buyer · Maisons du Monde`,
-        },
-      },
-      {
-        name: "Maison Lupin",
-        pitch: "Artisan lighting",
-        score: 88,
-        criteria: { cat: 92, logi: 81, marge: 90 },
-        why: "Hero pieces for merchandising · low private-label cannibalization.",
-        email: {
-          subject:
-            "Maison Lupin: your lighting, our autumn lookbook",
-          body: `Hi Camille,
-
-Élise Dauphin, Maisons du Monde. Your "Lune" and "Halo" pendants are visually strong enough to anchor a full universe page in our autumn catalog. That's rare. We looked at it on the mood board — the creative team is unanimous.
-
-On merchandising, our private-label signature pieces sit at €89–149 — you're positioned 30% above, which reinforces your artisan status without cannibalizing us. Everyone wins.
-
-I can introduce our premium seller offer + the editorial highlight project. 25 minutes this week?
-
-Élise Dauphin
-Senior Buyer · Maisons du Monde`,
-        },
-      },
-      {
-        name: "Velour Atelier",
-        pitch: "High-end women's ready-to-wear",
-        score: 64,
-        criteria: { cat: 58, logi: 72, marge: 63 },
-        why: "Outside main category · only worth exploring via home accessories.",
-        email: {
-          subject:
-            "Velour Atelier: your textile know-how on our home linens?",
-          body: `Hi Adrienne,
-
-Élise Dauphin, Maisons du Monde. Velour Atelier has no reason to be listed on ready-to-wear on our marketplace — it isn't our business and the audience doesn't follow. Honest score: 64/100.
-
-But your fabrics (the know-how behind your ready-to-wear) applied to home linens (cushion covers, throws, table runners) would be an excellent fit. It's a new channel for you with limited risk.
-
-If the idea speaks to you, I'm proposing a 45-minute scoping workshop with my textile buying team. Available?
-
-Élise Dauphin
-Senior Buyer · Maisons du Monde`,
-        },
-      },
-    ],
-  },
-
-  galeries: {
-    label: "Galeries Lafayette",
-    vertical: "Premium fashion · beauty",
-    audience: "Urban upper-class · 6M FR visitors · strong tourism audience",
-    bdr: "Anaïs Mercier",
-    matches: [
-      {
-        name: "Velour Atelier",
-        pitch: "High-end women's ready-to-wear",
-        score: 92,
-        criteria: { cat: 95, logi: 88, marge: 93 },
-        why: "Brand storytelling + material quality · ideal target for the Haussmann flagship.",
-        email: {
-          subject:
-            "Velour Atelier: your place is in our 2nd-floor windows",
-          body: `Hi Adrienne,
-
-Anaïs Mercier, Buying Office at Galeries Lafayette. I discovered Velour Atelier through your latest editorial collaboration. The quality of your cuts and your material sourcing (Loro Piana, premium Italian mills) check every box of our "Discovered Brand" eligibility.
-
-Our "Designer Selection" program retains 12 emerging brands each season for a physical placement at the Haussmann flagship + premium e-commerce. You would be my proposal this round.
-
-It's a demanding partnership — art direction, packshots, regular supply — but the exposure is unmatched in France. 30 minutes to walk through the program?
-
-Anaïs Mercier
-Senior Buyer · Galeries Lafayette`,
-        },
-      },
-      {
-        name: "Arôme & Plant",
-        pitch: "Premium organic cosmetics",
-        score: 87,
-        criteria: { cat: 89, logi: 85, marge: 86 },
-        why: "Clean beauty category peaking · average ticket to leverage.",
-        email: {
-          subject:
-            "Arôme & Plant × Galeries Lafayette: premium clean beauty wanted",
-          body: `Hi Inès,
-
-Anaïs Mercier, Galeries Lafayette. Our beauty department has been piloting a "premium clean beauty" strategy for 18 months — we're looking for brands under €5M revenue, French, with a genuine ingredient story. You check all three.
-
-Our beauty clientele has a €138 average cart with a 4.2 purchase frequency per year. The marketplace margin scales with premium positioning — your P&L holds.
-
-We're targeting a 6-month test on 8 key SKUs (serum, cleansing oil, mask) with a physical corner. 25 minutes this week?
-
-Anaïs Mercier
-Senior Buyer · Galeries Lafayette`,
-        },
-      },
-      {
-        name: "Maison Lupin",
-        pitch: "Artisan lighting",
-        score: 79,
-        criteria: { cat: 82, logi: 76, marge: 78 },
-        why: "Strong aesthetic match · home category more secondary for us.",
-        email: {
-          subject:
-            "Maison Lupin: an editorial 'Art de Vivre' niche awaits",
-          body: `Hi Camille,
-
-Anaïs Mercier, Galeries Lafayette. Home isn't our historical core but our "Art de Vivre" section is strengthening — and your lighting has the visual singularity that resonates with our clientele.
-
-Score 79/100: this isn't an obvious onboarding, you'll need to adapt your catalog to our universe and develop content with our studio. But the potential payoff (Haussmann placement + e-commerce + press exposure) is real.
-
-I'm proposing a 45-minute discovery coffee, no strings attached, to gauge mutual interest.
-
-Anaïs Mercier
-Senior Buyer · Galeries Lafayette`,
-        },
-      },
-    ],
-  },
-};
-
-function pickMarketplaces(lang: Lang): Record<MarketplaceKey, Marketplace> {
-  return lang === "en" ? MARKETPLACES_EN : MARKETPLACES_FR;
+// ---------- TYPES ----------
+
+type L = { fr: string; en: string };
+const pick = (lang: Lang, l: L) => (lang === "fr" ? l.fr : l.en);
+
+type CriterionKey =
+  | "category"
+  | "geography"
+  | "price"
+  | "customer"
+  | "catalogue"
+  | "distribution"
+  | "seasonality"
+  | "companySize";
+
+type AngleKey =
+  | "market_fit"
+  | "roi"
+  | "social_proof"
+  | "competitive_gap"
+  | "seasonal_window";
+
+type MethodKey =
+  | "email_sequence"
+  | "linkedin_email"
+  | "partner_intro"
+  | "seasonal_push";
+
+type SeasonKey =
+  | "always_on"
+  | "black_friday"
+  | "holiday_gifting"
+  | "back_to_school"
+  | "summer_sale"
+  | "fashion_drop";
+
+interface Strategy {
+  method: MethodKey;
+  angle: AngleKey;
+  season: SeasonKey;
 }
 
-// ---------- UI PRIMITIVES ----------
+interface Criterion {
+  key: CriterionKey;
+  score: number;
+  reason: L;
+}
 
-function CriteriaBar({ k, v }: { k: string; v: number }) {
-  const color = scoreColor(v);
+interface SellerProfile {
+  key: string;
+  name: string;
+  pitch: L;
+  country: string;
+  flag: string;
+  topMarketplace: string;
+  totalScore: number;
+  roi: L;
+  contactRole: string;
+  recommended: Strategy;
+  criteria: Criterion[];
+}
+
+// ---------- RÉFÉRENTIELS (identiques à la vraie app) ----------
+
+const WEIGHTS: Record<CriterionKey, number> = {
+  category: 22,
+  geography: 16,
+  price: 12,
+  customer: 12,
+  catalogue: 12,
+  distribution: 10,
+  seasonality: 8,
+  companySize: 8,
+};
+
+const CRITERIA_ORDER: CriterionKey[] = [
+  "category",
+  "geography",
+  "price",
+  "customer",
+  "catalogue",
+  "distribution",
+  "seasonality",
+  "companySize",
+];
+
+const CRITERION_LABELS: Record<CriterionKey, L> = {
+  category: { fr: "Catégorie", en: "Category" },
+  geography: { fr: "Géographie", en: "Geography" },
+  price: { fr: "Positionnement prix", en: "Price positioning" },
+  customer: { fr: "Profil client", en: "Customer profile" },
+  catalogue: { fr: "Profondeur catalogue", en: "Catalog depth" },
+  distribution: { fr: "Distribution", en: "Distribution" },
+  seasonality: { fr: "Saisonnalité", en: "Seasonality" },
+  companySize: { fr: "Taille entreprise", en: "Company size" },
+};
+
+const METHOD_OPTIONS: Array<{ value: MethodKey; label: L }> = [
+  { value: "email_sequence", label: { fr: "Séquence email", en: "Email sequence" } },
+  { value: "linkedin_email", label: { fr: "LinkedIn + email", en: "LinkedIn + email" } },
+  { value: "partner_intro", label: { fr: "Intro partenaire", en: "Partner intro" } },
+  { value: "seasonal_push", label: { fr: "Push saisonnier", en: "Seasonal push" } },
+];
+
+const ANGLE_OPTIONS: Array<{ value: AngleKey; label: L }> = [
+  { value: "market_fit", label: { fr: "Market fit", en: "Market fit" } },
+  { value: "roi", label: { fr: "ROI", en: "ROI" } },
+  { value: "social_proof", label: { fr: "Preuve sociale", en: "Social proof" } },
+  { value: "competitive_gap", label: { fr: "Gap concurrentiel", en: "Competitive gap" } },
+  { value: "seasonal_window", label: { fr: "Fenêtre saisonnière", en: "Seasonal window" } },
+];
+
+const SEASON_OPTIONS: Array<{ value: SeasonKey; label: L }> = [
+  { value: "always_on", label: { fr: "Always on", en: "Always on" } },
+  { value: "black_friday", label: { fr: "Black Friday", en: "Black Friday" } },
+  { value: "holiday_gifting", label: { fr: "Cadeaux de fin d'année", en: "Holiday gifting" } },
+  { value: "back_to_school", label: { fr: "Rentrée", en: "Back to school" } },
+  { value: "summer_sale", label: { fr: "Soldes d'été", en: "Summer sale" } },
+  { value: "fashion_drop", label: { fr: "Fashion drop", en: "Fashion drop" } },
+];
+
+// ---------- SELLERS MOCKÉS ----------
+
+const SELLERS: SellerProfile[] = [
+  {
+    key: "como",
+    name: "Atelier Como",
+    pitch: {
+      fr: "Maroquinerie premium DTC · Milan",
+      en: "Premium DTC leather goods · Milan",
+    },
+    country: "IT",
+    flag: "🇮🇹",
+    topMarketplace: "Galeries Lafayette",
+    totalScore: 91,
+    roi: {
+      fr: "≈ +62 k€ GMV sur 6 mois (catalogue premium, panier moyen 180 €)",
+      en: "≈ +€62k GMV over 6 months (premium catalog, €180 AOV)",
+    },
+    contactRole: "Head of Marketplace",
+    recommended: {
+      method: "partner_intro",
+      angle: "market_fit",
+      season: "holiday_gifting",
+    },
+    criteria: [
+      {
+        key: "category",
+        score: 96,
+        reason: {
+          fr: "Accessoires cuir = catégorie prioritaire de l'opérateur",
+          en: "Leather accessories = operator's priority category",
+        },
+      },
+      {
+        key: "geography",
+        score: 88,
+        reason: {
+          fr: "Italie dans les pays préférés, livraison UE déjà en place",
+          en: "Italy in preferred countries, EU shipping already live",
+        },
+      },
+      {
+        key: "price",
+        score: 94,
+        reason: {
+          fr: "Premium 120-300 € aligné sur le positionnement vitrine",
+          en: "Premium €120-300 aligned with the storefront positioning",
+        },
+      },
+      {
+        key: "customer",
+        score: 90,
+        reason: {
+          fr: "Clientèle urbaine CSP+ : recouvrement fort avec l'audience",
+          en: "Affluent urban customers: strong audience overlap",
+        },
+      },
+      {
+        key: "catalogue",
+        score: 75,
+        reason: {
+          fr: "Catalogue moyen (100-500 réf.) — suffisant mais pas large",
+          en: "Medium catalog (100-500 SKUs) — sufficient but not deep",
+        },
+      },
+      {
+        key: "distribution",
+        score: 85,
+        reason: {
+          fr: "DTC mono-marque, aucun conflit revendeur détecté",
+          en: "Mono-brand DTC, no reseller conflict detected",
+        },
+      },
+      {
+        key: "seasonality",
+        score: 92,
+        reason: {
+          fr: "Pic cadeaux Q4 très marqué — fenêtre idéale",
+          en: "Strong Q4 gifting peak — ideal window",
+        },
+      },
+      {
+        key: "companySize",
+        score: 80,
+        reason: {
+          fr: "≈ 40 employés : structurée, onboarding rapide possible",
+          en: "≈ 40 employees: structured, fast onboarding possible",
+        },
+      },
+    ],
+  },
+  {
+    key: "nordic",
+    name: "Nordic Trail",
+    pitch: {
+      fr: "Vêtements outdoor techniques · Stockholm",
+      en: "Technical outdoor apparel · Stockholm",
+    },
+    country: "SE",
+    flag: "🇸🇪",
+    topMarketplace: "Zalando",
+    totalScore: 84,
+    roi: {
+      fr: "≈ +95 k€ GMV sur 6 mois (catalogue large, forte rotation été)",
+      en: "≈ +€95k GMV over 6 months (deep catalog, high summer velocity)",
+    },
+    contactRole: "E-commerce Director",
+    recommended: {
+      method: "linkedin_email",
+      angle: "roi",
+      season: "summer_sale",
+    },
+    criteria: [
+      {
+        key: "category",
+        score: 82,
+        reason: {
+          fr: "Sport/outdoor accepté, pas prioritaire — match partiel mots-clés",
+          en: "Sport/outdoor accepted, not priority — partial keyword match",
+        },
+      },
+      {
+        key: "geography",
+        score: 95,
+        reason: {
+          fr: "Suède + hub logistique DE : zone préférée de la marketplace",
+          en: "Sweden + DE logistics hub: marketplace's preferred zone",
+        },
+      },
+      {
+        key: "price",
+        score: 78,
+        reason: {
+          fr: "Mid-range 60-140 € : accepté, légèrement au-dessus du cœur",
+          en: "Mid-range €60-140: accepted, slightly above the core",
+        },
+      },
+      {
+        key: "customer",
+        score: 76,
+        reason: {
+          fr: "Cible sportive 25-45 ans, recouvrement correct",
+          en: "Active 25-45 target, decent overlap",
+        },
+      },
+      {
+        key: "catalogue",
+        score: 96,
+        reason: {
+          fr: "Catalogue large (600+ réf.) avec variantes tailles complètes",
+          en: "Deep catalog (600+ SKUs) with full size variants",
+        },
+      },
+      {
+        key: "distribution",
+        score: 80,
+        reason: {
+          fr: "DTC + 2 revendeurs nordiques — risque de conflit faible",
+          en: "DTC + 2 Nordic resellers — low conflict risk",
+        },
+      },
+      {
+        key: "seasonality",
+        score: 88,
+        reason: {
+          fr: "Bi-saisonnier été/hiver, sell-through élevé en soldes",
+          en: "Summer/winter bi-seasonal, high sell-through in sales",
+        },
+      },
+      {
+        key: "companySize",
+        score: 70,
+        reason: {
+          fr: "≈ 15 employés : agile mais bande passante onboarding limitée",
+          en: "≈ 15 employees: agile but limited onboarding bandwidth",
+        },
+      },
+    ],
+  },
+  {
+    key: "minimoi",
+    name: "Mini & Moi",
+    pitch: {
+      fr: "Mode enfant éco-conçue · Nantes",
+      en: "Eco-designed kidswear · Nantes",
+    },
+    country: "FR",
+    flag: "🇫🇷",
+    topMarketplace: "La Redoute",
+    totalScore: 76,
+    roi: {
+      fr: "≈ +28 k€ GMV sur 6 mois (panier 45 €, volume rentrée)",
+      en: "≈ +€28k GMV over 6 months (€45 AOV, back-to-school volume)",
+    },
+    contactRole: "Founder/CEO",
+    recommended: {
+      method: "email_sequence",
+      angle: "competitive_gap",
+      season: "back_to_school",
+    },
+    criteria: [
+      {
+        key: "category",
+        score: 90,
+        reason: {
+          fr: "Mode enfant = catégorie en développement actif chez l'opérateur",
+          en: "Kidswear = actively growing category for the operator",
+        },
+      },
+      {
+        key: "geography",
+        score: 92,
+        reason: {
+          fr: "France : marché domestique de la marketplace",
+          en: "France: the marketplace's home market",
+        },
+      },
+      {
+        key: "price",
+        score: 70,
+        reason: {
+          fr: "Entrée-milieu de gamme 25-60 € : accepté, marge serrée",
+          en: "Entry-mid range €25-60: accepted, tight margin",
+        },
+      },
+      {
+        key: "customer",
+        score: 84,
+        reason: {
+          fr: "Familles sensibles à l'éco-conception : segment porteur",
+          en: "Eco-minded families: growing segment",
+        },
+      },
+      {
+        key: "catalogue",
+        score: 55,
+        reason: {
+          fr: "Petit catalogue (10-100 réf.) — frein au volume",
+          en: "Small catalog (10-100 SKUs) — limits volume",
+        },
+      },
+      {
+        key: "distribution",
+        score: 75,
+        reason: {
+          fr: "DTC pur, déjà présent sur 1 marketplace concurrente",
+          en: "Pure DTC, already on 1 competing marketplace",
+        },
+      },
+      {
+        key: "seasonality",
+        score: 86,
+        reason: {
+          fr: "Pic rentrée scolaire net + réassort Noël",
+          en: "Clear back-to-school peak + Christmas restock",
+        },
+      },
+      {
+        key: "companySize",
+        score: 50,
+        reason: {
+          fr: "< 10 employés : décision rapide mais ops à accompagner",
+          en: "< 10 employees: fast decision but ops need support",
+        },
+      },
+    ],
+  },
+];
+
+// ---------- GÉNÉRATION DES EMAILS (pilotée par la stratégie) ----------
+
+interface DraftEmail {
+  timing: L;
+  subject: string;
+  body: string;
+}
+
+// Accroche du mail 1 selon l'angle — c'est ici que la stratégie réécrit le texte.
+const ANGLE_HOOKS: Record<AngleKey, (s: SellerProfile, lang: Lang) => string> = {
+  market_fit: (s, lang) =>
+    tr(
+      lang,
+      `nos données montrent un alignement fort entre ${s.name} et ${s.topMarketplace} : catégorie, géographie et positionnement prix convergent (fit ${s.totalScore}/100).`,
+      `our data shows a strong alignment between ${s.name} and ${s.topMarketplace}: category, geography and price positioning all converge (${s.totalScore}/100 fit).`,
+    ),
+  roi: (s, lang) =>
+    tr(
+      lang,
+      `en projetant votre catalogue sur ${s.topMarketplace}, nous estimons ${pick(lang, s.roi)} — sans coût d'acquisition supplémentaire.`,
+      `projecting your catalog onto ${s.topMarketplace}, we estimate ${pick(lang, s.roi)} — with no extra acquisition cost.`,
+    ),
+  social_proof: (s, lang) =>
+    tr(
+      lang,
+      `des marques au profil très proche de ${s.name} réalisent déjà 15-25 % de leur GMV via ${s.topMarketplace} — les signaux de traction sont comparables.`,
+      `brands with a profile very close to ${s.name} already drive 15-25% of their GMV through ${s.topMarketplace} — traction signals are comparable.`,
+    ),
+  competitive_gap: (s, lang) =>
+    tr(
+      lang,
+      `vos concurrents directs sont déjà visibles sur ${s.topMarketplace} — chaque mois d'absence est de la part de marché laissée sur la table.`,
+      `your direct competitors are already visible on ${s.topMarketplace} — every month of absence is market share left on the table.`,
+    ),
+  seasonal_window: (s, lang) =>
+    tr(
+      lang,
+      `la prochaine fenêtre commerciale sur ${s.topMarketplace} s'ouvre dans quelques semaines : onboarder maintenant, c'est être en ligne au pic de demande.`,
+      `the next commercial window on ${s.topMarketplace} opens in a few weeks: onboarding now means being live at peak demand.`,
+    ),
+};
+
+const SEASON_LINES: Record<SeasonKey, L | null> = {
+  always_on: null,
+  black_friday: {
+    fr: "Le Black Friday concentre une part majeure du trafic annuel : votre catalogue promo y serait directement exposé.",
+    en: "Black Friday concentrates a major share of yearly traffic: your promo catalog would be directly exposed.",
+  },
+  holiday_gifting: {
+    fr: "La saison des cadeaux de fin d'année est le moment où votre catégorie surperforme le plus sur la plateforme.",
+    en: "The holiday gifting season is when your category over-performs the most on the platform.",
+  },
+  back_to_school: {
+    fr: "La rentrée est le pic naturel de votre catégorie : c'est la fenêtre que nous recommandons pour le lancement.",
+    en: "Back-to-school is your category's natural peak: it's the launch window we recommend.",
+  },
+  summer_sale: {
+    fr: "Les soldes d'été maximisent le sell-through des catalogues profonds comme le vôtre.",
+    en: "Summer sales maximize sell-through for deep catalogs like yours.",
+  },
+  fashion_drop: {
+    fr: "Le rythme de drops de la plateforme colle à vos lancements capsules.",
+    en: "The platform's drop cadence fits your capsule launches.",
+  },
+};
+
+const METHOD_CTA: Record<MethodKey, L> = {
+  email_sequence: {
+    fr: "Seriez-vous disponible 20 minutes cette semaine pour en parler ?",
+    en: "Would you have 20 minutes this week to discuss it?",
+  },
+  linkedin_email: {
+    fr: "Je vous ai également envoyé une invitation LinkedIn pour échanger plus directement.",
+    en: "I've also sent you a LinkedIn invite for a more direct chat.",
+  },
+  partner_intro: {
+    fr: "Notre équipe partenaire peut faire l'introduction directement auprès de l'opérateur — je peux l'activer dès votre retour.",
+    en: "Our partner team can make a direct introduction to the operator — I can trigger it as soon as you reply.",
+  },
+  seasonal_push: {
+    fr: "Le calendrier est serré pour être en ligne avant le pic : je vous propose un créneau dès cette semaine.",
+    en: "The timeline is tight to be live before the peak: I suggest a slot as early as this week.",
+  },
+};
+
+function buildSequence(
+  s: SellerProfile,
+  strat: Strategy,
+  lang: Lang,
+): DraftEmail[] {
+  const hook = ANGLE_HOOKS[strat.angle](s, lang);
+  const seasonLine = SEASON_LINES[strat.season];
+  const cta = pick(lang, METHOD_CTA[strat.method]);
+  const angleLabel = pick(
+    lang,
+    ANGLE_OPTIONS.find((a) => a.value === strat.angle)!.label,
+  );
+  const greet = tr(lang, "Bonjour,", "Hi,");
+  const sign = tr(
+    lang,
+    "Bien à vous,\nL'équipe Marketplace",
+    "Best regards,\nThe Marketplace team",
+  );
+
+  return [
+    {
+      timing: { fr: "J0 — Premier contact", en: "D0 — First touch" },
+      subject: tr(
+        lang,
+        `${s.name} × ${s.topMarketplace} : ${angleLabel.toLowerCase()}`,
+        `${s.name} × ${s.topMarketplace}: ${angleLabel.toLowerCase()}`,
+      ),
+      body: [
+        greet,
+        "",
+        tr(lang, `En un mot : ${hook}`, `In short: ${hook}`),
+        ...(seasonLine ? ["", pick(lang, seasonLine)] : []),
+        "",
+        cta,
+        "",
+        sign,
+      ].join("\n"),
+    },
+    {
+      timing: { fr: "J+5 — Relance ROI", en: "D+5 — ROI follow-up" },
+      subject: tr(
+        lang,
+        `${s.name} : le chiffrage derrière le score ${s.totalScore}/100`,
+        `${s.name}: the numbers behind the ${s.totalScore}/100 score`,
+      ),
+      body: [
+        greet,
+        "",
+        tr(
+          lang,
+          `Pour donner de la matière à mon précédent message : ${pick(lang, s.roi)}. Le score de ${s.totalScore}/100 repose sur 8 critères pondérés — les deux plus forts pour vous : ${pick(lang, CRITERION_LABELS[topTwo(s)[0]])} et ${pick(lang, CRITERION_LABELS[topTwo(s)[1]])}.`,
+          `To back up my previous note: ${pick(lang, s.roi)}. The ${s.totalScore}/100 score is built on 8 weighted criteria — your two strongest: ${pick(lang, CRITERION_LABELS[topTwo(s)[0]])} and ${pick(lang, CRITERION_LABELS[topTwo(s)[1]])}.`,
+        ),
+        "",
+        tr(
+          lang,
+          "Je peux partager le détail du scoring en 15 minutes.",
+          "I can walk you through the full scoring in 15 minutes.",
+        ),
+        "",
+        sign,
+      ].join("\n"),
+    },
+    {
+      timing: { fr: "J+12 — Closing", en: "D+12 — Closing" },
+      subject: tr(
+        lang,
+        `${s.name} : bon timing pour avancer ?`,
+        `${s.name}: right timing to move forward?`,
+      ),
+      body: [
+        greet,
+        "",
+        tr(
+          lang,
+          `Dernier message de ma part : si le timing est bon, nous pouvons cadrer un pilote sur ${s.topMarketplace} (onboarding accompagné, catalogue test, revue à 60 jours).`,
+          `Last note from me: if the timing works, we can scope a pilot on ${s.topMarketplace} (guided onboarding, test catalog, 60-day review).`,
+        ),
+        ...(seasonLine ? ["", pick(lang, seasonLine)] : []),
+        "",
+        sign,
+      ].join("\n"),
+    },
+  ];
+}
+
+function topTwo(s: SellerProfile): [CriterionKey, CriterionKey] {
+  const sorted = [...s.criteria].sort((a, b) => b.score - a.score);
+  return [sorted[0].key, sorted[1].key];
+}
+
+function priorityBadge(score: number, lang: Lang): { label: string; color: string } {
+  if (score >= 88) return { label: tr(lang, "P1 · Chaud", "P1 · Hot"), color: PALETTE.teal };
+  if (score >= 75) return { label: tr(lang, "P2 · Tiède", "P2 · Warm"), color: PALETTE.gold };
+  return { label: tr(lang, "P3 · À nourrir", "P3 · Nurture"), color: PALETTE.coral };
+}
+
+// ---------- UI ----------
+
+function SectionTitle({ index, children }: { index: string; children: React.ReactNode }) {
   return (
-    <div>
-      <div className="flex items-baseline justify-between mb-1">
-        <span
-          className="mono uppercase text-[9px] tracking-widest"
-          style={{ color: PALETTE.textDim }}
-        >
-          {k}
+    <p
+      className="mono uppercase text-[10px] tracking-[0.3em] mb-3"
+      style={{ color: PALETTE.textDim }}
+    >
+      <span style={{ color: PALETTE.orange }}>§ {index}</span> · {children}
+    </p>
+  );
+}
+
+function CriterionRow({ c, lang }: { c: Criterion; lang: Lang }) {
+  const color = scoreColor(c.score);
+  return (
+    <div className="py-2" style={{ borderBottom: `1px solid ${PALETTE.border}` }}>
+      <div className="flex items-baseline justify-between gap-2 mb-1">
+        <span className="flex items-baseline gap-2 min-w-0">
+          <span
+            className="mono uppercase text-[10px] tracking-widest"
+            style={{ color: PALETTE.text }}
+          >
+            {pick(lang, CRITERION_LABELS[c.key])}
+          </span>
+          <span
+            className="mono text-[9px] shrink-0"
+            style={{ color: PALETTE.textMuted }}
+          >
+            ×{WEIGHTS[c.key]}%
+          </span>
         </span>
-        <span style={{ color, fontSize: 12, fontWeight: 600 }}>{v}</span>
+        <span style={{ color, fontSize: 13, fontWeight: 600 }}>{c.score}</span>
       </div>
       <div
-        className="rounded-full overflow-hidden"
+        className="rounded-full overflow-hidden mb-1"
         style={{ height: 3, background: "rgba(255,255,255,0.06)" }}
       >
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: `${v}%` }}
+          animate={{ width: `${c.score}%` }}
           transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }}
-          style={{
-            height: "100%",
-            background: color,
-            boxShadow: `0 0 6px ${color}`,
-          }}
+          style={{ height: "100%", background: color }}
         />
       </div>
+      <p className="text-[11.5px]" style={{ color: PALETTE.textDim }}>
+        ↳ {pick(lang, c.reason)}
+      </p>
     </div>
   );
 }
 
-function ScorePill({ value }: { value: number }) {
-  const color = scoreColor(value);
-  return (
-    <div
-      className="flex items-center gap-2 px-2.5 py-1 rounded-full"
-      style={{
-        border: `1px solid ${color}55`,
-        background: `${color}11`,
-      }}
-    >
-      <span
-        className="mono uppercase text-[9px] tracking-widest"
-        style={{ color: PALETTE.textDim }}
-      >
-        match
-      </span>
-      <span style={{ color, fontSize: 14, fontWeight: 700, lineHeight: 1 }}>
-        {value}
-      </span>
-      <span style={{ color: PALETTE.textMuted, fontSize: 11 }}>/100</span>
-    </div>
-  );
-}
-
-// ---------- VENDOR CARD ----------
-
-function VendorCard({
-  vendor,
-  rank,
-  marketplace,
+function StrategySelect<T extends string>({
+  label,
+  value,
+  options,
+  recommended,
+  onChange,
+  lang,
 }: {
-  vendor: Vendor;
-  rank: number;
-  marketplace: Marketplace;
+  label: string;
+  value: T;
+  options: Array<{ value: T; label: L }>;
+  recommended: T;
+  onChange: (v: T) => void;
+  lang: Lang;
 }) {
-  const { lang } = useLang();
-  const [emailState, setEmailState] = useState<"idle" | "writing" | "done">(
-    "idle"
+  return (
+    <label className="block min-w-0">
+      <span
+        className="mono uppercase text-[9px] tracking-widest block mb-1"
+        style={{ color: PALETTE.textMuted }}
+      >
+        {label}
+        {value === recommended && (
+          <span style={{ color: PALETTE.teal }}> · reco</span>
+        )}
+      </span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as T)}
+        className="w-full rounded-md px-2 py-1.5 text-[12px] outline-none"
+        style={{
+          background: PALETTE.surfaceAlt,
+          border: `1px solid ${PALETTE.borderStrong}`,
+          color: PALETTE.text,
+        }}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value} style={{ color: "#111" }}>
+            {pick(lang, o.label)}
+            {o.value === recommended
+              ? tr(lang, " (reco moteur)", " (engine pick)")
+              : ""}
+          </option>
+        ))}
+      </select>
+    </label>
   );
+}
 
-  const generate = () => {
-    if (emailState === "done") {
-      setEmailState("idle");
-      return;
-    }
-    setEmailState("writing");
-    setTimeout(() => setEmailState("done"), 900);
-  };
-
+function EmailCard({
+  email,
+  index,
+  seller,
+  lang,
+}: {
+  email: DraftEmail;
+  index: number;
+  seller: SellerProfile;
+  lang: Lang;
+}) {
   return (
     <motion.div
-      layout
-      className="rounded-xl overflow-hidden"
-      style={{
-        background: PALETTE.surface,
-        border: `1px solid ${PALETTE.border}`,
-      }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.12 * index }}
+      className="rounded-lg overflow-hidden"
+      style={{ background: PALETTE.surfaceAlt, border: `1px solid ${PALETTE.border}` }}
     >
-      <div className="p-4 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0">
-            <span
-              className="mono uppercase text-[10px] tracking-widest shrink-0 px-2 py-1 rounded-md"
-              style={{
-                color: PALETTE.orange,
-                background: "rgba(255,122,69,0.10)",
-                border: `1px solid ${PALETTE.orange}33`,
-              }}
-            >
-              #{rank}
-            </span>
-            <div className="min-w-0">
-              <p
-                className="font-semibold text-[14px]"
-                style={{ color: PALETTE.text }}
-              >
-                {vendor.name}
-              </p>
-              <p
-                className="text-[12px] mt-0.5"
-                style={{ color: PALETTE.textDim }}
-              >
-                {vendor.pitch}
-              </p>
-            </div>
-          </div>
-          <ScorePill value={vendor.score} />
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <CriteriaBar k={tr(lang, "Catalogue", "Catalog")} v={vendor.criteria.cat} />
-          <CriteriaBar k={tr(lang, "Logistique", "Logistics")} v={vendor.criteria.logi} />
-          <CriteriaBar k={tr(lang, "Marge", "Margin")} v={vendor.criteria.marge} />
-        </div>
-
-        <p
-          className="text-[12px]"
-          style={{ color: PALETTE.textDim, fontStyle: "italic" }}
+      <div
+        className="px-3 py-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+        style={{ borderBottom: `1px solid ${PALETTE.border}` }}
+      >
+        <span
+          className="mono uppercase text-[9px] tracking-widest"
+          style={{ color: PALETTE.orange }}
         >
-          ↳ {vendor.why}
+          {pick(lang, email.timing)}
+        </span>
+        <span
+          className="mono uppercase text-[9px] tracking-widest"
+          style={{ color: PALETTE.textMuted }}
+        >
+          → {seller.contactRole} · {tr(lang, "brouillon", "draft")} ✓
+        </span>
+      </div>
+      <div className="px-3 py-3">
+        <p
+          className="font-semibold text-[13px] mb-2 break-words"
+          style={{ color: PALETTE.text }}
+        >
+          {email.subject}
         </p>
-
-        <button
-          type="button"
-          onClick={generate}
-          disabled={emailState === "writing"}
-          className="mono uppercase text-[10px] tracking-widest px-3 py-1.5 rounded-md transition-colors self-start"
+        <pre
+          className="text-[12.5px] whitespace-pre-wrap break-words"
           style={{
-            color: emailState === "done" ? PALETTE.orange : PALETTE.bg,
-            background:
-              emailState === "done" ? "transparent" : PALETTE.orange,
-            border: `1px solid ${PALETTE.orange}`,
-            cursor: emailState === "writing" ? "wait" : "pointer",
-            opacity: emailState === "writing" ? 0.65 : 1,
-            fontWeight: 600,
+            color: PALETTE.textDim,
+            fontFamily: "Georgia, ui-serif, serif",
+            lineHeight: 1.55,
           }}
         >
-          {emailState === "writing"
-            ? tr(lang, "Rédaction en cours…", "Drafting…")
-            : emailState === "done"
-              ? tr(lang, "Masquer l'email", "Hide email")
-              : tr(lang, "Générer l'email BDR", "Generate BDR email")}
-        </button>
+          {email.body}
+        </pre>
       </div>
-
-      <AnimatePresence initial={false}>
-        {emailState === "done" && (
-          <motion.div
-            key="email"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: [0.2, 0.8, 0.2, 1] }}
-            style={{
-              borderTop: `1px solid ${PALETTE.border}`,
-              background: PALETTE.surfaceAlt,
-            }}
-          >
-            <div className="px-4 py-3">
-              <div
-                className="flex items-center justify-between mb-2"
-                style={{ color: PALETTE.textMuted }}
-              >
-                <span className="mono uppercase text-[9px] tracking-widest">
-                  {tr(lang, "De", "From")} : {marketplace.bdr.toLowerCase().replace(" ", ".")}@
-                  {marketplace.label.toLowerCase().replace(/[^a-z]/g, "")}.com
-                </span>
-                <span className="mono uppercase text-[9px] tracking-widest">
-                  {tr(lang, "brouillon", "draft")} ✓
-                </span>
-              </div>
-              <p
-                className="font-semibold text-[13px] mb-2"
-                style={{ color: PALETTE.text }}
-              >
-                {vendor.email.subject}
-              </p>
-              <pre
-                className="text-[12.5px] whitespace-pre-wrap"
-                style={{
-                  color: PALETTE.textDim,
-                  fontFamily: "Georgia, ui-serif, serif",
-                  lineHeight: 1.55,
-                }}
-              >
-                {vendor.email.body}
-              </pre>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
@@ -991,17 +770,52 @@ function VendorCard({
 
 export function MiraklMiniApp() {
   const { lang } = useLang();
-  const MARKETPLACES = pickMarketplaces(lang);
-  const [marketplace, setMarketplace] = useState<MarketplaceKey>("manomano");
-  const current = MARKETPLACES[marketplace];
+  const [sellerKey, setSellerKey] = useState<string>(SELLERS[0].key);
+  const [scored, setScored] = useState(false);
+  const [scoring, setScoring] = useState(false);
+  const [strategy, setStrategy] = useState<Strategy>(SELLERS[0].recommended);
+  const [emailState, setEmailState] = useState<"idle" | "writing" | "done">("idle");
 
-  const keys: MarketplaceKey[] = [
-    "cdiscount",
-    "manomano",
-    "decathlon",
-    "maisons",
-    "galeries",
-  ];
+  const seller = SELLERS.find((s) => s.key === sellerKey)!;
+  const badge = priorityBadge(seller.totalScore, lang);
+
+  const selectSeller = (key: string) => {
+    const next = SELLERS.find((s) => s.key === key)!;
+    setSellerKey(key);
+    setScored(false);
+    setScoring(false);
+    setStrategy(next.recommended);
+    setEmailState("idle");
+  };
+
+  const runScoring = () => {
+    setScoring(true);
+    setEmailState("idle");
+    setTimeout(() => {
+      setScoring(false);
+      setScored(true);
+    }, 900);
+  };
+
+  const patchStrategy = (patch: Partial<Strategy>) => {
+    setStrategy((s) => ({ ...s, ...patch }));
+    // La séquence dépend de la stratégie : on la régénère si déjà affichée.
+    if (emailState === "done") {
+      setEmailState("writing");
+      setTimeout(() => setEmailState("done"), 500);
+    }
+  };
+
+  const generateEmails = () => {
+    if (emailState === "done") {
+      setEmailState("idle");
+      return;
+    }
+    setEmailState("writing");
+    setTimeout(() => setEmailState("done"), 900);
+  };
+
+  const emails = buildSequence(seller, strategy, lang);
 
   return (
     <div
@@ -1017,7 +831,7 @@ export function MiraklMiniApp() {
     >
       {/* Topbar */}
       <div
-        className="flex items-center justify-between px-5 py-3"
+        className="flex flex-wrap items-center justify-between gap-y-2 px-5 py-3"
         style={{ borderBottom: `1px solid ${PALETTE.border}` }}
       >
         <div className="flex items-center gap-2">
@@ -1026,7 +840,7 @@ export function MiraklMiniApp() {
             style={{
               width: 8,
               height: 8,
-              borderRadius: 2,
+              borderRadius: 999,
               background: PALETTE.orange,
               boxShadow: `0 0 10px ${PALETTE.orange}`,
             }}
@@ -1046,88 +860,251 @@ export function MiraklMiniApp() {
           </span>
         </div>
         <span
-          className="mono uppercase text-[10px] tracking-widest hidden sm:inline"
+          className="mono uppercase text-[9px] tracking-widest"
           style={{ color: PALETTE.textMuted }}
         >
-          {tr(lang, "5 marketplaces · top 3 matchs · email BDR auto", "5 marketplaces · top 3 matches · auto BDR email")}
+          scoring → {tr(lang, "stratégie", "strategy")} → emails
         </span>
       </div>
 
-      {/* Marketplace selector */}
+      {/* Seller selector — 3 profils mockés, aucun input libre */}
       <div
         className="px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
         style={{ borderBottom: `1px solid ${PALETTE.border}` }}
       >
+        <span
+          className="mono uppercase text-[10px] tracking-[0.3em]"
+          style={{ color: PALETTE.textDim }}
+        >
+          {tr(lang, "Seller à prospecter", "Seller to prospect")}
+        </span>
         <div className="flex flex-wrap gap-1.5">
-          {keys.map((k) => {
-            const active = k === marketplace;
+          {SELLERS.map((s) => {
+            const active = s.key === sellerKey;
             return (
               <button
-                key={k}
+                key={s.key}
                 type="button"
-                onClick={() => setMarketplace(k)}
+                onClick={() => selectSeller(s.key)}
                 className="mono uppercase text-[10px] tracking-widest px-2.5 py-1 rounded-md transition-colors"
                 style={{
                   color: active ? PALETTE.orange : PALETTE.textDim,
-                  background: active
-                    ? "rgba(255,122,69,0.10)"
-                    : "transparent",
-                  border: `1px solid ${
-                    active ? `${PALETTE.orange}55` : PALETTE.border
-                  }`,
+                  background: active ? "rgba(255,122,69,0.10)" : "transparent",
+                  border: `1px solid ${active ? `${PALETTE.orange}55` : PALETTE.border}`,
                 }}
               >
-                {MARKETPLACES[k].label}
+                {s.flag} {s.name}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Marketplace context */}
-      <div className="px-5 pt-4 pb-2 flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <p
-            className="font-semibold text-[15px]"
-            style={{ color: PALETTE.text }}
+      <div className="px-5 py-4 space-y-5">
+        {/* Cible + lancer le scoring */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className="mono text-[11px] px-3 py-1.5 rounded-md"
+            style={{
+              background: PALETTE.surfaceAlt,
+              border: `1px solid ${PALETTE.border}`,
+              color: PALETTE.textDim,
+            }}
           >
-            {current.label}
-          </p>
-          <p
-            className="text-[12px] mt-0.5"
-            style={{ color: PALETTE.textDim }}
+            {seller.name} · {pick(lang, seller.pitch)}
+          </span>
+          <button
+            type="button"
+            onClick={runScoring}
+            disabled={scoring}
+            className="mono uppercase text-[10px] tracking-widest px-3 py-1.5 rounded-md"
+            style={{
+              color: scored ? PALETTE.orange : PALETTE.bg,
+              background: scored ? "transparent" : PALETTE.orange,
+              border: `1px solid ${PALETTE.orange}`,
+              cursor: scoring ? "wait" : "pointer",
+              opacity: scoring ? 0.65 : 1,
+              fontWeight: 600,
+            }}
           >
-            {current.vertical} · {current.audience}
-          </p>
+            {scoring
+              ? tr(lang, "Scoring en cours…", "Scoring…")
+              : scored
+                ? tr(lang, "Relancer le scoring", "Re-run scoring")
+                : tr(lang, "Lancer le scoring", "Run scoring")}
+          </button>
         </div>
-        <span
-          className="mono uppercase text-[10px] tracking-widest"
-          style={{ color: PALETTE.textMuted }}
-        >
-          {tr(lang, "BDR", "BDR")} : {current.bdr}
-        </span>
-      </div>
 
-      {/* Top 3 matches */}
-      <div className="px-5 pb-5 pt-3">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={marketplace}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25 }}
-            className="space-y-3"
-          >
-            {current.matches.map((v, i) => (
-              <VendorCard
-                key={`${marketplace}-${v.name}`}
-                vendor={v}
-                rank={i + 1}
-                marketplace={current}
-              />
-            ))}
-          </motion.div>
+          {scored && (
+            <motion.div
+              key={`scored-${seller.key}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {/* § 01 — Scoring : 8 critères pondérés */}
+              <div>
+                <SectionTitle index="01">
+                  {tr(lang, "Scoring · 8 critères pondérés", "Scoring · 8 weighted criteria")}
+                </SectionTitle>
+                <div
+                  className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3"
+                  style={{
+                    background: PALETTE.surface,
+                    border: `1px solid ${PALETTE.border}`,
+                  }}
+                >
+                  <div>
+                    <p
+                      className="mono uppercase text-[10px] tracking-[0.3em]"
+                      style={{ color: PALETTE.textDim }}
+                    >
+                      {tr(lang, "Meilleur match", "Top match")}
+                    </p>
+                    <p
+                      className="font-bold mt-1"
+                      style={{ color: PALETTE.text, fontSize: 18 }}
+                    >
+                      {seller.topMarketplace}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="mono uppercase text-[9px] tracking-widest px-2 py-1 rounded-full"
+                      style={{ color: badge.color, border: `1px solid ${badge.color}55` }}
+                    >
+                      {badge.label}
+                    </span>
+                    <p className="font-bold" style={{ fontSize: 30, lineHeight: 1 }}>
+                      <span style={{ color: scoreColor(seller.totalScore) }}>
+                        {seller.totalScore}
+                      </span>
+                      <span style={{ color: PALETTE.textMuted, fontSize: 16 }}>/100</span>
+                    </p>
+                  </div>
+                </div>
+                <div
+                  className="rounded-xl px-4 py-1"
+                  style={{
+                    background: PALETTE.surface,
+                    border: `1px solid ${PALETTE.border}`,
+                  }}
+                >
+                  {seller.criteria.map((c) => (
+                    <CriterionRow key={c.key} c={c} lang={lang} />
+                  ))}
+                </div>
+              </div>
+
+              {/* § 02 — Stratégie recommandée, éditable */}
+              <div>
+                <SectionTitle index="02">
+                  {tr(
+                    lang,
+                    "Stratégie d'approche — recommandée par le moteur, ajustable",
+                    "Outreach strategy — engine-recommended, adjustable",
+                  )}
+                </SectionTitle>
+                <div
+                  className="rounded-xl p-4 space-y-3"
+                  style={{
+                    background: PALETTE.surface,
+                    border: `1px solid ${PALETTE.border}`,
+                  }}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <StrategySelect
+                      label={tr(lang, "Méthode", "Method")}
+                      value={strategy.method}
+                      options={METHOD_OPTIONS}
+                      recommended={seller.recommended.method}
+                      onChange={(method) => patchStrategy({ method })}
+                      lang={lang}
+                    />
+                    <StrategySelect
+                      label="Angle"
+                      value={strategy.angle}
+                      options={ANGLE_OPTIONS}
+                      recommended={seller.recommended.angle}
+                      onChange={(angle) => patchStrategy({ angle })}
+                      lang={lang}
+                    />
+                    <StrategySelect
+                      label={tr(lang, "Saisonnalité", "Seasonality")}
+                      value={strategy.season}
+                      options={SEASON_OPTIONS}
+                      recommended={seller.recommended.season}
+                      onChange={(season) => patchStrategy({ season })}
+                      lang={lang}
+                    />
+                  </div>
+                  <p className="text-[11.5px]" style={{ color: PALETTE.textMuted }}>
+                    ↳{" "}
+                    {tr(
+                      lang,
+                      `Contact à cibler : ${seller.contactRole}. Changez l'angle ou la saisonnalité — la séquence est réécrite en conséquence.`,
+                      `Contact to target: ${seller.contactRole}. Change the angle or seasonality — the sequence is rewritten accordingly.`,
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* § 03 — Séquence email personnalisée */}
+              <div>
+                <SectionTitle index="03">
+                  {tr(
+                    lang,
+                    "Séquence hyper-personnalisée · 3 temps",
+                    "Hyper-personalized sequence · 3 touches",
+                  )}
+                </SectionTitle>
+                <button
+                  type="button"
+                  onClick={generateEmails}
+                  disabled={emailState === "writing"}
+                  className="mono uppercase text-[10px] tracking-widest px-3 py-1.5 rounded-md mb-3"
+                  style={{
+                    color: emailState === "done" ? PALETTE.orange : PALETTE.bg,
+                    background: emailState === "done" ? "transparent" : PALETTE.orange,
+                    border: `1px solid ${PALETTE.orange}`,
+                    cursor: emailState === "writing" ? "wait" : "pointer",
+                    opacity: emailState === "writing" ? 0.65 : 1,
+                    fontWeight: 600,
+                  }}
+                >
+                  {emailState === "writing"
+                    ? tr(lang, "Rédaction en cours…", "Drafting…")
+                    : emailState === "done"
+                      ? tr(lang, "Masquer la séquence", "Hide sequence")
+                      : tr(lang, "Générer la séquence (3 emails)", "Generate sequence (3 emails)")}
+                </button>
+                <AnimatePresence initial={false} mode="wait">
+                  {emailState === "done" && (
+                    <motion.div
+                      key={`${strategy.method}-${strategy.angle}-${strategy.season}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-3"
+                    >
+                      {emails.map((e, i) => (
+                        <EmailCard
+                          key={`${pick(lang, e.timing)}-${i}`}
+                          email={e}
+                          index={i}
+                          seller={seller}
+                          lang={lang}
+                        />
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>
