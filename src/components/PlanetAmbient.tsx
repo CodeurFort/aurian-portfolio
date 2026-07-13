@@ -2,15 +2,27 @@
 
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePerformanceTier } from "@/lib/usePerformanceTier";
 
 // Per-planet ambient overlay. Subtle, non-obscuring, signature per slug.
 // All effects sit at z-[8] (above canvas, below header / arrows / chatbot).
 
 const Z = 8;
 
+// Adoucissement 2.5px par élément — remplace l'ancien backdrop-filter du
+// LightMetallicVeil (~30ms/frame). Posé sur chaque élément (et PAS sur le
+// conteneur plein écran) : le raster flouté est mis en cache et les
+// animations transform/opacity restent composited → coût nul mesuré (60fps
+// desktop). Sur tier "low" (mobile), les éléments animés en continu (shards,
+// streams) sautent le blur : le compositor mobile re-rasterise et ça coûte
+// 10-20fps (mesuré), pour un adoucissement invisible à taille téléphone.
+const SOFT_BLUR = "blur(2.5px)";
+
 function LevelsAmbient() {
   // Stained-glass modern dark: floating geometric glass shards with cool accents,
   // discreet "leaded" grid, periodic diagonal light sweep.
+  const tier = usePerformanceTier();
+  const softBlur = tier === "low" ? undefined : SOFT_BLUR;
   const shards = useMemo(
     () => [
       { left: "8%", top: "14%", w: 240, h: 150, rotate: -8, color: "164,245,200", delay: 0 },
@@ -57,6 +69,7 @@ function LevelsAmbient() {
             "radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, transparent 80%)",
           WebkitMaskImage:
             "radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, transparent 80%)",
+          filter: SOFT_BLUR,
         }}
       />
 
@@ -92,6 +105,9 @@ function LevelsAmbient() {
               border: `1px solid rgba(${s.color},0.4)`,
               borderRadius: 2,
               boxShadow: `0 0 18px rgba(${s.color},0.18), inset 0 0 24px rgba(${s.color},0.10)`,
+              // blur sur l'enfant statique, PAS sur le wrapper animé : le
+              // raster flouté est caché, le transform reste composité (60fps).
+              filter: softBlur,
             }}
           />
           {/* edge highlight */}
@@ -103,6 +119,7 @@ function LevelsAmbient() {
               top: 0,
               height: 1,
               background: `linear-gradient(90deg, transparent 0%, rgba(${s.color},0.85) 50%, transparent 100%)`,
+              filter: softBlur,
             }}
           />
         </motion.div>
@@ -138,6 +155,8 @@ function LevelsAmbient() {
 
 function EnergizerAmbient() {
   // Vertical green data streams
+  const tier = usePerformanceTier();
+  const softBlur = tier === "low" ? undefined : SOFT_BLUR;
   const streams = useMemo(
     () =>
       Array.from({ length: 14 }).map((_, i) => ({
@@ -181,6 +200,7 @@ function EnergizerAmbient() {
               "linear-gradient(180deg, transparent 0%, rgba(164,245,200,0.6) 30%, rgba(164,245,200,0.9) 60%, transparent 100%)",
             boxShadow: "0 0 8px rgba(164,245,200,0.5)",
             borderRadius: 999,
+            filter: softBlur,
           }}
         />
       ))}
@@ -241,6 +261,7 @@ function MiraklAmbient() {
               background: "#E0B760",
               boxShadow: "0 0 8px rgba(224,183,96,0.7), 0 0 18px rgba(224,183,96,0.4)",
               transform: "translate(-50%, -50%)",
+              filter: SOFT_BLUR,
             }}
           />
         </motion.div>
@@ -299,6 +320,7 @@ function TheLookAmbient() {
           backgroundImage:
             "repeating-linear-gradient(0deg, rgba(142,139,131,0.08) 0px, rgba(142,139,131,0.08) 1px, transparent 1px, transparent 4px)",
           opacity: 0.5,
+          filter: SOFT_BLUR,
         }}
       />
       {/* Sweeping scan */}
