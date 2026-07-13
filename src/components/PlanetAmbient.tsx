@@ -316,9 +316,11 @@ function TheLookAmbient() {
   );
 }
 
-// Voile métallique : blur 2.5px + voile gris perle léger (12% au centre)
-// au-dessus de l'ambient et du canvas. Assez perceptible pour adoucir
-// les arêtes vives (étoiles, wireframe) sans flouter le contenu utile.
+// Voile métallique : voile gris perle léger (12% au centre) au-dessus de
+// l'ambient et du canvas. Le blur 2.5px qui vivait ici en backdrop-filter
+// coûtait ~30ms/frame (re-snapshot plein écran à chaque frame, mesuré
+// 15→25 fps sur M1) ; le même flou est maintenant un `filter` posé sur le
+// canvas WebGL dans PortfolioUniverse (coût quasi nul, look identique).
 function LightMetallicVeil() {
   return (
     <motion.div
@@ -333,8 +335,6 @@ function LightMetallicVeil() {
         zIndex: 9,
         background:
           "radial-gradient(ellipse 90% 80% at 50% 55%, rgba(226,229,235,0.12) 0%, rgba(226,229,235,0.05) 60%, transparent 100%)",
-        backdropFilter: "blur(2.5px)",
-        WebkitBackdropFilter: "blur(2.5px)",
       }}
     />
   );

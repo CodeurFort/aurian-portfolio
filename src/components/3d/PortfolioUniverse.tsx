@@ -4403,7 +4403,16 @@ export function PortfolioUniverse() {
       <Canvas
         dpr={[1, 1.5]}
         camera={{ position: [-12, 0, 6], fov: 55 }}
-        gl={{ antialias: true }}
+        gl={{ antialias: false, powerPreference: "high-performance" }}
+        // Adoucissement 2.5px du rendu WebGL (étoiles, wireframe) — même look
+        // que l'ancien backdrop-filter du LightMetallicVeil, mais un filter
+        // posé sur le canvas est composité quasi gratuitement (60fps) alors
+        // que le backdrop-filter re-snapshotait tout l'arrière-plan à chaque
+        // frame (~30ms/frame mesuré). Suit le timing d'apparition du voile.
+        style={{
+          filter: introDismissed ? "blur(2.5px)" : "none",
+          transition: "filter 0.6s ease-out",
+        }}
       >
         <color attach="background" args={["#07080A"]} />
         <fog attach="fog" args={["#07080A", 12, 28]} />
@@ -4422,7 +4431,7 @@ export function PortfolioUniverse() {
           />
         )}
 
-        <EffectComposer multisampling={4}>
+        <EffectComposer multisampling={0}>
           <Bloom
             intensity={1.2}
             luminanceThreshold={0.55}
