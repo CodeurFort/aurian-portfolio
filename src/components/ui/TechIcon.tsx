@@ -11,6 +11,8 @@ const SLUG_MAP: Record<string, string> = {
   Firebase: "siFirebase",
   Firestore: "siFirebase",
   "Firebase Auth": "siFirebase",
+  "Cloud Functions": "siFirebase",
+  FCM: "siFirebase",
   PWA: "siPwa",
   Python: "siPython",
   FastAPI: "siFastapi",

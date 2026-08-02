@@ -72,15 +72,15 @@ const FR: Record<string, PlanetGuide> = {
     steps: [
       {
         kind: "narrate",
-        text: "Levels, c'est l'idée que la discipline se joue chaque jour. Une PWA pour suivre ses objectifs sur tous les horizons : la semaine, le mois, l'année, la vie.",
+        text: "Levels, c'est l'idée que la discipline se joue chaque jour. Cinq objectifs par jour, de l'XP, des séries, et une planification sur tous les horizons : la semaine, le mois, l'année, la vie.",
       },
       {
         kind: "narrate",
-        text: "L'historique journalier complet est la feature centrale. Chaque jour validé devient une trace lisible, un point de continuité.",
+        text: "Autour du quotidien, un vrai jeu : 6 mentors IA et leurs programmes guidés, des duels à preuves photo jugées par un jury, une base à bâtir avec son économie interne, un assistant vocal.",
       },
       {
         kind: "narrate",
-        text: "Architecture PWA en trois fichiers : index.html, styles.css, app.js. Stack vanilla pure, zéro build. Firebase Auth, Firestore en temps réel, hébergement Firebase Hosting.",
+        text: "Architecture assumée : client vanilla zéro build, 60+ Cloud Functions derrière, sync Firestore temps réel. Bilingue : le bundle anglais est généré au build depuis la source française.",
       },
     ],
   },
@@ -163,15 +163,15 @@ const EN: Record<string, PlanetGuide> = {
     steps: [
       {
         kind: "narrate",
-        text: "Levels is the idea that discipline plays out daily. A PWA to track goals across every horizon: week, month, year, life.",
+        text: "Levels is the idea that discipline plays out daily. Five goals a day, XP, streaks, and planning across every horizon: week, month, year, life.",
       },
       {
         kind: "narrate",
-        text: "The complete daily history is the core feature. Each validated day becomes a readable trace, a thread of continuity.",
+        text: "Around the daily loop, a full game: 6 AI mentors and their guided programs, duels with photo proofs judged by a jury, a homestead to build with its own economy, a voice assistant.",
       },
       {
         kind: "narrate",
-        text: "Three-file PWA architecture: index.html, styles.css, app.js. Pure vanilla stack, zero build. Firebase Auth, real-time Firestore, Firebase Hosting.",
+        text: "Deliberate architecture: zero-build vanilla client, 60+ Cloud Functions behind, real-time Firestore sync. Bilingual: the English bundle is generated at build time from the French source.",
       },
       {
         kind: "narrate",

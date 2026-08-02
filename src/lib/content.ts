@@ -20,7 +20,7 @@ export interface Project {
   slug: string;
   chapter: string;
   title: string;
-  subtitle?: string; // e.g. "(Productivity App)"
+  subtitle?: string; // e.g. "(Discipline RPG)"
   paperColor: PaperColor;
   pitch: string;
   role?: string;
@@ -93,22 +93,23 @@ export const projects: Project[] = [
     slug: "levels",
     chapter: "i",
     title: "Levels",
-    subtitle: "(Productivity App)",
+    subtitle: "(Discipline RPG)",
     paperColor: "paper-cream",
     role: "conception, dev, design solo",
     status: "ongoing",
     visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png"],
     pitch:
-      "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Application web de suivi d'objectifs avec historique journalier complet et planification multi-horizons : la semaine, le mois, l'année, la vie. L'utilisateur définit ses objectifs, valide au fil de la journée, consulte son historique passé et projette ses cibles sur tous les horizons. PWA vanilla en trois fichiers, synchronisation temps réel multi-appareils.",
+      "La discipline se joue dans LEVELS : deviens le héros de ta propre histoire. Un vrai jeu par-dessus le quotidien : 5 objectifs par jour, XP, séries et pénalités, planification multi-horizons (semaine, mois, année, vie), 6 mentors IA aux personas travaillées et leurs programmes guidés, duels 1v1 à preuves photo jugées par un jury, base à bâtir avec son économie interne, assistant vocal. PWA vanilla synchronisée temps réel multi-appareils, bilingue FR/EN.",
     achievements: [
-      "Historique journalier complet et planification multi-horizons (semaine, mois, année, vie) : feature centrale.",
-      "Architecture PWA en trois fichiers vanilla (index.html, styles.css, app.js) : zéro build, déploiement instantané sur Firebase Hosting.",
-      "Synchronisation Firestore temps réel multi-appareils avec session unique anti-conflit.",
-      "Système de dates custom : grace period 0h, 2h pour préserver la régularité de l'utilisateur.",
-      "PWA installable sur mobile, fonctionne offline grâce au service worker.",
+      "Boucle de jeu complète : XP, séries, pénalités, succès, prestige, économie de base-building (7 pièces, 3 monnaies étanches) : la discipline devient un RPG.",
+      "6 mentors IA (personas expertes, anti-hallucination ancrée sur les données réelles du joueur) + 6 programmes guidés : 105 leçons écrites main.",
+      "Multijoueur vérifié : duels et coop à preuves photo jugées par un jury anonyme ; l'Influence, score calculé côté serveur, sépare le déclaré du prouvé.",
+      "Backend : 60+ Cloud Functions (quotas transactionnels, crons, push FCM, mails), sync Firestore temps réel avec verrous anti-conflit et anti-rollback.",
+      "Assistant vocal (SpeechRecognition + TTS) : dicter ses objectifs, naviguer, interroger un manuel canonique anti-hallucination.",
+      "Bilingue FR/EN : le français est la source, un pipeline maison génère le bundle anglais au build (mémoire de traduction, build refusé si un segment manque).",
     ],
-    stack: ["HTML", "CSS", "JavaScript", "TypeScript", "Firebase", "Firestore", "Firebase Auth", "PWA"],
-    liveUrl: "https://levels-app-f50a9.web.app",
+    stack: ["HTML", "CSS", "JavaScript", "Firebase", "Firestore", "Cloud Functions", "Firebase Auth", "FCM", "OpenRouter", "PWA"],
+    liveUrl: "https://lesommet.app",
   },
   {
     slug: "energizer",
@@ -247,7 +248,7 @@ export const projectQualities: Record<string, ProjectQuality> = {
     qualities: ["Autonomie", "Pragmatisme"],
     phrase: "Trancher seul, viser l'usage.",
     context:
-      "Levels embarque sync Firestore temps réel multi-appareils, PWA installable, mode offline et un système de dates custom. Mais l'architecture, elle, est volontairement minimale (trois fichiers vanilla, zéro build) : choisir les bons compromis pour livrer un vrai produit, sans tomber dans l'over-engineering.",
+      "Levels est devenu un jeu complet : mentors IA, multijoueur à preuves, économie interne, version anglaise générée au build. Le tout construit en solo sur une base volontairement minimale (client vanilla zéro build, 60+ Cloud Functions derrière) : choisir les bons compromis pour livrer un vrai produit, sans tomber dans l'over-engineering.",
   },
   energizer: {
     label: "Analyse × Initiative",
@@ -390,7 +391,7 @@ export const profile: Profile = {
   twitter: undefined,
   cvPdf: "/cv-aurian.pdf",
   cvCurrent:
-    "VSOLUTION : alternant Automatisation, Agents IA & Performance Digitale (2026, en cours). Création d'Energizer, approfondissement d'OpenClaw, prototypage d'automatisations.",
+    "VSOLUTION, ingénierie assistée par ordinateur : alternant Automatisation, Agents IA & Performance Digitale (2026, en cours). Création d'Energizer, développement du site web de VSolution, approfondissement d'OpenClaw, prototypage d'automatisations.",
   cvPrevious:
     "Le Chalet Studio : bras droit Marketing & Data Analyst, été 2024 (+22% de clics, +10% d'abonnés en 2 mois). Odillon SARL : consultant depuis 2021, RH d'une équipe de 5, création de Chronodil.",
   formation:
@@ -451,22 +452,23 @@ export const projectsEn: Project[] = [
     slug: "levels",
     chapter: "i",
     title: "Levels",
-    subtitle: "(Productivity App)",
+    subtitle: "(Discipline RPG)",
     paperColor: "paper-cream",
     role: "concept, dev, design (solo)",
     status: "ongoing",
     visuals: ["/visuals/levels-vision.png", "/visuals/levels-radar.png", "/visuals/levels-progression.png", "/visuals/levels-daily.png"],
     pitch:
-      "Discipline plays out in LEVELS: become the hero of your own story. A web app for goal tracking with full daily history and multi-horizon planning across the week, month, year and life. The user defines goals, validates them throughout the day, browses past history and projects targets onto every horizon. Three-file vanilla PWA, real-time sync across devices.",
+      "Discipline plays out in LEVELS: become the hero of your own story. A full game layered over daily life: 5 goals a day, XP, streaks and penalties, multi-horizon planning (week, month, year, life), 6 AI mentors with crafted personas and their guided programs, 1v1 duels with photo proofs judged by a jury, a homestead to build with its own economy, a voice assistant. Vanilla PWA with real-time multi-device sync, fully bilingual FR/EN.",
     achievements: [
-      "Full daily history and multi-horizon planning (week, month, year, lifetime): the core feature.",
-      "Three-file vanilla architecture (index.html, styles.css, app.js): zero build, instant deploy on Firebase Hosting.",
-      "Real-time multi-device Firestore sync with single-session anti-conflict logic.",
-      "Custom date system with 0h-2h grace period to preserve user consistency.",
-      "Installable PWA, works offline thanks to the service worker.",
+      "Complete game loop: XP, streaks, penalties, achievements, prestige, base-building economy (7 rooms, 3 sealed currencies): discipline becomes an RPG.",
+      "6 AI mentors (expert personas, anti-hallucination grounded in the player's real data) + 6 guided programs: 105 hand-written lessons.",
+      "Verified multiplayer: duels and co-op with photo proofs judged by an anonymous jury; Influence, a server-computed score, splits the declared from the proven.",
+      "Backend: 60+ Cloud Functions (transactional quotas, crons, FCM push, emails), real-time Firestore sync with anti-conflict and anti-rollback locks.",
+      "Voice assistant (SpeechRecognition + TTS): dictate goals, navigate, query a canonical anti-hallucination manual.",
+      "Bilingual FR/EN: French is the source; a custom pipeline generates the English bundle at build time (translation memory, build refused when a segment is missing).",
     ],
-    stack: ["HTML", "CSS", "JavaScript", "TypeScript", "Firebase", "Firestore", "Firebase Auth", "PWA"],
-    liveUrl: "https://levels-app-f50a9.web.app",
+    stack: ["HTML", "CSS", "JavaScript", "Firebase", "Firestore", "Cloud Functions", "Firebase Auth", "FCM", "OpenRouter", "PWA"],
+    liveUrl: "https://lesommet.app",
   },
   {
     slug: "energizer",
@@ -605,7 +607,7 @@ export const projectQualitiesEn: Record<string, ProjectQuality> = {
     qualities: ["Autonomy", "Pragmatism"],
     phrase: "Decide alone, aim for usage.",
     context:
-      "Levels ships real-time multi-device Firestore sync, an installable PWA, offline mode and a custom date system. But the architecture itself is intentionally minimal (three vanilla files, zero build): picking the right trade-offs to ship a real product without over-engineering.",
+      "Levels grew into a full game: AI mentors, proof-based multiplayer, an internal economy, an English version generated at build time. All built solo on a deliberately minimal base (zero-build vanilla client, 60+ Cloud Functions behind): picking the right trade-offs to ship a real product without over-engineering.",
   },
   energizer: {
     label: "Analysis × Initiative",
@@ -706,7 +708,7 @@ export const profileEn: Profile = {
   twitter: undefined,
   cvPdf: "/cv-aurian.pdf",
   cvCurrent:
-    "VSOLUTION: apprentice in Automation, AI Agents & Digital Performance (2026, ongoing). Built Energizer, deepened OpenClaw, prototyped automations.",
+    "VSOLUTION, computer-aided engineering: apprentice in Automation, AI Agents & Digital Performance (2026, ongoing). Built Energizer, built VSolution's website, deepened OpenClaw, prototyped automations.",
   cvPrevious:
     "Le Chalet Studio: right hand in Marketing & Data Analyst, summer 2024 (+22% clicks, +10% subscribers in 2 months). Odillon SARL: consultant since 2021, HR for a 5-person team, built Chronodil.",
   formation:

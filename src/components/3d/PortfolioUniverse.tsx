@@ -3145,15 +3145,35 @@ interface UniverseProps {
   onSelectPlanet: (project: Project) => void;
 }
 
+// Demi-étendue horizontale des planètes aux VISUELS LARGES, focus ×1.35 inclus
+// (arceau de Mirakl : RING_OUTER 2.25 ; orbites de Beyond : 2.0 + la lune).
+// Sur un écran portrait, ces visuels débordent du viewport : la caméra recule
+// JUSTE assez pour eux, par formule (adaptée à tout téléphone), et max(6, …)
+// laisse le desktop strictement inchangé. Les trois autres planètes gardent
+// z = 6 : Levels et Energizer tiennent, TheLook tronque à peine (assumé).
+const WIDE_PLANET_EXTENT: Record<string, number> = {
+  mirakl: 2.25 * 1.35,
+  "music-agency": 2.2 * 1.35,
+};
+
 function Universe({ index, onSelectStar, onSelectPlanet }: UniverseProps) {
   const { projects } = useContent();
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const camTarget = useRef(new THREE.Vector3(0, 0, 6));
   const lookTarget = useRef(new THREE.Vector3(0, 0, 0));
 
   useFrame(() => {
     const tx = index * 6 - 12;
-    camTarget.current.set(tx, 0, 6);
+    const extent = WIDE_PLANET_EXTENT[projects[index]?.slug ?? ""] ?? 0;
+    let tz = 6;
+    if (extent) {
+      const persp = camera as THREE.PerspectiveCamera;
+      const aspect = size.width / Math.max(1, size.height);
+      const halfTan = Math.tan((persp.fov * Math.PI) / 360);
+      // marge 6% pour que l'arceau ne lèche pas le bord de l'écran
+      tz = Math.max(6, (extent * 1.06) / (halfTan * aspect));
+    }
+    camTarget.current.set(tx, 0, tz);
     lookTarget.current.set(tx, 0, 0);
     const distance = Math.abs(
       (camera as THREE.PerspectiveCamera).position.x - tx
